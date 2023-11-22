@@ -1,0 +1,33 @@
+{
+  "name": "co.buck.datamanagement",
+  "version": "0.1.0",
+  "displayName": "BUCK Data Management",
+  "description": "This is BUCK's Unity package for saving and loading data. It includes a DataManager class with an API for reading and writing data to disk.",
+  "unity": "2023.2",
+  "documentationUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
+  "changelogUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
+  "licensesUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
+  "keywords": [
+    "BUCK",
+    "Save",
+    "Load",
+    "Files",
+    "I/O",
+    "Data",
+    "DataManager",
+    "DataManagement"
+  ],
+  "repository": {
+    "url": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
+    "type": "git"
+  },
+  "author": {
+    "name": "BUCK",
+    "url": "https://buck.co/"
+  },
+  "dependencies": {
+    "co.buck.basics": "https://github.com/buck-co/unity-pkg-buck-basics.git#v1.0.7"
+  },
+  "enableLockFile": true,
+  "resolutionStrategy": "highest"
+}
