@@ -29,5 +29,12 @@
     "co.buck.basics": "https://github.com/buck-co/unity-pkg-buck-basics.git#v1.0.7"
   },
   "enableLockFile": true,
-  "resolutionStrategy": "highest"
+  "resolutionStrategy": "highest",
+  "samples": [
+      {
+          "displayName": "Data Management Example",
+          "description": "Contains a simple example scene that demonstrates the use of the DataManager class and two implementations of the ISaveable interface.",
+          "path": "Samples~/DataManagementExample"
+      }
+  ]
 }

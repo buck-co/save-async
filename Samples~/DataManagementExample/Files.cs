@@ -1,6 +1,6 @@
-namespace Buck
+namespace Buck.DataManagementExample
 {
-    public static class FileNames
+    public static class Files
     {
         public const string GameData = "GameData";
         public const string SomeFile = "SomeFile";

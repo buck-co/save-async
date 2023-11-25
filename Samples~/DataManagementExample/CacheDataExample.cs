@@ -3,16 +3,16 @@ using Buck.DataManagement;
 using UnityEngine;
 using Sirenix.OdinInspector;
 
-namespace Buck
+namespace Buck.DataManagementExample
 {
     public class CacheDataExample : MonoBehaviour, ISaveable
     {
         // Things needed for this class to be ISaveable
         [SerializeField, HideInInspector] byte[] m_guidBytes;
         [ShowInInspector]
-        public Guid Guid => new(GuidUtility.GetSerializableGuid(ref m_guidBytes));
+        public Guid Guid => new(ExtensionMethods.GetSerializableGuid(ref m_guidBytes));
         
-        public string FileName => FileNames.SomeFile;
+        public string FileName => Files.SomeFile;
 
         // Your game data
         [SerializeField] string m_myString = "Some string!";
