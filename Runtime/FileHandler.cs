@@ -4,70 +4,107 @@ using System.IO;
 
 namespace Buck.DataManagement
 {
-    public static class FileHandler
+    public class FileHandler
     {
-        static string PersistentDataPath;
+        string m_persistentDataPath;
         
-        static CancellationTokenSource m_CancellationTokenSource;
-        static CancellationToken DestroyCancellationToken
+        CancellationTokenSource m_cancellationTokenSource;
+        CancellationToken DestroyCancellationToken
+            => m_cancellationTokenSource.Token;
+
+        /// <summary>
+        /// Creates a new FileHandler instance that stores Application.persistentDataPath, which can only be accessed on the main thread.
+        /// Also creates a cancellation token for async methods.
+        /// </summary>
+        public FileHandler()
         {
-            get
-            {
-                m_CancellationTokenSource ??= new CancellationTokenSource();
-                return m_CancellationTokenSource.Token;
-            }
+            m_persistentDataPath = Application.persistentDataPath;
+            m_cancellationTokenSource = new CancellationTokenSource();
+        }
+
+        /// <summary>
+        /// Returns the full path to a file in the persistent data path using the given path or filename.
+        /// <code>
+        /// File example: "MyFile.json"
+        /// Path example: "MyFolder/MyFile.json"
+        /// </code>
+        /// </summary>
+        /// <param name="pathOrFilename">The path or filename of the file that will be combined with the persistent data path.</param>
+        string GetPath(string pathOrFilename)
+            => Path.Combine(m_persistentDataPath, pathOrFilename);
+
+        /// <summary>
+        /// Returns true if a file exists at the given path or filename.
+        /// <code>
+        /// File example: "MyFile.json"
+        /// Path example: "MyFolder/MyFile.json"
+        /// </code>
+        /// </summary>
+        /// <param name="pathOrFilename">The path or filename of the file to check.</param>
+        public bool Exists(string pathOrFilename)
+            => File.Exists(GetPath(pathOrFilename));
+        
+        /// <summary>
+        /// Writes the given content to a file at the given path or filename.
+        /// This is an asynchronous method. If useBackgroundThread is true, it runs on a background thread, 
+        /// otherwise it runs on the main thread.
+        /// <code>
+        /// File example: "MyFile.json"
+        /// Path example: "MyFolder/MyFile.json"
+        /// </code>
+        /// </summary>
+        /// <param name="pathOrFilename">The path or filename of the file to write.</param>
+        /// <param name="content">The string to write to the file.</param>
+        /// <param name="useBackgroundThread">True by default. Set to false to run on the main thread.</param>
+        public async Awaitable WriteFile(string pathOrFilename, string content, bool useBackgroundThread = true)
+        {
+            if (useBackgroundThread)
+                await Awaitable.BackgroundThreadAsync();
+            
+            await File.WriteAllTextAsync(GetPath(pathOrFilename), content, DestroyCancellationToken);
         }
         
         /// <summary>
-        /// This is called from the DataManager's Awake() method.
-        /// It stores the persistent data path so that save methods can be called from any thread.
+        /// Returns the contents of a file at the given path or filename.
+        /// This is an asynchronous method. If useBackgroundThread is true, it runs on a background thread, 
+        /// otherwise it runs on the main thread.
+        /// <code>
+        /// File example: "MyFile.json"
+        /// Path example: "MyFolder/MyFile.json"
+        /// </code>
         /// </summary>
-        public static void Initialize()
-            => PersistentDataPath = Application.persistentDataPath;
-        
-        static string GetPath(string filename)
-            => Path.Combine(PersistentDataPath, filename);
-
-        public static bool Exists(string filename)
-            => File.Exists(GetPath(filename));
-        
-        public static async Awaitable WriteFile(string filename, string content)
+        /// <param name="pathOrFilename">The path or filename of the file to read.</param>
+        /// <param name="useBackgroundThread">True by default. Set to false to run on the main thread.</param>
+        public async Awaitable<string> ReadFile(string pathOrFilename, bool useBackgroundThread = true)
         {
-            // If the cancellation token has been requested at any point, return
-            while (!DestroyCancellationToken.IsCancellationRequested)
-            {
-                // Switch to a background thread for writing the file
+            if (useBackgroundThread)
                 await Awaitable.BackgroundThreadAsync();
-
-                FileStream fileStream = new FileStream(GetPath(filename), FileMode.Create);
-
-                await using StreamWriter writer = new StreamWriter(fileStream);
-                await writer.WriteAsync(content);
-                
-                return;
-            }
+            
+            return await File.ReadAllTextAsync(GetPath(pathOrFilename), DestroyCancellationToken);
         }
         
-        public static async Awaitable<string> ReadFile(string filename)
-        {
-            // If the cancellation token has been requested at any point, return
-            while (!DestroyCancellationToken.IsCancellationRequested)
-            {
-                // Switch to a background thread for reading the file
-                await Awaitable.BackgroundThreadAsync();
+        /// <summary>
+        /// Erases a file at the given path or filename. The file will still exist on disk, but it will be empty.
+        /// Use <see cref="Delete(string)"/> to remove the file from disk.
+        /// <code>
+        /// File example: "MyFile.json"
+        /// Path example: "MyFolder/MyFile.json"
+        /// </code>
+        /// </summary>
+        /// <param name="pathOrFilename">The path or filename of the file to erase.</param>
+        public void Erase(string pathOrFilename) 
+            => File.WriteAllText(GetPath(pathOrFilename), string.Empty);
 
-                FileStream fileStream = new FileStream(GetPath(filename), FileMode.Open);
-
-                using StreamReader reader = new StreamReader(fileStream);
-                string content = await reader.ReadToEndAsync();
-
-                return content;
-            }
-
-            return null;
-        }
-
-        public static void Delete(string filename) 
-            => File.Delete(GetPath(filename));
+        /// <summary>
+        /// Deletes a file at the given path or filename. This will remove the file from disk.
+        /// Use <see cref="Erase(string)"/> to fill the file with an empty string without removing it from disk.
+        /// <code>
+        /// File example: "MyFile.json"
+        /// Path example: "MyFolder/MyFile.json"
+        /// </code>
+        /// </summary>
+        /// <param name="pathOrFilename">The path or filename of the file to delete.</param>
+        public void Delete(string pathOrFilename) 
+            => File.Delete(GetPath(pathOrFilename));
     }
 }
