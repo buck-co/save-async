@@ -17,13 +17,13 @@ This package works with Unity 2023.2 and above as it requires Unity's [`Awaitabl
 
 ### DataManager API
 
-Currently done! More documentation will go here once the dust settles.
+Still WIP! More documentation will go here once the dust settles.
 
 ### Asynchronous Saving and Loading
 
-Works with EasySave currently. JSONUtility support is in progress.
+Async methods are working, but JSON writing is still not great. In progress!
 
 ### Data Migrations
 
-Still in progress.
+Not yet started, but planned!
   

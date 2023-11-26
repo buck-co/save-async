@@ -70,13 +70,13 @@ namespace Buck.DataManagementExample
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             m_deleteStopwatch.Start();
-            Debug.Log("Starting EraseGameData()...");
+            Debug.Log("Starting DeleteGameData()...");
 #endif
 
             await DataManager.Instance.DeleteAsync(new[] { Files.GameData, Files.SomeFile });
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log("EraseGameData() completed in " + m_deleteStopwatch.ElapsedMilliseconds + "ms");
+            Debug.Log("DeleteGameData() completed in " + m_deleteStopwatch.ElapsedMilliseconds + "ms");
             m_deleteStopwatch.Stop();
             m_deleteStopwatch.Reset();
 #endif

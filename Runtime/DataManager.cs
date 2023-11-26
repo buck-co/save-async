@@ -28,12 +28,14 @@ namespace Buck.DataManagement
         
         // TODOS:
         // [X] Turn this into a package
-        // [ ] Add the ability to use JSONUtility instead of EasySave
+        // [ ] Add the ability to use JSON instead of EasySave
         // [X] Check if File.WriteAllTextAsync works versus FileStream / StreamWriter
         // [X] Test file encryption on writes
         // [ ] Test file encryption on reads
         // [X] Test file deletes
         // [X] Test file erases
+        // [ ] Test paths and folders
+        // [ ] Test FileHandler.Exists()
         // [ ] On Awake, get all of the Saveables register them rather than having to do it manually
         // [ ] Add save versions and data migrations
         // [ ] Create a debug visual that can be used for testing on devices
