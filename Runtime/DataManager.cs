@@ -47,6 +47,8 @@ namespace Buck.DataManagement
         // [X] Test file erases
         // [X] Add support for serializable collections (done via Json.NET)
         // [X] Make methods static
+        // [ ] Improve performance by replacing JObject in SaveableDataWrapper with a string
+        // [ ] Add JsonConverters for Vector3 and other common Unity types
         // [ ] Test paths and folders
         // [ ] Test FileHandler.Exists()
         // [ ] Add XML comments to all public methods
