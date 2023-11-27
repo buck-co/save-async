@@ -55,9 +55,9 @@ namespace Buck.DataManagement
         // [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
         // [ ] Add save versions and data migrations
         // [ ] Create a debug visual that can be used for testing on devices
-        // [ ] Write adapters for platforms where necessary: PlayStation, Xbox, Switch, iOS, Android
-        // [ ] Write tests
+        // [ ] Add data adapters for platforms where necessary: PlayStation, Xbox, Switch, iOS, Android
         // [ ] Add support for save backups
+        // [ ] Write tests
         
         void Awake()
             => m_fileHandler = new FileHandler();
@@ -213,8 +213,8 @@ namespace Buck.DataManagement
         /// Deletes the files at the given paths or filenames. Each file will be removed from disk.
         /// Use <see cref="EraseAsync(string[])"/> to fill each file with an empty string without removing it from disk.
         /// <code>
-        /// File example: "MyFile.json"
-        /// Path example: "MyFolder/MyFile.json"
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to delete.</param>
@@ -260,8 +260,8 @@ namespace Buck.DataManagement
         /// Erases the files at the given paths or filenames. Each file will still exist on disk, but it will be empty.
         /// Use <see cref="DeleteAsync(string[], bool)"/> to remove the file from disk.
         /// <code>
-        /// File example: "MyFile.json"
-        /// Path example: "MyFolder/MyFile.json"
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to erase.</param>

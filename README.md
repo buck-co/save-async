@@ -17,13 +17,21 @@ This package works with Unity 2023.2 and above as it requires Unity's [`Awaitabl
 
 ### DataManager API
 
-Still WIP! More documentation will go here once the dust settles.
+Still WIP! More documentation will go here once the dust settles, but JSON reading and writing works. Classes that implement the ISaveable interface need to register themselves with the DataManager currently.
 
 ### Asynchronous Saving and Loading
 
-Async methods are working, but JSON writing is still not great. In progress!
+Async methods are working, although reads and writes have room for performance improvement. In progress!
+
+### Encryption
+
+Basic XOR encryption is implemented. There's a bug with AES decryption currently.
 
 ### Data Migrations
 
-Not yet started, but planned!
+Not yet started, but planned! This will allow individual objects to include a version number and upgrade themselves with game patches.
+
+### Data Adaptors
+
+Not yet started, but planned! This will allow consumers of the DataManager to use platforms not supported by Unity out of the box.
   
