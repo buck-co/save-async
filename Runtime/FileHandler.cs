@@ -25,8 +25,8 @@ namespace Buck.DataManagement
         /// <summary>
         /// Returns the full path to a file in the persistent data path using the given path or filename.
         /// <code>
-        /// File example: "MyFile.json"
-        /// Path example: "MyFolder/MyFile.json"
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file that will be combined with the persistent data path.</param>
@@ -36,8 +36,8 @@ namespace Buck.DataManagement
         /// <summary>
         /// Returns true if a file exists at the given path or filename.
         /// <code>
-        /// File example: "MyFile.json"
-        /// Path example: "MyFolder/MyFile.json"
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to check.</param>
@@ -49,8 +49,8 @@ namespace Buck.DataManagement
         /// This is an asynchronous method. If useBackgroundThread is true, it runs on a background thread, 
         /// otherwise it runs on the main thread.
         /// <code>
-        /// File example: "MyFile.json"
-        /// Path example: "MyFolder/MyFile.json"
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to write.</param>
@@ -69,8 +69,8 @@ namespace Buck.DataManagement
         /// This is an asynchronous method. If useBackgroundThread is true, it runs on a background thread, 
         /// otherwise it runs on the main thread.
         /// <code>
-        /// File example: "MyFile.json"
-        /// Path example: "MyFolder/MyFile.json"
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to read.</param>
@@ -87,8 +87,8 @@ namespace Buck.DataManagement
         /// Erases a file at the given path or filename. The file will still exist on disk, but it will be empty.
         /// Use <see cref="Delete(string)"/> to remove the file from disk.
         /// <code>
-        /// File example: "MyFile.json"
-        /// Path example: "MyFolder/MyFile.json"
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to erase.</param>
@@ -99,8 +99,8 @@ namespace Buck.DataManagement
         /// Deletes a file at the given path or filename. This will remove the file from disk.
         /// Use <see cref="Erase(string)"/> to fill the file with an empty string without removing it from disk.
         /// <code>
-        /// File example: "MyFile.json"
-        /// Path example: "MyFolder/MyFile.json"
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to delete.</param>

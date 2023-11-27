@@ -1,4 +1,5 @@
 using System;
+using Newtonsoft.Json.Linq;
 
 namespace Buck.DataManagement
 {
@@ -32,5 +33,13 @@ namespace Buck.DataManagement
         /// also using this method to initialize any fields that are not saved (i.e. "resetting the object").
         /// </summary>
         void RestoreState(object state);
+    }
+
+    // Wrapper class for ISaveable data
+    class SaveableDataWrapper
+    {
+        public string Guid { get; set; }
+        public string TypeName { get; set; }
+        public JObject Data { get; set; }
     }
 }
