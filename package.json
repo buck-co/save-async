@@ -1,6 +1,6 @@
 {
   "name": "co.buck.datamanagement",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "displayName": "BUCK Data Management",
   "description": "This is BUCK's Unity package for saving and loading data. It includes a DataManager class with an API for reading and writing data to disk.",
   "unity": "2023.2",
@@ -26,8 +26,9 @@
     "url": "https://buck.co/"
   },
   "dependencies": {
-    "co.buck.basics": "https://github.com/buck-co/unity-pkg-buck-basics.git#v1.0.7",
-    "com.unity.nuget.newtonsoft-json": "3.2.1"
+    "co.buck.basics": "https://github.com/buck-co/unity-pkg-buck-basics.git#v1.0.8",
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "jillejr.newtonsoft.json-for-unity.converters": "https://github.com/jilleJr/Newtonsoft.Json-for-Unity.Converters.git#v1.5.1"
   },
   "enableLockFile": true,
   "resolutionStrategy": "highest",

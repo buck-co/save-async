@@ -57,7 +57,8 @@ namespace Buck.DataManagement
         // [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
         // [ ] Add save versions and data migrations
         // [ ] Create a debug visual that can be used for testing on devices
-        // [ ] Add data adapters for platforms where necessary: PlayStation, Xbox, Switch, iOS, Android
+        // [ ] Add data adapters for platforms where necessary (could be inherited from FileHandler)
+        // [ ] Test on other platforms, i.e. PlayStation, Xbox, Switch, iOS, Android
         // [ ] Add support for save backups
         // [ ] Write tests
         
