@@ -34,7 +34,8 @@ namespace Buck.DataManagement
         static readonly JsonSerializerSettings m_jsonSerializerSettingssettings = new()
         {
             Formatting = Formatting.Indented,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            
         };
         
         // TODOS:
@@ -48,7 +49,8 @@ namespace Buck.DataManagement
         // [X] Add support for serializable collections (done via Json.NET)
         // [X] Make methods static
         // [ ] Improve performance by replacing JObject in SaveableDataWrapper with a string
-        // [ ] Add JsonConverters for Vector3 and other common Unity types
+        // [X] Add JsonConverters for Vector3 and other common Unity types (done via Newtonsoft.Json.UnityConverters)
+        // [ ] Figure out how to support custom Unity types within each class's generic ISaveable object type (maybe use inheritance?)
         // [ ] Test paths and folders
         // [ ] Test FileHandler.Exists()
         // [ ] Add XML comments to all public methods
@@ -140,7 +142,7 @@ namespace Buck.DataManagement
                 if (i < saveables.Count - 1)
                     m_jsonStringBuilder.Append(",\n");
             }
-
+            
             m_jsonStringBuilder.Append("\n]");
 
             return m_jsonStringBuilder.ToString();
