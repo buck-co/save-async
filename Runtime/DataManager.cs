@@ -47,6 +47,8 @@ namespace Buck.DataManagement
         // [X] Improve performance by replacing JObject in SaveableData with a string
         // [X] Add JsonConverters for Vector3 and other common Unity types (done via Newtonsoft.Json.UnityConverters)
         // [X] Figure out how to support custom Unity types within each class's generic ISaveable object type (maybe use inheritance?)
+        // [ ] Figure out why Guid, TypeName, and Data are being added to the serialized JSON string
+        // [ ] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
         // [ ] Test paths and folders
         // [ ] Test FileHandler.Exists()
         // [ ] Add XML comments to all public methods
@@ -129,14 +131,12 @@ namespace Buck.DataManagement
                     var s = saveables[i];
                     var data = s.CaptureState();
 
-                    SaveableData wrappedData = new()
+                    wrappedSaveables[i] = new SaveableData
                     {
                         Guid = s.Guid.ToString(),
                         TypeName = data.GetType().AssemblyQualifiedName,
                         Data = data
                     };
-
-                    wrappedSaveables[i] = wrappedData;
                 }
 
                 return JsonConvert.SerializeObject(wrappedSaveables, m_jsonSerializerSettings);
