@@ -1,5 +1,7 @@
 using System;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnityEditor;
 
 namespace Buck.DataManagement
 {
@@ -25,21 +27,27 @@ namespace Buck.DataManagement
         /// Typically this is a struct defined by the ISaveable implementing class.
         /// The contents of the struct could be created at the time of saving, or cached in a field. 
         /// </summary>
-        object CaptureState();
+        SaveableData CaptureState();
         
         /// <summary>
         /// This is used by the DataManager class to restore the state of a saveable object.
         /// This will be called any time the game is loaded, so you may want to consider
         /// also using this method to initialize any fields that are not saved (i.e. "resetting the object").
         /// </summary>
-        void RestoreState(object state);
+        void RestoreState(SaveableData state);
     }
-
-    // Wrapper class for ISaveable data
-    class SaveableDataWrapper
+    
+    [Serializable]
+    public class SaveableData
     {
-        public string Guid { get; set; }
-        public string TypeName { get; set; }
-        public JObject Data { get; set; }
+        public string Guid;
+        public string TypeName;
+        public object Data;
+        
+        public virtual string Serialize()
+            => JsonConvert.SerializeObject(this);
+
+        public virtual void Deserialize(string serializedData)
+            => JsonConvert.PopulateObject(serializedData, this);
     }
 }

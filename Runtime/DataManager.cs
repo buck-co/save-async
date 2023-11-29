@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Buck.DataManagement
 {
@@ -23,7 +21,6 @@ namespace Buck.DataManagement
         static Queue<string[]> m_saveQueue = new();
         static Queue<string[]> m_loadQueue = new();
         static Queue<string[]> m_deleteQueue = new();
-        static StringBuilder m_jsonStringBuilder = new();
         
         static bool m_isSaving;
         static bool m_isLoading;
@@ -31,11 +28,10 @@ namespace Buck.DataManagement
         
         static bool IsBusy => m_isSaving || m_isLoading || m_isDeleting;
 
-        static readonly JsonSerializerSettings m_jsonSerializerSettingssettings = new()
+        static readonly JsonSerializerSettings m_jsonSerializerSettings = new()
         {
             Formatting = Formatting.Indented,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
         };
         
         // TODOS:
@@ -48,9 +44,9 @@ namespace Buck.DataManagement
         // [X] Test file erases
         // [X] Add support for serializable collections (done via Json.NET)
         // [X] Make methods static
-        // [ ] Improve performance by replacing JObject in SaveableDataWrapper with a string
+        // [X] Improve performance by replacing JObject in SaveableData with a string
         // [X] Add JsonConverters for Vector3 and other common Unity types (done via Newtonsoft.Json.UnityConverters)
-        // [ ] Figure out how to support custom Unity types within each class's generic ISaveable object type (maybe use inheritance?)
+        // [X] Figure out how to support custom Unity types within each class's generic ISaveable object type (maybe use inheritance?)
         // [ ] Test paths and folders
         // [ ] Test FileHandler.Exists()
         // [ ] Add XML comments to all public methods
@@ -117,37 +113,38 @@ namespace Buck.DataManagement
         
         static async Awaitable<string> ToJson(List<ISaveable> saveables)
         {
-            await Awaitable.BackgroundThreadAsync();
-
-            m_jsonStringBuilder.Clear();
-            m_jsonStringBuilder.Append("[\n");
-
-            JsonSerializer serializer = JsonSerializer.Create(m_jsonSerializerSettingssettings);
-
-            for (int i = 0; i < saveables.Count; i++)
+            // If the cancellation token has been requested at any point, return
+            while (!Instance.destroyCancellationToken.IsCancellationRequested)
             {
-                var saveable = saveables[i];
-                var data = saveable.CaptureState();
-                var wrappedData = new
+                // Switch to a background thread
+                await Awaitable.BackgroundThreadAsync();
+
+                if (saveables == null)
+                    throw new System.ArgumentNullException(nameof(saveables));
+
+                SaveableData[] wrappedSaveables = new SaveableData[saveables.Count];
+
+                for (var i = 0; i < saveables.Count; i++)
                 {
-                    Guid = saveable.Guid.ToString(),
-                    TypeName = data.GetType().AssemblyQualifiedName,
-                    Data = JToken.FromObject(data, serializer)
-                };
+                    var s = saveables[i];
+                    var data = s.CaptureState();
 
-                string json = JsonConvert.SerializeObject(wrappedData, m_jsonSerializerSettingssettings);
+                    SaveableData wrappedData = new()
+                    {
+                        Guid = s.Guid.ToString(),
+                        TypeName = data.GetType().AssemblyQualifiedName,
+                        Data = data
+                    };
 
-                m_jsonStringBuilder.Append(json);
+                    wrappedSaveables[i] = wrappedData;
+                }
 
-                if (i < saveables.Count - 1)
-                    m_jsonStringBuilder.Append(",\n");
+                return JsonConvert.SerializeObject(wrappedSaveables, m_jsonSerializerSettings);
             }
-            
-            m_jsonStringBuilder.Append("\n]");
 
-            return m_jsonStringBuilder.ToString();
+            return null;
         }
-
+        
         public static async Awaitable LoadAsync(string[] filenames)
         {
             // If the cancellation token has been requested at any point, return
@@ -177,30 +174,38 @@ namespace Buck.DataManagement
                     {
                         string fileContent = await m_fileHandler.ReadFile(filename);
                         string json = Encrpytion.Decrypt(fileContent, Instance.m_encryptionPassword, Instance.m_encryptionType);
-
-                        // Deserialize the JSON data
-                        var loadedDataList = JsonConvert.DeserializeObject<List<SaveableDataWrapper>>(json, m_jsonSerializerSettingssettings);
+                        
+                        // Deserialize the JSON data to List of SaveableDataWrapper
+                        List<SaveableData> loadedDataList = JsonConvert.DeserializeObject<List<SaveableData>>(json, m_jsonSerializerSettings);
 
                         // Switch back to the main thread before accessing Unity objects
                         await Awaitable.MainThreadAsync();
                         
                         // Restore state for each saveable
-                        foreach (var wrappedData in loadedDataList)
+                        foreach (SaveableData wrappedData in loadedDataList)
                         {
                             var guid = new System.Guid(wrappedData.Guid);
+                            
                             var saveable = m_saveables.Find(s => s.Guid == guid);
 
                             if (saveable != null)
                             {
-                                System.Type type = System.Type.GetType(wrappedData.TypeName);
-                                try
+                                // Determine the specific type from the TypeName
+                                System.Type theDataType = System.Type.GetType(wrappedData.TypeName);
+                                if (theDataType != null)
                                 {
-                                    var data = wrappedData.Data.ToObject(type);
-                                    saveable.RestoreState(data);
-                                }
-                                catch (System.Exception e)
-                                {
-                                    Debug.LogError($"Failed to restore state for {saveable.FileName} with GUID {saveable.Guid} and type {type}.\n{e}");
+                                    try
+                                    {
+                                        // Deserialize the data into the correct subtype of SaveableData
+                                        SaveableData dataInstance = (SaveableData)JsonConvert.DeserializeObject(wrappedData.Data.ToString(), theDataType, m_jsonSerializerSettings);
+
+                                        // Restore state with the deserialized data
+                                        saveable.RestoreState(dataInstance);
+                                    }
+                                    catch (System.Exception e)
+                                    {
+                                        Debug.LogError($"Failed to restore state for {saveable.FileName} with GUID {saveable.Guid} and type {theDataType}.\n{e}");
+                                    }
                                 }
                             }
                         }
