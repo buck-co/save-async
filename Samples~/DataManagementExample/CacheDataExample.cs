@@ -19,7 +19,8 @@ namespace Buck.DataManagementExample
         [SerializeField] int m_myInt = 5;
         [SerializeField] float m_myFloat = 2f;
 
-        struct MySaveData
+        [Serializable]
+        public struct MySaveData
         {
             public string myString;
             public int myInt;

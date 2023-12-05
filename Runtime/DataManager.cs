@@ -1,3 +1,33 @@
+// TODOS:
+// [X] Turn this into a package
+// [X] Add the ability to use JSON instead of EasySave
+// [X] Check if File.WriteAllTextAsync works versus FileStream / StreamWriter
+// [X] Test basic XOR file encryption on writes
+// [X] Test basic XOR file encryption on reads
+// [X] Test file deletes
+// [X] Test file erases
+// [X] Add support for serializable collections (done via Json.NET)
+// [X] Make methods static
+// [X] Improve performance by replacing JObject in SaveableData with a string
+// [X] Add JsonConverters for Vector3 and other common Unity types (done via Newtonsoft.Json.UnityConverters)
+// [X] Figure out how to support custom Unity types within each class's generic ISaveable object type (maybe use inheritance?)
+// [X] Figure out why Guid, TypeName, and Data are being added to the serialized JSON string
+// [ ] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
+// [ ] Figure out why spamming output (especially on queue tests) shows 0ms on console output
+// [ ] Test paths and folders
+// [ ] Test FileHandler.Exists()
+// [ ] Add XML comments to all public methods
+// [/] Make better encryption (AES is WIP and encryption works, but something is wrong with decryption)
+// [ ] Add more error handling (i.e. if a file isn't registered that's being saved to, etc.)
+// [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
+// [ ] Add save versions and data migrations
+// [ ] Create a debug visual that can be used for testing on devices
+// [ ] Add data adapters for platforms where necessary (could be inherited from FileHandler)
+// [ ] Test on other platforms, i.e. PlayStation, Xbox, Switch, iOS, Android
+// [ ] Add support for save backups
+// [ ] Write tests
+        
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
@@ -31,36 +61,16 @@ namespace Buck.DataManagement
         static readonly JsonSerializerSettings m_jsonSerializerSettings = new()
         {
             Formatting = Formatting.Indented,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            TypeNameHandling = TypeNameHandling.Auto
         };
-        
-        // TODOS:
-        // [X] Turn this into a package
-        // [X] Add the ability to use JSON instead of EasySave
-        // [X] Check if File.WriteAllTextAsync works versus FileStream / StreamWriter
-        // [X] Test basic XOR file encryption on writes
-        // [X] Test basic XOR file encryption on reads
-        // [X] Test file deletes
-        // [X] Test file erases
-        // [X] Add support for serializable collections (done via Json.NET)
-        // [X] Make methods static
-        // [X] Improve performance by replacing JObject in SaveableData with a string
-        // [X] Add JsonConverters for Vector3 and other common Unity types (done via Newtonsoft.Json.UnityConverters)
-        // [X] Figure out how to support custom Unity types within each class's generic ISaveable object type (maybe use inheritance?)
-        // [ ] Figure out why Guid, TypeName, and Data are being added to the serialized JSON string
-        // [ ] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
-        // [ ] Test paths and folders
-        // [ ] Test FileHandler.Exists()
-        // [ ] Add XML comments to all public methods
-        // [/] Make better encryption (AES is WIP and encryption works, but something is wrong with decryption)
-        // [ ] Add more error handling (i.e. if a file isn't registered that's being saved to, etc.)
-        // [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
-        // [ ] Add save versions and data migrations
-        // [ ] Create a debug visual that can be used for testing on devices
-        // [ ] Add data adapters for platforms where necessary (could be inherited from FileHandler)
-        // [ ] Test on other platforms, i.e. PlayStation, Xbox, Switch, iOS, Android
-        // [ ] Add support for save backups
-        // [ ] Write tests
+
+        [Serializable]
+        public class SaveableDataWrapper
+        {
+            public string Guid;
+            public object Data;
+        }
         
         void Awake()
             => m_fileHandler = new FileHandler();
@@ -122,19 +132,18 @@ namespace Buck.DataManagement
                 await Awaitable.BackgroundThreadAsync();
 
                 if (saveables == null)
-                    throw new System.ArgumentNullException(nameof(saveables));
+                    throw new ArgumentNullException(nameof(saveables));
 
-                SaveableData[] wrappedSaveables = new SaveableData[saveables.Count];
+                SaveableDataWrapper[] wrappedSaveables = new SaveableDataWrapper[saveables.Count];
 
                 for (var i = 0; i < saveables.Count; i++)
                 {
                     var s = saveables[i];
                     var data = s.CaptureState();
 
-                    wrappedSaveables[i] = new SaveableData
+                    wrappedSaveables[i] = new SaveableDataWrapper
                     {
                         Guid = s.Guid.ToString(),
-                        TypeName = data.GetType().AssemblyQualifiedName,
                         Data = data
                     };
                 }
@@ -176,38 +185,20 @@ namespace Buck.DataManagement
                         string json = Encrpytion.Decrypt(fileContent, Instance.m_encryptionPassword, Instance.m_encryptionType);
                         
                         // Deserialize the JSON data to List of SaveableDataWrapper
-                        List<SaveableData> loadedDataList = JsonConvert.DeserializeObject<List<SaveableData>>(json, m_jsonSerializerSettings);
+                        List<SaveableDataWrapper> loadedDataList = JsonConvert.DeserializeObject<List<SaveableDataWrapper>>(json, m_jsonSerializerSettings);
 
                         // Switch back to the main thread before accessing Unity objects
                         await Awaitable.MainThreadAsync();
                         
                         // Restore state for each saveable
-                        foreach (SaveableData wrappedData in loadedDataList)
+                        foreach (SaveableDataWrapper wrappedData in loadedDataList)
                         {
-                            var guid = new System.Guid(wrappedData.Guid);
+                            var guid = new Guid(wrappedData.Guid);
                             
                             var saveable = m_saveables.Find(s => s.Guid == guid);
 
                             if (saveable != null)
-                            {
-                                // Determine the specific type from the TypeName
-                                System.Type theDataType = System.Type.GetType(wrappedData.TypeName);
-                                if (theDataType != null)
-                                {
-                                    try
-                                    {
-                                        // Deserialize the data into the correct subtype of SaveableData
-                                        SaveableData dataInstance = (SaveableData)JsonConvert.DeserializeObject(wrappedData.Data.ToString(), theDataType, m_jsonSerializerSettings);
-
-                                        // Restore state with the deserialized data
-                                        saveable.RestoreState(dataInstance);
-                                    }
-                                    catch (System.Exception e)
-                                    {
-                                        Debug.LogError($"Failed to restore state for {saveable.FileName} with GUID {saveable.Guid} and type {theDataType}.\n{e}");
-                                    }
-                                }
-                            }
+                                saveable.RestoreState(wrappedData.Data);
                         }
                     }
                 }

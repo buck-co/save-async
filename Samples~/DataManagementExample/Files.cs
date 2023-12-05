@@ -2,8 +2,7 @@ namespace Buck.DataManagementExample
 {
     public static class Files
     {
-        public const string GameData = "GameData";
-        public const string SomeFile = "SomeFile";
-        public const string AnotherFile = "AnotherFile";
+        public const string GameData = "GameData.dat";
+        public const string SomeFile = "SomeFile.dat";
     }
 }
