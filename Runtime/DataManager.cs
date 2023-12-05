@@ -14,6 +14,7 @@
 // [X] Figure out why Guid, TypeName, and Data are being added to the serialized JSON string
 // [ ] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
 // [ ] Figure out why spamming output (especially on queue tests) shows 0ms on console output
+// [ ] Need to test for file existence before attempting to load
 // [ ] Test paths and folders
 // [ ] Test FileHandler.Exists()
 // [ ] Add XML comments to all public methods
