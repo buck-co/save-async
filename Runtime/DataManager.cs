@@ -17,6 +17,9 @@
 // [ ] Figure out why the first load test doesn't work
 // [ ] Check for empty files before loading
 // [X] Improve performance of loading by batching all of the wrapped saveables before switching back to the main thread
+// [ ] Simplify methods into a single file operation handler
+// [X] Test if there is any benefit to using Tasks for the FileHandler so that Task.WhenAll can be used for batching
+//     - Result: It does not, and in fact seems to be slower than Awaitable.
 // [ ] Need to test for file existence before attempting to load. Does the FileHandler already do this?
 // [ ] Test paths and folders
 // [ ] Test FileHandler.Exists()
