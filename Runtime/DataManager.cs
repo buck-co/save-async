@@ -108,27 +108,26 @@ namespace Buck.DataManagement
             // If the cancellation token has been requested at any point, return
             while (!Instance.destroyCancellationToken.IsCancellationRequested)
             {
-                var filenamesToPeek = new string[filenames.Length];
-                
                 // If these files are not in the queue, add them
-                if (!m_saveQueue.TryPeek(out filenamesToPeek))
+                if (!m_saveQueue.Contains(filenames))
                     m_saveQueue.Enqueue(filenames);
                 
                 // If we are already doing file I/O, wait
                 if (IsBusy)
-                    await Awaitable.EndOfFrameAsync();
+                    await Awaitable.NextFrameAsync();
                 
                 // Semaphore to prevent multiple saves from happening at once
                 m_isSaving = true;
                 
                 // Switch to a background thread
-                await Awaitable.BackgroundThreadAsync();
+                if (m_saveQueue.Count > 0)
+                    await Awaitable.BackgroundThreadAsync();
 
                 // Process the save queue until it's empty
                 while (m_saveQueue.Count > 0)
                 {
                     // Get the next set of files to save
-                    m_saveQueue.TryDequeue(out var filenamesToSave);
+                    string[] filenamesToSave = m_saveQueue.Dequeue();
 
                     // Get the saveables that correspond to the files, convert them to JSON, and save them
                     foreach (string filename in filenamesToSave)
@@ -188,21 +187,20 @@ namespace Buck.DataManagement
             // If the cancellation token has been requested at any point, return
             while (!Instance.destroyCancellationToken.IsCancellationRequested)
             {
-                var filenamesToPeek = new string[filenames.Length];
-                
                 // If these files are not in the queue, add them
-                if (!m_loadQueue.TryPeek(out filenamesToPeek))
+                if (!m_loadQueue.Contains(filenames))
                     m_loadQueue.Enqueue(filenames);
 
                 // If we are already doing file I/O, wait
                 if (IsBusy)
-                    await Awaitable.EndOfFrameAsync();
+                    await Awaitable.NextFrameAsync();
 
                 // Semaphore to prevent multiple loads from happening at once
                 m_isLoading = true;
-
+                
                 // Switch to a background thread
-                await Awaitable.BackgroundThreadAsync();
+                if (m_loadQueue.Count > 0)
+                    await Awaitable.BackgroundThreadAsync();
                 
                 // Create the list of SaveableDataWrappers to restore state from
                 List<SaveableDataWrapper> loadedDataList = new();
@@ -211,7 +209,7 @@ namespace Buck.DataManagement
                 while (m_loadQueue.Count > 0)
                 {
                     // Get the next set of files to load
-                    m_loadQueue.TryDequeue(out var filenamesToLoad);
+                    string[] filenamesToLoad = m_loadQueue.Dequeue();
 
                     // Load the files
                     foreach (string filename in filenamesToLoad)
@@ -268,10 +266,8 @@ namespace Buck.DataManagement
             // If the cancellation token has been requested at any point, return
             while (!Instance.destroyCancellationToken.IsCancellationRequested)
             {
-                var filenamesToPeek = new string[filenames.Length];
-                
                 // If these files are not in the queue, add them
-                if (!m_deleteQueue.TryPeek(out filenamesToPeek))
+                if (!m_deleteQueue.Contains(filenames))
                     m_deleteQueue.Enqueue(filenames);
 
                 // If we are already doing file I/O, wait
@@ -282,11 +278,12 @@ namespace Buck.DataManagement
                 m_isDeleting = true;
                 
                 // Switch to a background thread
-                await Awaitable.BackgroundThreadAsync();
+                if (m_deleteQueue.Count > 0)
+                    await Awaitable.BackgroundThreadAsync();
                 
                 while (m_deleteQueue.Count > 0)
                 {
-                    m_deleteQueue.TryDequeue(out var filenamesToDelete);
+                    string[] filenamesToDelete = m_deleteQueue.Dequeue();
                     
                     // Delete the files from disk
                     foreach (string filename in filenamesToDelete)
