@@ -22,6 +22,7 @@
 // [ ] Test FileHandler.Exists()
 // [ ] Add XML comments to all public methods
 // [/] Make better encryption (AES is WIP and encryption works, but something is wrong with decryption)
+// [ ] Should the collections be concurrent types?
 // [ ] Add more error handling (i.e. if a file isn't registered that's being saved to, etc.)
 // [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
 // [ ] Add save versions and data migrations
