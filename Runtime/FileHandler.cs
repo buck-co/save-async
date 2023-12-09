@@ -7,20 +7,13 @@ namespace Buck.DataManagement
     public class FileHandler
     {
         string m_persistentDataPath;
-        
-        CancellationTokenSource m_cancellationTokenSource;
-        CancellationToken DestroyCancellationToken
-            => m_cancellationTokenSource.Token;
 
         /// <summary>
         /// Creates a new FileHandler instance that stores Application.persistentDataPath, which can only be accessed on the main thread.
         /// Also creates a cancellation token for async methods.
         /// </summary>
         public FileHandler()
-        {
-            m_persistentDataPath = Application.persistentDataPath;
-            m_cancellationTokenSource = new CancellationTokenSource();
-        }
+            => m_persistentDataPath = Application.persistentDataPath;
 
         /// <summary>
         /// Returns the full path to a file in the persistent data path using the given path or filename.
@@ -43,7 +36,7 @@ namespace Buck.DataManagement
         /// <param name="pathOrFilename">The path or filename of the file to check.</param>
         public bool Exists(string pathOrFilename)
             => File.Exists(GetPath(pathOrFilename));
-        
+
         /// <summary>
         /// Writes the given content to a file at the given path or filename.
         /// This is an asynchronous method. If useBackgroundThread is true, it runs on a background thread, 
@@ -56,13 +49,9 @@ namespace Buck.DataManagement
         /// <param name="pathOrFilename">The path or filename of the file to write.</param>
         /// <param name="content">The string to write to the file.</param>
         /// <param name="useBackgroundThread">True by default. Set to false to run on the main thread.</param>
-        public async Awaitable WriteFile(string pathOrFilename, string content, bool useBackgroundThread = true)
-        {
-            if (useBackgroundThread)
-                await Awaitable.BackgroundThreadAsync();
-            
-            await File.WriteAllTextAsync(GetPath(pathOrFilename), content, DestroyCancellationToken);
-        }
+        /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
+        public async Awaitable WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken)
+            => await File.WriteAllTextAsync(GetPath(pathOrFilename), content, cancellationToken);
         
         /// <summary>
         /// Returns the contents of a file at the given path or filename.
@@ -75,13 +64,9 @@ namespace Buck.DataManagement
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to read.</param>
         /// <param name="useBackgroundThread">True by default. Set to false to run on the main thread.</param>
-        public async Awaitable<string> ReadFile(string pathOrFilename, bool useBackgroundThread = true)
-        {
-            if (useBackgroundThread)
-                await Awaitable.BackgroundThreadAsync();
-            
-            return await File.ReadAllTextAsync(GetPath(pathOrFilename), DestroyCancellationToken);
-        }
+        /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
+        public async Awaitable<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
+            => await File.ReadAllTextAsync(GetPath(pathOrFilename), cancellationToken);
         
         /// <summary>
         /// Erases a file at the given path or filename. The file will still exist on disk, but it will be empty.
@@ -92,8 +77,9 @@ namespace Buck.DataManagement
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to erase.</param>
-        public void Erase(string pathOrFilename) 
-            => File.WriteAllText(GetPath(pathOrFilename), string.Empty);
+        /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
+        public async Awaitable Erase(string pathOrFilename, CancellationToken cancellationToken) 
+            => await File.WriteAllTextAsync(GetPath(pathOrFilename), string.Empty, cancellationToken);
 
         /// <summary>
         /// Deletes a file at the given path or filename. This will remove the file from disk.
