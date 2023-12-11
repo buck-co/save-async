@@ -1,5 +1,7 @@
 using UnityEngine;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using System.IO;
 
 namespace Buck.DataManagement
@@ -7,7 +9,7 @@ namespace Buck.DataManagement
     public class FileHandler
     {
         string m_persistentDataPath;
-
+        
         /// <summary>
         /// Creates a new FileHandler instance that stores Application.persistentDataPath, which can only be accessed on the main thread.
         /// Also creates a cancellation token for async methods.
@@ -50,9 +52,9 @@ namespace Buck.DataManagement
         /// <param name="content">The string to write to the file.</param>
         /// <param name="useBackgroundThread">True by default. Set to false to run on the main thread.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public async Awaitable WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken)
+        public async Task WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken)
             => await File.WriteAllTextAsync(GetPath(pathOrFilename), content, cancellationToken);
-        
+
         /// <summary>
         /// Returns the contents of a file at the given path or filename.
         /// This is an asynchronous method. If useBackgroundThread is true, it runs on a background thread, 
@@ -65,7 +67,7 @@ namespace Buck.DataManagement
         /// <param name="pathOrFilename">The path or filename of the file to read.</param>
         /// <param name="useBackgroundThread">True by default. Set to false to run on the main thread.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public async Awaitable<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
+        public async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
             => await File.ReadAllTextAsync(GetPath(pathOrFilename), cancellationToken);
         
         /// <summary>
@@ -78,7 +80,7 @@ namespace Buck.DataManagement
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to erase.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public async Awaitable Erase(string pathOrFilename, CancellationToken cancellationToken) 
+        public async Task Erase(string pathOrFilename, CancellationToken cancellationToken) 
             => await File.WriteAllTextAsync(GetPath(pathOrFilename), string.Empty, cancellationToken);
 
         /// <summary>

@@ -14,7 +14,7 @@
 // [X] Figure out why Guid, TypeName, and Data are being added to the serialized JSON string
 // [ ] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
 // [X] Figure out why spamming output (especially on queue tests) shows 0ms on console output
-// [ ] Figure out why the first load test doesn't work
+// [X] Figure out why the first load test doesn't work
 // [ ] Check for empty files before loading
 // [X] Improve performance of loading by batching all of the wrapped saveables before switching back to the main thread
 // [ ] Simplify methods into a single file operation handler
@@ -64,7 +64,7 @@ namespace Buck.DataManagement
         static bool m_isLoading;
         static bool m_isDeleting;
         
-        static bool IsBusy => m_isSaving || m_isLoading || m_isDeleting;
+        public static bool IsBusy => m_isSaving || m_isLoading || m_isDeleting;
 
         static readonly JsonSerializerSettings m_jsonSerializerSettings = new()
         {
@@ -83,7 +83,7 @@ namespace Buck.DataManagement
             public string Guid;
             public object Data;
         }
-        
+
         void Awake()
             => m_fileHandler = new FileHandler();
 
@@ -98,6 +98,8 @@ namespace Buck.DataManagement
             else
                 Debug.LogError($"Saveable with GUID {saveable.Guid} already exists!");
         }
+        
+        
 
         /// <summary>
         /// Saves the files at the given paths or filenames.
@@ -112,6 +114,13 @@ namespace Buck.DataManagement
             // If the cancellation token has been requested at any point, return
             while (!Instance.destroyCancellationToken.IsCancellationRequested)
             {
+                if (m_saveables.Count == 0)
+                {
+                    Debug.LogError("No saveables have been registered! You must call RegisterSaveable on your" +
+                                   " ISaveable classes before using save, load, erase, or delete methods.", Instance.gameObject);
+                    return;
+                }
+                
                 // If these files are not in the queue, add them
                 if (!m_saveQueue.Contains(filenames))
                     m_saveQueue.Enqueue(filenames);
@@ -191,6 +200,13 @@ namespace Buck.DataManagement
             // If the cancellation token has been requested at any point, return
             while (!Instance.destroyCancellationToken.IsCancellationRequested)
             {
+                if (m_saveables.Count == 0)
+                {
+                    Debug.LogError("No saveables have been registered! You must call RegisterSaveable on your" +
+                                   " ISaveable classes before using save, load, erase, or delete methods.", Instance.gameObject);
+                    return;
+                }
+                
                 // If these files are not in the queue, add them
                 if (!m_loadQueue.Contains(filenames))
                     m_loadQueue.Enqueue(filenames);
@@ -270,6 +286,13 @@ namespace Buck.DataManagement
             // If the cancellation token has been requested at any point, return
             while (!Instance.destroyCancellationToken.IsCancellationRequested)
             {
+                if (m_saveables.Count == 0)
+                {
+                    Debug.LogError("No saveables have been registered! You must call RegisterSaveable on your" +
+                                   " ISaveable classes before using save, load, erase, or delete methods.", Instance.gameObject);
+                    return;
+                }
+                
                 // If these files are not in the queue, add them
                 if (!m_deleteQueue.Contains(filenames))
                     m_deleteQueue.Enqueue(filenames);
