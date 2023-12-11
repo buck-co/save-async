@@ -202,8 +202,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1751005054}
-        m_TargetAssemblyTypeName: Buck.DataManagementExample.GameManager, Assembly-CSharp
+      - m_Target: {fileID: 1751005056}
+        m_TargetAssemblyTypeName: Buck.DataManagementExample.DataManagerBenchmarks,
+          Assembly-CSharp
         m_MethodName: LoadGameData
         m_Mode: 1
         m_Arguments:
@@ -401,7 +402,6 @@ GameObject:
   - component: {fileID: 346742332}
   - component: {fileID: 346742331}
   - component: {fileID: 346742330}
-  - component: {fileID: 346742334}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -492,19 +492,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &346742334
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 346742329}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5dc6a4f58de5fa04096d7ff12f2a60f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_debugText: {fileID: 1339772107}
 --- !u!1 &385040791
 GameObject:
   m_ObjectHideFlags: 0
@@ -588,8 +575,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1751005054}
-        m_TargetAssemblyTypeName: Buck.DataManagementExample.GameManager, Assembly-CSharp
+      - m_Target: {fileID: 1751005056}
+        m_TargetAssemblyTypeName: Buck.DataManagementExample.DataManagerBenchmarks,
+          Assembly-CSharp
         m_MethodName: SaveGameData
         m_Mode: 1
         m_Arguments:
@@ -1433,8 +1421,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1751005054}
-        m_TargetAssemblyTypeName: Buck.DataManagementExample.GameManager, Assembly-CSharp
+      - m_Target: {fileID: 1751005056}
+        m_TargetAssemblyTypeName: Buck.DataManagementExample.DataManagerBenchmarks,
+          Assembly-CSharp
         m_MethodName: LoadQueueTest
         m_Mode: 1
         m_Arguments:
@@ -1642,8 +1631,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1751005054}
-        m_TargetAssemblyTypeName: Buck.DataManagementExample.GameManager, Assembly-CSharp
+      - m_Target: {fileID: 1751005056}
+        m_TargetAssemblyTypeName: Buck.DataManagementExample.DataManagerBenchmarks,
+          Assembly-CSharp
         m_MethodName: SaveQueueTest
         m_Mode: 1
         m_Arguments:
@@ -2080,13 +2070,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1664646199}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 189159b70572d5c429b387eabd86d89f, type: 3}
+  m_Script: {fileID: 11500000, guid: b556886628c710145996343d18385da5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_guidBytes: a7fc877e2a6a924c8bf6184b0ad8a82e
-  m_playerName: First
-  m_playerHealth: 1
-  m_position: {x: 1, y: 1, z: 1}
+  m_guidBytes: 9566c514475eb94d8dd3790348f09fc9
+  m_playerName: Steve
+  m_playerHealth: 100
+  m_position: {x: 1, y: 2, z: 3}
 --- !u!1 &1665658484
 GameObject:
   m_ObjectHideFlags: 0
@@ -2232,27 +2222,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1751005055}
-  - component: {fileID: 1751005054}
+  - component: {fileID: 1751005056}
   m_Layer: 0
-  m_Name: Save Tests
+  m_Name: Data Manager Benchmarks
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1751005054
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1751005053}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5dc6a4f58de5fa04096d7ff12f2a60f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_debugText: {fileID: 1339772107}
 --- !u!4 &1751005055
 Transform:
   m_ObjectHideFlags: 0
@@ -2268,6 +2245,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1751005056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1751005053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e85ff5ee49d322548b03340d4b8c5d4e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_debugText: {fileID: 1339772107}
 --- !u!1 &1779326920
 GameObject:
   m_ObjectHideFlags: 0
@@ -2351,8 +2341,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1751005054}
-        m_TargetAssemblyTypeName: Buck.DataManagementExample.GameManager, Assembly-CSharp
+      - m_Target: {fileID: 1751005056}
+        m_TargetAssemblyTypeName: Buck.DataManagementExample.DataManagerBenchmarks,
+          Assembly-CSharp
         m_MethodName: EraseGameData
         m_Mode: 1
         m_Arguments:
@@ -2620,8 +2611,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1751005054}
-        m_TargetAssemblyTypeName: Buck.DataManagementExample.GameManager, Assembly-CSharp
+      - m_Target: {fileID: 1751005056}
+        m_TargetAssemblyTypeName: Buck.DataManagementExample.DataManagerBenchmarks,
+          Assembly-CSharp
         m_MethodName: DeleteGameData
         m_Mode: 1
         m_Arguments:
@@ -2680,7 +2672,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2019224796}
   - component: {fileID: 2019224795}
-  - component: {fileID: 2019224794}
+  - component: {fileID: 2019224797}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -2688,26 +2680,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2019224794
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2019224793}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
 --- !u!114 &2019224795
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2738,6 +2710,36 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2019224797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2019224793}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SendPointerHoverToParent: 1
+  m_MoveRepeatDelay: 0.5
+  m_MoveRepeatRate: 0.1
+  m_XRTrackingOrigin: {fileID: 0}
+  m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_PointAction: {fileID: -1654692200621890270, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MoveAction: {fileID: -8784545083839296357, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_SubmitAction: {fileID: 392368643174621059, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_CancelAction: {fileID: 7727032971491509709, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_LeftClickAction: {fileID: 3001919216989983466, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MiddleClickAction: {fileID: -2185481485913320682, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_RightClickAction: {fileID: -4090225696740746782, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_ScrollWheelAction: {fileID: 6240969308177333660, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDevicePositionAction: {fileID: 6564999863303420839, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDeviceOrientationAction: {fileID: 7970375526676320489, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_DeselectOnBackgroundClick: 1
+  m_PointerBehavior: 0
+  m_CursorLockBehavior: 0
 --- !u!1 &2120769808
 GameObject:
   m_ObjectHideFlags: 0

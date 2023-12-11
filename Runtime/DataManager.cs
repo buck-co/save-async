@@ -15,7 +15,7 @@
 // [ ] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
 // [X] Figure out why spamming output (especially on queue tests) shows 0ms on console output
 // [X] Figure out why the first load test doesn't work
-// [ ] Check for empty files before loading
+// [X] Check for empty files before loading
 // [X] Improve performance of loading by batching all of the wrapped saveables before switching back to the main thread
 // [ ] Simplify methods into a single file operation handler
 // [X] Test if there is any benefit to using Tasks for the FileHandler so that Task.WhenAll can be used for batching
