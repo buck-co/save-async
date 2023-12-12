@@ -52,17 +52,21 @@ using Newtonsoft.Json;
 
 namespace Buck.DataManagement
 {
-    public class DataManager : Singleton<DataManager>
+    public class DataManager : Buck.DataManagement.Singleton<DataManager>
     {
-        [SerializeField, Tooltip("Enables encryption for save data." +
-                                 "Note, AES is the most secure encryption type but also takes significantly longer than XOR or no encryption." +
+        [SerializeField, Tooltip("Enables encryption for save data. " +
+                                 "XOR encryption is basic but extremely fast. Support for AES encryption is planned." +
                                  "Do not change the encryption type once the game has shipped!")]
         EncryptionType m_encryptionType = EncryptionType.None;
         
-        [SerializeField, Tooltip("The password used to encrypt and decrypt save data. This password should be unique to your game." +
+        [SerializeField, Tooltip("The password used to encrypt and decrypt save data. This password should be unique to your game. " +
                                  "Do not change the encryption password once the game has shipped!")]
         string m_encryptionPassword = "password";
-        
+
+        [SerializeField, Tooltip("Enables the use of background threads for saving and loading which greatly improves performance. " +
+                                 "However, only use this if you are not using any Unity objects in your save data!")]
+        bool m_useBackgroundThreads = true;
+
         enum FileOperationType
         {
             Save,
@@ -210,7 +214,8 @@ namespace Buck.DataManagement
                 IsBusy = true;
                 
                 // Switch to a background thread to process the queue
-                await Awaitable.BackgroundThreadAsync();
+                if (Instance.m_useBackgroundThreads)
+                    await Awaitable.BackgroundThreadAsync();
 
                 while (m_fileOperationQueue.Count > 0)
                 {
@@ -329,6 +334,42 @@ namespace Buck.DataManagement
             }
 
             return JsonConvert.SerializeObject(wrappedSaveables, m_jsonSerializerSettings);
+        }
+        
+        /// <summary>
+        /// Sets the given Guid byte array to a new Guid byte array if it is null, empty, or an empty Guid.
+        /// </summary>
+        public static byte[] GetSerializableGuid(ref byte[] guidBytes)
+        {
+            // If the byte array is null, return a new Guid byte array.
+            if (guidBytes == null)
+            {
+                Debug.Log("Guid byte array is null. Generating a new Guid.");
+                guidBytes = System.Guid.NewGuid().ToByteArray();
+            }
+            
+            // If the byte array is empty, return a new Guid byte array.
+            if (guidBytes.Length == 0)
+            {
+                Debug.Log("Guid byte array is empty. Generating a new Guid.");
+                guidBytes = System.Guid.NewGuid().ToByteArray();
+            }
+            
+            // If the byte array is not empty, but is not 16 bytes long, throw an exception.
+            if (guidBytes.Length != 16)
+                throw new System.ArgumentException("Guid byte array must be 16 bytes long.");
+
+            // If the byte array is not an empty Guid, return a new Guid byte array.
+            // Otherwise, return the given Guid byte array.
+            System.Guid guidObj = new System.Guid(guidBytes);
+
+            if (guidObj == System.Guid.Empty)
+            {
+                Debug.Log("Guid is empty. Generating a new Guid.");
+                guidBytes = System.Guid.NewGuid().ToByteArray();
+            }
+            
+            return guidBytes;
         }
     }
 }

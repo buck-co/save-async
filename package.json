@@ -26,9 +26,7 @@
     "url": "https://buck.co/"
   },
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "co.buck.basics": "https://github.com/buck-co/unity-pkg-buck-basics.git#v1.0.8",
-    "jillejr.newtonsoft.json-for-unity.converters": "https://github.com/jilleJr/Newtonsoft.Json-for-Unity.Converters.git#v1.5.1"
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
   },
   "enableLockFile": true,
   "resolutionStrategy": "highest",
