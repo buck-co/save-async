@@ -174,6 +174,44 @@ namespace Buck.DataManagement
         public static async Awaitable EraseAsync(string[] filenames)
             => await DoFileOperation(FileOperationType.Erase, filenames);
         
+        /// <summary>
+        /// Sets the given Guid byte array to a new Guid byte array if it is null, empty, or an empty Guid.
+        /// </summary>
+        /// <param name="guidBytes">The byte array (passed by reference) that you would like to fill with a serializable guid.</param>
+        /// <returns>The same byte array that contains the serializable guid, but returned from the method.</returns>
+        public static byte[] GetSerializableGuid(ref byte[] guidBytes)
+        {
+            // If the byte array is null, return a new Guid byte array.
+            if (guidBytes == null)
+            {
+                Debug.Log("Guid byte array is null. Generating a new Guid.");
+                guidBytes = Guid.NewGuid().ToByteArray();
+            }
+            
+            // If the byte array is empty, return a new Guid byte array.
+            if (guidBytes.Length == 0)
+            {
+                Debug.Log("Guid byte array is empty. Generating a new Guid.");
+                guidBytes = Guid.NewGuid().ToByteArray();
+            }
+            
+            // If the byte array is not empty, but is not 16 bytes long, throw an exception.
+            if (guidBytes.Length != 16)
+                throw new ArgumentException("Guid byte array must be 16 bytes long.");
+
+            // If the byte array is not an empty Guid, return a new Guid byte array.
+            // Otherwise, return the given Guid byte array.
+            Guid guidObj = new Guid(guidBytes);
+
+            if (guidObj == Guid.Empty)
+            {
+                Debug.Log("Guid is empty. Generating a new Guid.");
+                guidBytes = Guid.NewGuid().ToByteArray();
+            }
+            
+            return guidBytes;
+        }
+        
         #endregion
         
         static async Awaitable DoFileOperation(FileOperationType operationType, string[] filenames)
@@ -322,42 +360,6 @@ namespace Buck.DataManagement
             }
 
             return JsonConvert.SerializeObject(wrappedSaveables, m_jsonSerializerSettings);
-        }
-        
-        /// <summary>
-        /// Sets the given Guid byte array to a new Guid byte array if it is null, empty, or an empty Guid.
-        /// </summary>
-        public static byte[] GetSerializableGuid(ref byte[] guidBytes)
-        {
-            // If the byte array is null, return a new Guid byte array.
-            if (guidBytes == null)
-            {
-                Debug.Log("Guid byte array is null. Generating a new Guid.");
-                guidBytes = Guid.NewGuid().ToByteArray();
-            }
-            
-            // If the byte array is empty, return a new Guid byte array.
-            if (guidBytes.Length == 0)
-            {
-                Debug.Log("Guid byte array is empty. Generating a new Guid.");
-                guidBytes = Guid.NewGuid().ToByteArray();
-            }
-            
-            // If the byte array is not empty, but is not 16 bytes long, throw an exception.
-            if (guidBytes.Length != 16)
-                throw new ArgumentException("Guid byte array must be 16 bytes long.");
-
-            // If the byte array is not an empty Guid, return a new Guid byte array.
-            // Otherwise, return the given Guid byte array.
-            Guid guidObj = new Guid(guidBytes);
-
-            if (guidObj == Guid.Empty)
-            {
-                Debug.Log("Guid is empty. Generating a new Guid.");
-                guidBytes = Guid.NewGuid().ToByteArray();
-            }
-            
-            return guidBytes;
         }
     }
 }
