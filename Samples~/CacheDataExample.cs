@@ -10,7 +10,7 @@ namespace Buck.DataManagementExample
         // Things needed for this class to be ISaveable
         [SerializeField, HideInInspector] byte[] m_guidBytes;
         [ShowInInspector]
-        public Guid Guid => new(ExtensionMethods.GetSerializableGuid(ref m_guidBytes));
+        public Guid Guid => new(DataManager.GetSerializableGuid(ref m_guidBytes));
         
         public string FileName => Files.SomeFile;
 

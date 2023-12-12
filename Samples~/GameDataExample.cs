@@ -20,7 +20,7 @@ namespace Buck.DataManagementExample
         // Things needed for this class to be ISaveable
         [SerializeField, HideInInspector] byte[] m_guidBytes;
         public Guid Guid => new(m_guidBytes);
-        void OnValidate() => ExtensionMethods.GetSerializableGuid(ref m_guidBytes);
+        void OnValidate() => DataManager.GetSerializableGuid(ref m_guidBytes);
         public string FileName => Files.GameData;
 
         // Your game data
