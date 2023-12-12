@@ -12,29 +12,39 @@
 // [X] Add JsonConverters for Vector3 and other common Unity types (done via Newtonsoft.Json.UnityConverters)
 // [X] Figure out how to support custom Unity types within each class's generic ISaveable object type (maybe use inheritance?)
 // [X] Figure out why Guid, TypeName, and Data are being added to the serialized JSON string
-// [ ] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
 // [X] Figure out why spamming output (especially on queue tests) shows 0ms on console output
 // [X] Figure out why the first load test doesn't work
 // [X] Check for empty files before loading
 // [X] Improve performance of loading by batching all of the wrapped saveables before switching back to the main thread
-// [ ] Simplify methods into a single file operation handler
+// [X] Simplify methods into a single file operation handler
 // [X] Test if there is any benefit to using Tasks for the FileHandler so that Task.WhenAll can be used for batching
 //     - Result: It does not, and in fact seems to be slower than Awaitable.
-// [ ] Need to test for file existence before attempting to load. Does the FileHandler already do this?
+//     - Actually... This is indeed necessary to support async/await on the FileHandler using the File class.
+// [X] Add XML comments to all public methods
+// [X] Test FileHandler.Exists()
+// [X] Need to test for file existence before attempting to load. Does the FileHandler already do this?
+// [ ] Add comments and documentation for the samples
+// [ ] Update Github readme
+// [ ] Clean up and test in a new project for first tagged release of 0.3.0 (also maybe remove AES encryption for now)
+// [ ] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
 // [ ] Test paths and folders
-// [ ] Test FileHandler.Exists()
-// [ ] Add XML comments to all public methods
-// [/] Make better encryption (AES is WIP and encryption works, but something is wrong with decryption)
+// [ ] Add AES encryption
 // [ ] Should the collections be concurrent types?
 // [ ] Add more error handling (i.e. if a file isn't registered that's being saved to, etc.)
 // [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
 // [ ] Add save versions and data migrations
-// [ ] Create a debug visual that can be used for testing on devices
+// [X] Create a debug visual that can be used for testing on devices
+// [ ] Create a loading bar prefab that can be used for loading screens
 // [ ] Add data adapters for platforms where necessary (could be inherited from FileHandler)
 // [ ] Test on other platforms, i.e. PlayStation, Xbox, Switch, iOS, Android
+// [ ] Add support for multiple save slots
+// [ ] Add support for multiple users? (particularly on Steam)
 // [ ] Add support for save backups
+// [ ] Add support for save cloud syncing (necessary for cross-platform saves beyond just Steam)
 // [ ] Write tests
         
+// [ ] Figure out why erase doesn't work
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -53,29 +63,40 @@ namespace Buck.DataManagement
                                  "Do not change the encryption password once the game has shipped!")]
         string m_encryptionPassword = "password";
         
+        enum FileOperationType
+        {
+            Save,
+            Load,
+            Delete,
+            Erase
+        }
+        
+        struct FileOperation
+        {
+            public FileOperationType Type;
+            public string[] Filenames;
+
+            public FileOperation(FileOperationType operationType, string[] filenames)
+            {
+                Type = operationType;
+                Filenames = filenames;
+            }
+        }
+        
         static FileHandler m_fileHandler;
         static Dictionary<Guid, ISaveable> m_saveables = new();
+        static List<SaveableDataWrapper> m_loadedSaveables = new();
+        static Queue<FileOperation> m_fileOperationQueue = new();
         static HashSet<string> m_files = new();
-        static Queue<string[]> m_saveQueue = new();
-        static Queue<string[]> m_loadQueue = new();
-        static Queue<string[]> m_deleteQueue = new();
         
-        static bool m_isSaving;
-        static bool m_isLoading;
-        static bool m_isDeleting;
+        static bool m_isInitialized;
         
-        public static bool IsBusy => m_isSaving || m_isLoading || m_isDeleting;
-
         static readonly JsonSerializerSettings m_jsonSerializerSettings = new()
         {
             Formatting = Formatting.Indented,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             TypeNameHandling = TypeNameHandling.Auto
         };
-        
-        public static int SaveQueueCount => m_saveQueue.Count;
-        public static int LoadQueueCount => m_loadQueue.Count;
-        public static int DeleteQueueCount => m_deleteQueue.Count;
 
         [Serializable]
         public class SaveableDataWrapper
@@ -85,7 +106,23 @@ namespace Buck.DataManagement
         }
 
         void Awake()
-            => m_fileHandler = new FileHandler();
+            => Initialize();
+
+        static void Initialize()
+        {
+            if (m_isInitialized)
+                return;
+            
+            m_fileHandler = new FileHandler();
+            m_isInitialized = true;
+        }
+
+        #region DataManager API
+
+        /// <summary>
+        /// Boolean indicating whether or not the DataManager is currently busy with a file operation.
+        /// </summary>
+        public static bool IsBusy { get; private set; }
 
         /// <summary>
         /// Registers an ISaveable and its file with the DataManager for saving and loading.
@@ -98,8 +135,6 @@ namespace Buck.DataManagement
             else
                 Debug.LogError($"Saveable with GUID {saveable.Guid} already exists!");
         }
-        
-        
 
         /// <summary>
         /// Saves the files at the given paths or filenames.
@@ -110,7 +145,50 @@ namespace Buck.DataManagement
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to save.</param>
         public static async Awaitable SaveAsync(string[] filenames)
+            => await DoFileOperation(FileOperationType.Save, filenames);
+        
+        /// <summary>
+        /// Loads the files at the given paths or filenames.
+        /// <code>
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
+        /// </code>
+        /// </summary>
+        /// <param name="filenames">The array of paths or filenames to load.</param>
+        public static async Awaitable LoadAsync(string[] filenames)
+            => await DoFileOperation(FileOperationType.Load, filenames);
+
+        /// <summary>
+        /// Deletes the files at the given paths or filenames. Each file will be removed from disk.
+        /// Use <see cref="EraseAsync(string[])"/> to fill each file with an empty string without removing it from disk.
+        /// <code>
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
+        /// </code>
+        /// </summary>
+        /// <param name="filenames">The array of paths or filenames to delete.</param>
+        public static async Awaitable DeleteAsync(string[] filenames)
+            => await DoFileOperation(FileOperationType.Delete, filenames);
+        
+        /// <summary>
+        /// Erases the files at the given paths or filenames. Each file will still exist on disk, but it will be empty.
+        /// Use <see cref="DeleteAsync(string[], bool)"/> to remove the file from disk.
+        /// <code>
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
+        /// </code>
+        /// </summary>
+        /// <param name="filenames">The array of paths or filenames to erase.</param>
+        public static async Awaitable EraseAsync(string[] filenames)
+            => await DoFileOperation(FileOperationType.Erase, filenames);
+        
+        #endregion
+        
+        static async Awaitable DoFileOperation(FileOperationType operationType, string[] filenames)
         {
+            // Initialize the DataManager if it hasn't been already
+            Initialize();
+            
             // If the cancellation token has been requested at any point, return
             while (!Instance.destroyCancellationToken.IsCancellationRequested)
             {
@@ -121,48 +199,114 @@ namespace Buck.DataManagement
                     return;
                 }
                 
-                // If these files are not in the queue, add them
-                if (!m_saveQueue.Contains(filenames))
-                    m_saveQueue.Enqueue(filenames);
-                
-                // If we are already doing file I/O, wait
+                // Create the file operation struct and queue it
+                m_fileOperationQueue.Enqueue(new FileOperation(operationType, filenames));
+
+                // If we are already doing file I/O, return
                 if (IsBusy)
-                    await Awaitable.NextFrameAsync();
-                
-                // Semaphore to prevent multiple saves from happening at once
-                m_isSaving = true;
-                
-                // Switch to a background thread
-                if (m_saveQueue.Count > 0)
-                    await Awaitable.BackgroundThreadAsync();
+                    return;
 
-                // Process the save queue until it's empty
-                while (m_saveQueue.Count > 0)
+                // Prevent duplicate file operations from processing the queue
+                IsBusy = true;
+                
+                // Switch to a background thread to process the queue
+                await Awaitable.BackgroundThreadAsync();
+
+                while (m_fileOperationQueue.Count > 0)
                 {
-                    // Get the next set of files to save
-                    string[] filenamesToSave = m_saveQueue.Dequeue();
-
-                    // Get the saveables that correspond to the files, convert them to JSON, and save them
-                    foreach (string filename in filenamesToSave)
+                    m_fileOperationQueue.TryDequeue(out FileOperation fileOperation);
+                    switch (fileOperation.Type)
                     {
-                        List<ISaveable> saveablesToSave = new();
-                        
-                        // Gather all of the saveables that correspond to the file
-                        foreach (ISaveable saveable in m_saveables.Values)
-                            if (saveable.FileName == filename)
-                                saveablesToSave.Add(saveable);
-                        
-                        string json = SaveablesToJson(saveablesToSave);
-                        json = Encrpytion.Encrypt(json, Instance.m_encryptionPassword, Instance.m_encryptionType);
-                        await m_fileHandler.WriteFile(filename, json, Instance.destroyCancellationToken);
+                        case FileOperationType.Save:
+                            await SaveFileOperationAsync(fileOperation.Filenames);
+                            break;
+                        case FileOperationType.Load:
+                            await LoadFileOperationAsync(fileOperation.Filenames);
+                            break;
+                        case FileOperationType.Delete:
+                            await DeleteFileOperationAsync(fileOperation.Filenames);
+                            break;
+                        case FileOperationType.Erase:
+                            await DeleteFileOperationAsync(fileOperation.Filenames, true);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+
+                // Switch back to the main thread before accessing Unity objects and setting IsBusy to false
+                await Awaitable.MainThreadAsync();
+                
+                // If anything was populated in the loadedDataList, restore state
+                // This is done here because it's better to process the whole queue before switching back to the main thread.
+                if (m_loadedSaveables.Count > 0)
+                {
+                    // Restore state for each ISaveable
+                    foreach (SaveableDataWrapper wrappedData in m_loadedSaveables)
+                    {
+                        var guid = new Guid(wrappedData.Guid);
+
+                        var saveable = m_saveables[guid];
+
+                        if (saveable != null)
+                            saveable.RestoreState(wrappedData.Data);
                     }
                 }
                 
-                m_isSaving = false;
+                // Clear the list before the next iteration
+                m_loadedSaveables.Clear();
+
+                IsBusy = false;
                 
                 // Return, otherwise we will loop forever
                 return;
             }
+        }
+
+        static async Awaitable SaveFileOperationAsync(string[] filenames)
+        {
+            // Get the ISaveables that correspond to the files, convert them to JSON, and save them
+            foreach (string filename in filenames)
+            {
+                List<ISaveable> saveablesToSave = new();
+                        
+                // Gather all of the saveables that correspond to the file
+                foreach (ISaveable saveable in m_saveables.Values)
+                    if (saveable.FileName == filename)
+                        saveablesToSave.Add(saveable);
+                        
+                string json = SaveablesToJson(saveablesToSave);
+                json = Encryption.Encrypt(json, Instance.m_encryptionPassword, Instance.m_encryptionType);
+                await m_fileHandler.WriteFile(filename, json, Instance.destroyCancellationToken);
+            }
+        }
+
+        static async Awaitable LoadFileOperationAsync(string[] filenames)
+        {
+            // Load the files
+            foreach (string filename in filenames)
+            {
+                string fileContent = await m_fileHandler.ReadFile(filename, Instance.destroyCancellationToken);
+                        
+                // If the file is empty, skip it
+                if (string.IsNullOrEmpty(fileContent))
+                    continue;
+                        
+                string json = Encryption.Decrypt(fileContent, Instance.m_encryptionPassword, Instance.m_encryptionType);
+                        
+                // Deserialize the JSON data to List of SaveableDataWrapper
+                m_loadedSaveables.AddRange(JsonConvert.DeserializeObject<List<SaveableDataWrapper>>(json, m_jsonSerializerSettings));
+            }
+        }
+        
+        static async Awaitable DeleteFileOperationAsync(string[] filenames, bool eraseAndKeepFile = false)
+        {
+            // Delete the files from disk
+            foreach (string filename in filenames)
+                if (eraseAndKeepFile)
+                    await m_fileHandler.Erase(filename, Instance.destroyCancellationToken);
+                else
+                    m_fileHandler.Delete(filename);
         }
         
         static string SaveablesToJson(List<ISaveable> saveables)
@@ -186,157 +330,5 @@ namespace Buck.DataManagement
 
             return JsonConvert.SerializeObject(wrappedSaveables, m_jsonSerializerSettings);
         }
-        
-        /// <summary>
-        /// Loads the files at the given paths or filenames.
-        /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
-        /// </code>
-        /// </summary>
-        /// <param name="filenames">The array of paths or filenames to load.</param>
-        public static async Awaitable LoadAsync(string[] filenames)
-        {
-            // If the cancellation token has been requested at any point, return
-            while (!Instance.destroyCancellationToken.IsCancellationRequested)
-            {
-                if (m_saveables.Count == 0)
-                {
-                    Debug.LogError("No saveables have been registered! You must call RegisterSaveable on your" +
-                                   " ISaveable classes before using save, load, erase, or delete methods.", Instance.gameObject);
-                    return;
-                }
-                
-                // If these files are not in the queue, add them
-                if (!m_loadQueue.Contains(filenames))
-                    m_loadQueue.Enqueue(filenames);
-
-                // If we are already doing file I/O, wait
-                if (IsBusy)
-                    await Awaitable.NextFrameAsync();
-
-                // Semaphore to prevent multiple loads from happening at once
-                m_isLoading = true;
-                
-                // Switch to a background thread
-                if (m_loadQueue.Count > 0)
-                    await Awaitable.BackgroundThreadAsync();
-                
-                // Create the list of SaveableDataWrappers to restore state from
-                List<SaveableDataWrapper> loadedDataList = new();
-                
-                // Process the load queue until it's empty
-                while (m_loadQueue.Count > 0)
-                {
-                    // Get the next set of files to load
-                    string[] filenamesToLoad = m_loadQueue.Dequeue();
-
-                    // Load the files
-                    foreach (string filename in filenamesToLoad)
-                    {
-                        string fileContent = await m_fileHandler.ReadFile(filename, Instance.destroyCancellationToken);
-                        
-                        // If the file is empty, skip it
-                        if (string.IsNullOrEmpty(fileContent))
-                        {
-                            Debug.LogWarning($"Attempted to load {filename} but the file was empty.");
-                            continue;
-                        }
-                        
-                        string json = Encrpytion.Decrypt(fileContent, Instance.m_encryptionPassword, Instance.m_encryptionType);
-                        
-                        // Deserialize the JSON data to List of SaveableDataWrapper
-                        loadedDataList.AddRange(JsonConvert.DeserializeObject<List<SaveableDataWrapper>>(json, m_jsonSerializerSettings));
-                    }
-                }
-                
-                // Switch back to the main thread before accessing Unity objects
-                await Awaitable.MainThreadAsync();
-                
-                // Restore state for each saveable
-                foreach (SaveableDataWrapper wrappedData in loadedDataList)
-                {
-                    var guid = new Guid(wrappedData.Guid);
-
-                    var saveable = m_saveables[guid];
-
-                    if (saveable != null)
-                        saveable.RestoreState(wrappedData.Data);
-                }
-                
-                m_isLoading = false;
-
-                // Return, otherwise we will loop forever
-                return;
-            }
-        }
-
-        /// <summary>
-        /// Deletes the files at the given paths or filenames. Each file will be removed from disk.
-        /// Use <see cref="EraseAsync(string[])"/> to fill each file with an empty string without removing it from disk.
-        /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
-        /// </code>
-        /// </summary>
-        /// <param name="filenames">The array of paths or filenames to delete.</param>
-        /// <param name="eraseAndKeepFile">If true, files will only be erased. If false, files will be removed from disk.</param>
-        public static async Awaitable DeleteAsync(string[] filenames, bool eraseAndKeepFile = false)
-        {
-            // If the cancellation token has been requested at any point, return
-            while (!Instance.destroyCancellationToken.IsCancellationRequested)
-            {
-                if (m_saveables.Count == 0)
-                {
-                    Debug.LogError("No saveables have been registered! You must call RegisterSaveable on your" +
-                                   " ISaveable classes before using save, load, erase, or delete methods.", Instance.gameObject);
-                    return;
-                }
-                
-                // If these files are not in the queue, add them
-                if (!m_deleteQueue.Contains(filenames))
-                    m_deleteQueue.Enqueue(filenames);
-
-                // If we are already doing file I/O, wait
-                if (IsBusy)
-                    await Awaitable.NextFrameAsync();
-
-                // Semaphore to prevent multiple deletes from happening at once
-                m_isDeleting = true;
-                
-                // Switch to a background thread
-                if (m_deleteQueue.Count > 0)
-                    await Awaitable.BackgroundThreadAsync();
-                
-                while (m_deleteQueue.Count > 0)
-                {
-                    string[] filenamesToDelete = m_deleteQueue.Dequeue();
-                    
-                    // Delete the files from disk
-                    foreach (string filename in filenamesToDelete)
-                        if (eraseAndKeepFile)
-                            await m_fileHandler.Erase(filename, Instance.destroyCancellationToken);
-                        else
-                            m_fileHandler.Delete(filename);
-                }
-
-                m_isDeleting = false;
-                
-                // Return, otherwise we will loop forever
-                return;
-            }
-        }
-        
-        /// <summary>
-        /// Erases the files at the given paths or filenames. Each file will still exist on disk, but it will be empty.
-        /// Use <see cref="DeleteAsync(string[], bool)"/> to remove the file from disk.
-        /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
-        /// </code>
-        /// </summary>
-        /// <param name="filenames">The array of paths or filenames to erase.</param>
-        public static async Awaitable EraseAsync(string[] filenames)
-            => await DeleteAsync(filenames, true);
     }
 }

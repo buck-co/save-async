@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
@@ -68,7 +67,26 @@ namespace Buck.DataManagement
         /// <param name="useBackgroundThread">True by default. Set to false to run on the main thread.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
         public async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
-            => await File.ReadAllTextAsync(GetPath(pathOrFilename), cancellationToken);
+        {
+            // If the file does not exist, return an empty string and log a warning.
+            if (!Exists(pathOrFilename))
+            {
+                Debug.LogWarning($"FileHandler: File does not exist at path or filename: {pathOrFilename}" +
+                                 $"\nReturning empty string and no data will be loaded.");
+                return string.Empty;
+            }
+                
+            string fileContent = await File.ReadAllTextAsync(GetPath(pathOrFilename), cancellationToken);
+            
+            // If the file is empty, return an empty string and log a warning.
+            if (string.IsNullOrEmpty(fileContent))
+            {
+                Debug.LogWarning($"FileHandler: Attempted to load {pathOrFilename} but the file was empty.");
+                return string.Empty;
+            }
+
+            return fileContent;
+        }
         
         /// <summary>
         /// Erases a file at the given path or filename. The file will still exist on disk, but it will be empty.
@@ -80,8 +98,8 @@ namespace Buck.DataManagement
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to erase.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public async Task Erase(string pathOrFilename, CancellationToken cancellationToken) 
-            => await File.WriteAllTextAsync(GetPath(pathOrFilename), string.Empty, cancellationToken);
+        public async Task Erase(string pathOrFilename, CancellationToken cancellationToken)
+            => await WriteFile(pathOrFilename, string.Empty, cancellationToken);
 
         /// <summary>
         /// Deletes a file at the given path or filename. This will remove the file from disk.

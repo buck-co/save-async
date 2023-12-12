@@ -21,13 +21,10 @@ namespace Buck.DataManagementExample
         [SerializeField, HideInInspector] byte[] m_guidBytes;
         public Guid Guid => new(m_guidBytes);
         void OnValidate() => ExtensionMethods.GetSerializableGuid(ref m_guidBytes);
-
         public string FileName => Files.GameData;
 
-        public Type SaveDataType => typeof(MyCustomData);
-        
         // Your game data
-        [SerializeField] string m_playerName = "Steve";
+        [SerializeField] string m_playerName = "The Player Name";
         [SerializeField] int m_playerHealth = 100;
         [SerializeField] Vector3 m_position = new Vector3(1f, 2f, 3f);
         

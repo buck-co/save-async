@@ -8,10 +8,10 @@ namespace Buck.DataManagement
     {
         None,
         XOR,
-        AES
+        //AES
     }
     
-    public class Encrpytion
+    public class Encryption
     {
         public static string Encrypt(string content, string password, EncryptionType encryptionType)
         {
@@ -21,8 +21,8 @@ namespace Buck.DataManagement
                     return content;
                 case EncryptionType.XOR:
                     return EncryptDecryptXOR(content, password);
-                case EncryptionType.AES:
-                    return EncryptStringAES(content, password);
+                /*case EncryptionType.AES:
+                    return EncryptStringToBytes_Aes(content, password);*/
                 default:
                     throw new ArgumentOutOfRangeException(nameof(encryptionType), encryptionType, null);
             }
@@ -36,8 +36,8 @@ namespace Buck.DataManagement
                     return content;
                 case EncryptionType.XOR:
                     return EncryptDecryptXOR(content, password);
-                case EncryptionType.AES:
-                    return DecryptStringAES(content, password);
+                /*case EncryptionType.AES:
+                    return DecryptStringFromBytes_Aes(content, password);*/
                 default:
                     throw new ArgumentOutOfRangeException(nameof(encryptionType), encryptionType, null);
             }
@@ -51,92 +51,73 @@ namespace Buck.DataManagement
             return newContent;
         }
         
-        const int KeySize = 256; // 256 bits for AES key
-        const int Iterations = 10000; // Number of iterations for PBKDF2
-
-        /// <summary>
-        /// Encrypts a plain text string using AES encryption with a given password.
-        /// </summary>
-        /// <param name="plainText">The text to be encrypted.</param>
-        /// <param name="password">The password used for generating the encryption key.</param>
-        /// <returns>The encrypted text in Base64 format.</returns>
-        /// <remarks>
-        /// This method generates a random salt and IV, uses PBKDF2 to derive an AES key from the password,
-        /// and then encrypts the text using AES. The salt and IV are prepended to the encrypted data.
-        /// </remarks>
-        static string EncryptStringAES(string plainText, string password)
+        /*static byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key, byte[] IV)
         {
-            var salt = GenerateRandomBytes(16); // Generate a 128-bit salt
+            // Check arguments.
+            if (plainText == null || plainText.Length <= 0)
+                throw new ArgumentNullException("plainText");
+            if (Key == null || Key.Length <= 0)
+                throw new ArgumentNullException("Key");
+            if (IV == null || IV.Length <= 0)
+                throw new ArgumentNullException("IV");
+            byte[] encrypted;
 
-            using var key = new Rfc2898DeriveBytes(password, salt, Iterations);
-            var aesKey = key.GetBytes(KeySize / 8);
-            var aesIV = GenerateRandomBytes(16); // Generate a 128-bit IV
-
+            // Create an Aes object
+            // with the specified key and IV.
             using Aes aesAlg = Aes.Create();
-            aesAlg.Key = aesKey;
-            aesAlg.IV = aesIV;
+            aesAlg.Key = Key;
+            aesAlg.IV = IV;
 
+            // Create an encryptor to perform the stream transform.
             ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
+            // Create the streams used for encryption.
             using MemoryStream msEncrypt = new MemoryStream();
-            // Prepend salt and IV to the encrypted data
-            msEncrypt.Write(salt, 0, salt.Length);
-            msEncrypt.Write(aesIV, 0, aesIV.Length);
-
             using CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write);
-            using StreamWriter swEncrypt = new StreamWriter(csEncrypt);
-            swEncrypt.Write(plainText);
-            return Convert.ToBase64String(msEncrypt.ToArray());
+            using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+            {
+                // Write all data to the stream.
+                swEncrypt.Write(plainText);
+            }
+            encrypted = msEncrypt.ToArray();
+
+            // Return the encrypted bytes from the memory stream.
+            return encrypted;
         }
 
-        /// <summary>
-        /// Decrypts a Base64 encoded string that was encrypted using the AES algorithm.
-        /// </summary>
-        /// <param name="cipherText">The encrypted text in Base64 format.</param>
-        /// <param name="password">The password used for generating the encryption key.</param>
-        /// <returns>The decrypted plain text.</returns>
-        /// <remarks>
-        /// This method extracts the salt and IV that were prepended to the encrypted data,
-        /// uses PBKDF2 with the extracted salt and provided password to derive the AES key,
-        /// and then decrypts the text using AES.
-        /// </remarks>
-        static string DecryptStringAES(string cipherText, string password)
+        static string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
         {
-            byte[] cipherBytes = Convert.FromBase64String(cipherText);
-            using MemoryStream msDecrypt = new MemoryStream(cipherBytes);
-            byte[] salt = new byte[16];
-            byte[] iv = new byte[16];
-            msDecrypt.Read(salt, 0, salt.Length);
-            msDecrypt.Read(iv, 0, iv.Length);
+            // Check arguments.
+            if (cipherText == null || cipherText.Length <= 0)
+                throw new ArgumentNullException("cipherText");
+            if (Key == null || Key.Length <= 0)
+                throw new ArgumentNullException("Key");
+            if (IV == null || IV.Length <= 0)
+                throw new ArgumentNullException("IV");
 
-            using var key = new Rfc2898DeriveBytes(password, salt, Iterations);
-            var aesKey = key.GetBytes(KeySize / 8);
+            // Declare the string used to hold
+            // the decrypted text.
+            string plaintext = null;
 
+            // Create an Aes object
+            // with the specified key and IV.
             using Aes aesAlg = Aes.Create();
-            aesAlg.Key = aesKey;
-            aesAlg.IV = iv;
+            aesAlg.Key = Key;
+            aesAlg.IV = IV;
 
+            // Create a decryptor to perform the stream transform.
             ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
 
+            // Create the streams used for decryption.
+            using MemoryStream msDecrypt = new MemoryStream(cipherText);
             using CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
             using StreamReader srDecrypt = new StreamReader(csDecrypt);
-            return srDecrypt.ReadToEnd();
-        }
+            
+            // Read the decrypted bytes from the decrypting stream
+            // and place them in a string.
+            plaintext = srDecrypt.ReadToEnd();
 
-        /// <summary>
-        /// Generates a random byte array of a specified length using a cryptographic random number generator.
-        /// </summary>
-        /// <param name="length">The desired length of the random byte array.</param>
-        /// <returns>A byte array containing cryptographically strong random values.</returns>
-        /// <remarks>
-        /// This method is primarily used for generating random salts and IVs for cryptographic purposes.
-        /// </remarks>
-        static byte[] GenerateRandomBytes(int length)
-        {
-            using var rng = new RNGCryptoServiceProvider();
-            byte[] randomNumber = new byte[length];
-            rng.GetBytes(randomNumber);
-            return randomNumber;
-        }
+            return plaintext;
+        }*/
     }
 }

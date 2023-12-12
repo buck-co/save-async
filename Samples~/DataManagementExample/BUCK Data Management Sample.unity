@@ -2074,7 +2074,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_guidBytes: 9566c514475eb94d8dd3790348f09fc9
-  m_playerName: Steve
+  m_playerName: The Player Name
   m_playerHealth: 100
   m_position: {x: 1, y: 2, z: 3}
 --- !u!1 &1665658484

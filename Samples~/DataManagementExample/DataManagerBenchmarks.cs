@@ -18,7 +18,7 @@ namespace Buck.DataManagementExample
             Files.GameData
         };
         
-        async void AddDebugOutput(string output)
+        async Awaitable AddDebugOutput(string output)
         {
             // If the list is too long, remove the oldest entry
             if (m_debugOutput.Count > 30)
@@ -83,12 +83,10 @@ namespace Buck.DataManagementExample
             
             try
             {
-                Awaitable.BackgroundThreadAsync();
-                
                 for (int i = 0; i < 10; i++)
                     DataManager.SaveAsync(m_filenames);
 
-                while (DataManager.SaveQueueCount > 0 || DataManager.IsBusy)
+                while (DataManager.IsBusy)
                     await Awaitable.NextFrameAsync();
 
                 AddDebugOutput("SaveQueueTest() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds + "ms");
@@ -111,12 +109,10 @@ namespace Buck.DataManagementExample
             
             try
             {
-                Awaitable.BackgroundThreadAsync();
-                
                 for (int i = 0; i < 10; i++)
                     DataManager.LoadAsync(m_filenames);
                 
-                while (DataManager.LoadQueueCount > 0 || DataManager.IsBusy)
+                while (DataManager.IsBusy)
                     await Awaitable.NextFrameAsync();
                 
                 AddDebugOutput("LoadQueueTest() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds + "ms");
