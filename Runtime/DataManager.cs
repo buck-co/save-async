@@ -1,59 +1,37 @@
-// TODOS:
-// [X] Turn this into a package
-// [X] Add the ability to use JSON instead of EasySave
-// [X] Check if File.WriteAllTextAsync works versus FileStream / StreamWriter
-// [X] Test basic XOR file encryption on writes
-// [X] Test basic XOR file encryption on reads
-// [X] Test file deletes
-// [X] Test file erases
-// [X] Add support for serializable collections (done via Json.NET)
-// [X] Make methods static
-// [X] Improve performance by replacing JObject in SaveableData with a string
-// [X] Add JsonConverters for Vector3 and other common Unity types (done via Newtonsoft.Json.UnityConverters)
-// [X] Figure out how to support custom Unity types within each class's generic ISaveable object type (maybe use inheritance?)
-// [X] Figure out why Guid, TypeName, and Data are being added to the serialized JSON string
-// [X] Figure out why spamming output (especially on queue tests) shows 0ms on console output
-// [X] Figure out why the first load test doesn't work
-// [X] Check for empty files before loading
-// [X] Improve performance of loading by batching all of the wrapped saveables before switching back to the main thread
-// [X] Simplify methods into a single file operation handler
-// [X] Test if there is any benefit to using Tasks for the FileHandler so that Task.WhenAll can be used for batching
-//     - Result: It does not, and in fact seems to be slower than Awaitable.
-//     - Actually... This is indeed necessary to support async/await on the FileHandler using the File class.
-// [X] Add XML comments to all public methods
-// [X] Test FileHandler.Exists()
-// [X] Need to test for file existence before attempting to load. Does the FileHandler already do this?
-// [X] Clean up and test in a new project for first tagged release of 0.3.0 (also maybe remove AES encryption for now)
-// [X] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
-// [X] Create a debug visual that can be used for testing on devices
-// [ ] Add comments and documentation for the samples
-// [ ] Update Github readme
+/*
 
-// 0.4.0
+TODOS:
 
-// [ ] Test paths and folders
-// [ ] Add AES encryption
-// [ ] Should the collections be concurrent types?
-// [ ] Add more error handling (i.e. if a file isn't registered that's being saved to, etc.)
-// [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
+    [ ] Add comments and documentation for the samples
+    [ ] Update Github readme
 
-// 0.5.0
+0.4.0
 
-// [ ] Add save versions and data migrations
+    [ ] Test paths and folders
+    [ ] Add AES encryption
+    [ ] Should the collections be concurrent types?
+    [ ] Add more error handling (i.e. if a file isn't registered that's being saved to, etc.)
+    [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
 
-// 0.6.0
+0.5.0
 
-// [ ] Add data adapters for platforms where necessary (could be inherited from FileHandler)
-// [ ] Test on closed platforms, i.e. PlayStation, Xbox, Switch, iOS, Android
+    [ ] Add save versions and data migrations
 
-// Post 1.0 Ideas
+0.6.0
 
-// [ ] Create a loading bar prefab that can be used for loading screens
-// [ ] Add support for multiple save slots
-// [ ] Add support for multiple users? (particularly on Steam)
-// [ ] Add support for save backups
-// [ ] Add support for save cloud syncing (necessary for cross-platform saves beyond just Steam)
-// [ ] Write tests
+    [ ] Add data adapters for platforms where necessary (could be inherited from FileHandler)
+    [ ] Test on closed platforms, i.e. PlayStation, Xbox, Switch, iOS, Android
+
+Post 1.0 Ideas
+
+    [ ] Create a loading bar prefab that can be used for loading screens
+    [ ] Add support for multiple save slots
+    [ ] Add support for multiple users? (particularly on Steam)
+    [ ] Add support for save backups
+    [ ] Add support for save cloud syncing (necessary for cross-platform saves beyond just Steam)
+    [ ] Write tests
+    
+*/
 
 using System;
 using System.Collections.Generic;

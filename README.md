@@ -1,8 +1,16 @@
 # BUCK Data Management
 
-_BUCK Data Management_ is BUCK's Unity package for saving and loading JSON data asynchronously. It includes a `DataManager` class that provides an API for saving and loading data and an `ISaveable` interface that can be implemented on any class that needs to be saved and loaded.
+## About
+_BUCK Data Management_ is BUCK's Unity package designed for efficient and asynchronous saving and loading of game data. Utilizing Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable class, it allows for smooth and non-blocking file operations in Unity games.
 
-Figuring out how to save game data can be a pain. Not only is there the issue of data serialization and file I/O, but worse, often times save and load operations end up happening synchronously on Unity's main thread, which will cause framerate dips. Furthermore, while most desktops have SSDs, sometimes file I/O can take longer than the time it takes to render a frame, especially if you're running your game on a gaming console or a computer with an HDD.
+### Features
+- **Asynchronous Data Operations**: Leverages Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable class for non-blocking file I/O.
+- **DataManager API**: A suite of static methods for saving and loading data asynchronously.
+- **ISaveable Interface**: A standardized interface for objects that can be saved and loaded.
+- **JSON Formatting**: Files are serialized to JSON using the [Newtonsoft Json Unity Package](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html).
+
+### What's so cool about this?
+Figuring out how to save and load your game data can be tricky, but what's even more challenging is deciding _when_ to save your game data. Not only is there the issue of data serialization and file I/O, but worse, often times save and load operations end up happening synchronously on Unity's main thread, which will cause framerate dips. Furthermore, while most desktops have SSDs, sometimes file I/O can take longer than the time it takes to render a frame, especially if you're running your game on a gaming console or a computer with an HDD.
 
 We hit these pain points on our game _[Let's! Revolution!](https://store.steampowered.com/app/2111090/Lets_Revolution/)_ and we wanted to come up with a better approach. By combining C#.NET support of async and await with Unity's new [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class, it is now possible to do file I/O both asynchronously _and_ on background threads. That means you can save and load data, in the background, while your game continues to render frames seamlessly. Nice! However, there's still a good bit to learn about how multithreading works in the context of Unity and how to combine that with a JSON serializer and other features like encryption. The _BUCK Data Management_ package aims to make asynchronous saving and loading data in Unity a breeze!
 
@@ -42,11 +50,72 @@ Code example will go here!
 
 ## DataManager API
 
-Still WIP! More documentation will go here once the dust settles, but JSON reading and writing works. Classes that implement the ISaveable interface need to register themselves with the DataManager currently.
+### Properties
+- **IsBusy**
+  - Type: `bool`
+  - Description: Indicates whether the DataManager is currently busy with a file operation.
 
-### Asynchronous Saving and Loading
+### Methods
 
-Async methods are working, although reads and writes have room for performance improvement. In progress!
+#### RegisterSaveable
+```csharp
+public static void RegisterSaveable(ISaveable saveable)
+```
+- **Description**: Registers an ISaveable with the DataManager for saving and loading.
+- **Parameters**:
+  - `saveable`: The ISaveable object to register.
+- **Usage Example**:
+  ```csharp
+  DataManager.RegisterSaveable(mySaveableObject);
+  ```
+
+#### SaveAsync
+```csharp
+public static async Awaitable SaveAsync(string[] filenames)
+```
+- **Description**: Asynchronously saves the files at the specified paths or filenames.
+- **Parameters**:
+  - `filenames`: Array of paths or filenames to save.
+- **Usage Example**:
+  ```csharp
+  await DataManager.SaveAsync(new string[] {"MyFile.dat"});
+  ```
+
+#### LoadAsync
+```csharp
+public static async Awaitable LoadAsync(string[] filenames)
+```
+- **Description**: Asynchronously loads the files at the specified paths or filenames.
+- **Parameters**:
+  - `filenames`: Array of paths or filenames to load.
+- **Usage Example**:
+  ```csharp
+  await DataManager.LoadAsync(new string[] {"MyFile.dat"});
+  ```
+
+#### DeleteAsync
+```csharp
+public static async Awaitable DeleteAsync(string[] filenames)
+```
+- **Description**: Asynchronously deletes the files at the specified paths or filenames.
+- **Parameters**:
+  - `filenames`: Array of paths or filenames to delete.
+- **Usage Example**:
+  ```csharp
+  await DataManager.DeleteAsync(new string[] {"MyFile.dat"});
+  ```
+
+#### EraseAsync
+```csharp
+public static async Awaitable EraseAsync(string[] filenames)
+```
+- **Description**: Asynchronously erases the files at the specified paths or filenames, leaving them empty but still on disk.
+- **Parameters**:
+  - `filenames`: Array of paths or filenames to erase.
+- **Usage Example**:
+  ```csharp
+  await DataManager.EraseAsync(new string[] {"MyFile.dat"});
+  ```
 
 ### Encryption
 
