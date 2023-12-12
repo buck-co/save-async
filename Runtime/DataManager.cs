@@ -23,27 +23,37 @@
 // [X] Add XML comments to all public methods
 // [X] Test FileHandler.Exists()
 // [X] Need to test for file existence before attempting to load. Does the FileHandler already do this?
+// [X] Clean up and test in a new project for first tagged release of 0.3.0 (also maybe remove AES encryption for now)
+// [X] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
+// [X] Create a debug visual that can be used for testing on devices
 // [ ] Add comments and documentation for the samples
 // [ ] Update Github readme
-// [ ] Clean up and test in a new project for first tagged release of 0.3.0 (also maybe remove AES encryption for now)
-// [ ] Figure out a solve for git dependencies on Newtonsoft.Json.UnityConverters and BUCK Basics (UPM doesn't support git dependencies)
+
+// 0.4.0
+
 // [ ] Test paths and folders
 // [ ] Add AES encryption
 // [ ] Should the collections be concurrent types?
 // [ ] Add more error handling (i.e. if a file isn't registered that's being saved to, etc.)
 // [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
+
+// 0.5.0
+
 // [ ] Add save versions and data migrations
-// [X] Create a debug visual that can be used for testing on devices
-// [ ] Create a loading bar prefab that can be used for loading screens
+
+// 0.6.0
+
 // [ ] Add data adapters for platforms where necessary (could be inherited from FileHandler)
-// [ ] Test on other platforms, i.e. PlayStation, Xbox, Switch, iOS, Android
+// [ ] Test on closed platforms, i.e. PlayStation, Xbox, Switch, iOS, Android
+
+// Post 1.0 Ideas
+
+// [ ] Create a loading bar prefab that can be used for loading screens
 // [ ] Add support for multiple save slots
 // [ ] Add support for multiple users? (particularly on Steam)
 // [ ] Add support for save backups
 // [ ] Add support for save cloud syncing (necessary for cross-platform saves beyond just Steam)
 // [ ] Write tests
-        
-// [ ] Figure out why erase doesn't work
 
 using System;
 using System.Collections.Generic;
@@ -345,28 +355,28 @@ namespace Buck.DataManagement
             if (guidBytes == null)
             {
                 Debug.Log("Guid byte array is null. Generating a new Guid.");
-                guidBytes = System.Guid.NewGuid().ToByteArray();
+                guidBytes = Guid.NewGuid().ToByteArray();
             }
             
             // If the byte array is empty, return a new Guid byte array.
             if (guidBytes.Length == 0)
             {
                 Debug.Log("Guid byte array is empty. Generating a new Guid.");
-                guidBytes = System.Guid.NewGuid().ToByteArray();
+                guidBytes = Guid.NewGuid().ToByteArray();
             }
             
             // If the byte array is not empty, but is not 16 bytes long, throw an exception.
             if (guidBytes.Length != 16)
-                throw new System.ArgumentException("Guid byte array must be 16 bytes long.");
+                throw new ArgumentException("Guid byte array must be 16 bytes long.");
 
             // If the byte array is not an empty Guid, return a new Guid byte array.
             // Otherwise, return the given Guid byte array.
-            System.Guid guidObj = new System.Guid(guidBytes);
+            Guid guidObj = new Guid(guidBytes);
 
-            if (guidObj == System.Guid.Empty)
+            if (guidObj == Guid.Empty)
             {
                 Debug.Log("Guid is empty. Generating a new Guid.");
-                guidBytes = System.Guid.NewGuid().ToByteArray();
+                guidBytes = Guid.NewGuid().ToByteArray();
             }
             
             return guidBytes;
