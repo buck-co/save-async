@@ -18,7 +18,17 @@ namespace Buck.DataManagementExample
             Files.GameData
         };
         
-        async Awaitable AddDebugOutput(string output)
+        enum BenchmarkType
+        {
+            SaveGameData,
+            LoadGameData,
+            SaveGameDataQueue,
+            LoadGameDataQueue,
+            EraseGameData,
+            DeleteGameData
+        }
+        
+        void AddDebugOutput(string output)
         {
             // If the list is too long, remove the oldest entry
             if (m_debugOutput.Count > 30)
@@ -31,96 +41,83 @@ namespace Buck.DataManagementExample
             m_stringBuilder.Clear();
             foreach (var t in m_debugOutput)
                 m_stringBuilder.AppendLine(t);
-
-            // Switch back to the main thread to access the Unity API
-            await Awaitable.MainThreadAsync();
             
             m_debugText.text = m_stringBuilder.ToString();
         }
 
-        async Awaitable RunBenchmark(string testName, Awaitable test)
+        async Awaitable RunBenchmark(BenchmarkType benchmarkType)
         {
-            // Create a new GUID to track which save test is which
-            Guid guid = Guid.NewGuid();
-            string shortGuid = guid.ToString().Substring(0, 4);
-            
-            Stopwatch stopwatch = new();
-            stopwatch.Start();
-            AddDebugOutput("Starting " + testName + "() " + shortGuid + " ...");
-            
-            try
+            while (!destroyCancellationToken.IsCancellationRequested)
             {
-                await test;
-                AddDebugOutput(testName + "() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds + "ms");
-            }
-            catch (Exception e)
-            {
-                AddDebugOutput("<color=\"red\">" + testName + "() " + shortGuid + " failed: " + e.Message + "</color>");
+                // Create a new GUID to track which save test is which
+                Guid guid = Guid.NewGuid();
+                string shortGuid = guid.ToString().Substring(0, 4);
+
+                Stopwatch stopwatch = new();
+                stopwatch.Start();
+                AddDebugOutput("Starting " + benchmarkType + "() " + shortGuid + " ...");
+
+                try
+                {
+                    switch (benchmarkType)
+                    {
+                        case BenchmarkType.SaveGameData:
+                            await DataManager.SaveAsync(m_filenames);
+                            break;
+                        case BenchmarkType.LoadGameData:
+                            await DataManager.LoadAsync(m_filenames);
+                            break;
+                        case BenchmarkType.SaveGameDataQueue:
+                            for (int i = 0; i < 10; i++) DataManager.SaveAsync(m_filenames);
+                            break;
+                        case BenchmarkType.LoadGameDataQueue:
+                            for (int i = 0; i < 10; i++) DataManager.LoadAsync(m_filenames);
+                            break;
+                        case BenchmarkType.EraseGameData:
+                            await DataManager.EraseAsync(m_filenames);
+                            break;
+                        case BenchmarkType.DeleteGameData:
+                            await DataManager.DeleteAsync(m_filenames);
+                            break;
+                    }
+                    
+                    // Switch back to the main thread while waiting
+                    Awaitable.MainThreadAsync();
+                    
+                    while (DataManager.IsBusy)
+                        await Awaitable.NextFrameAsync();
+                    
+                    AddDebugOutput(benchmarkType + "() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds +
+                                   "ms");
+                }
+                catch (Exception e)
+                {
+                    Awaitable.MainThreadAsync();
+                    
+                    AddDebugOutput("<color=\"red\">" + benchmarkType + "() " + shortGuid + " failed: " + e.Message +
+                                   "</color>");
+                }
+
+                return;
             }
         }
 
         public void SaveGameData()
-            => RunBenchmark("SaveGameData", DataManager.SaveAsync(m_filenames));
+            => RunBenchmark(BenchmarkType.SaveGameData);
+        
+        public void SaveGameDataQueue()
+            => RunBenchmark(BenchmarkType.SaveGameDataQueue);
 
         public void LoadGameData()
-            => RunBenchmark("LoadGameData", DataManager.LoadAsync(m_filenames));
+            => RunBenchmark(BenchmarkType.LoadGameData);
+        
+        public void LoadGameDataQueue()
+            => RunBenchmark(BenchmarkType.LoadGameDataQueue);
 
         public void EraseGameData()
-            => RunBenchmark("EraseGameData", DataManager.EraseAsync(m_filenames));
+            => RunBenchmark(BenchmarkType.EraseGameData);
         
         public void DeleteGameData()
-            => RunBenchmark("DeleteGameData", DataManager.DeleteAsync(m_filenames));
-        
-        public async void SaveQueueTest()
-        {
-            // Create a new GUID to track which save test is which
-            Guid guid = Guid.NewGuid();
-            string shortGuid = guid.ToString().Substring(0, 4);
-            
-            Stopwatch stopwatch = new();
-            stopwatch.Start();
-            AddDebugOutput("Starting SaveQueueTest() " + shortGuid + " ...");
-            
-            try
-            {
-                for (int i = 0; i < 10; i++)
-                    DataManager.SaveAsync(m_filenames);
-
-                while (DataManager.IsBusy)
-                    await Awaitable.NextFrameAsync();
-
-                AddDebugOutput("SaveQueueTest() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds + "ms");
-            }
-            catch (Exception e)
-            {
-                AddDebugOutput("<color=\"red\">SaveQueueTest() " + shortGuid + " failed: " + e.Message + "</color>");
-            }
-        }
-
-        public async void LoadQueueTest()
-        {
-            // Create a new GUID to track which save test is which
-            Guid guid = Guid.NewGuid();
-            string shortGuid = guid.ToString().Substring(0, 4);
-            
-            Stopwatch stopwatch = new();
-            stopwatch.Start();
-            AddDebugOutput("Starting LoadQueueTest() " + shortGuid + " ...");
-            
-            try
-            {
-                for (int i = 0; i < 10; i++)
-                    DataManager.LoadAsync(m_filenames);
-                
-                while (DataManager.IsBusy)
-                    await Awaitable.NextFrameAsync();
-                
-                AddDebugOutput("LoadQueueTest() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds + "ms");
-            }
-            catch (Exception e)
-            {
-                AddDebugOutput("<color=\"red\">LoadQueueTest() " + shortGuid + " failed: " + e.Message + "</color>");
-            }
-        }
+            => RunBenchmark(BenchmarkType.DeleteGameData);
     }
 }

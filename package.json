@@ -1,8 +1,8 @@
 {
   "name": "co.buck.datamanagement",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "BUCK Data Management",
-  "description": "This is BUCK's Unity package for saving and loading data. It includes a DataManager class with an API for reading and writing data to disk.",
+  "description": "This is BUCK's Unity package for saving and loading data asynchronously.",
   "unity": "2023.2",
   "documentationUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
   "changelogUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
