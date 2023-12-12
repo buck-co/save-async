@@ -36,21 +36,128 @@ However, Unity types like Vector3 don't serialize to JSON very nicely because al
 
 This package includes a sample project which you can install from the Unity Package Manager by selecting the package from the list and then selecting the `Samples` tab on the right. Then click `Import`. This will add a "Samples" folder to your project where you can benchmark the Data Manager's methods. In the samples, you'll find two examples of how you can implement the ISaveable class which can help you get an idea of how you might implement ISaveable on your own classes.
 
-### Project Setup
+### Quick Project Setup
 
 Here's how the package can be used.
 1. Add the Data Manager component to a GameObject in your scene. You can name the GameObject something like `Data Manager`.
-2. Implement the ISaveable interface on at least one class. Most importantly, make sure that class's ISaveable.Guid property is backed by a serializable Guid. (Again, check out the samples to see example implementations!)
+2. Implement the ISaveable interface on at least one class. Most importantly, make sure that class's ISaveable.Guid property is backed by a persistent serializable Guid. (more detail on this is available below).
 3. Call `DataManager.RegisterSaveable` on your object (ideally this is done in Awake).
 4. Call DataManager API methods like `DataManager.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered with the DataManager.
 
-## Implementing ISaveable
 
-Code example will go here!
+## Saving and Loading Classes using the `ISaveable` Interface
+
+Any class that should save or load data needs to implement the `ISaveable` interface which contains key elements that enable an object to be saved and loaded:
+
+1. **Guid Property**: Each `ISaveable` must have a unique identifier (Guid) for distinguishing it when saving and loading data.
+2. **CaptureState Method**: This method captures and returns the current state of the object in a serializable format.
+3. **RestoreState Method**: This method restores the object's state from the provided data.
+
+### Example Implementation: `GameDataExample`
+
+In the `GameDataExample` class, `ISaveable` is implemented as follows:
+
+1. **Guid Property**: A byte array `m_guidBytes` is serialized and used to generate the Guid.
+    ```csharp
+    [SerializeField, HideInInspector] byte[] m_guidBytes;
+    public Guid Guid => new Guid(m_guidBytes);
+    ```
+
+2. **CaptureState Method**: It captures the current state of the object and returns it.
+    ```csharp
+    public object CaptureState() {
+        return new MyCustomData {
+            playerName = m_playerName,
+            playerHealth = m_playerHealth,
+            // Additional data fields...
+        };
+    }
+    ```
+
+3. **RestoreState Method**: It restores the object's state from the provided data.
+    ```csharp
+    public void RestoreState(object state) {
+        var s = (MyCustomData)state;
+        m_playerName = s.playerName;
+        m_playerHealth = s.playerHealth;
+        // Additional data fields...
+    }
+    ```
+
+## Steps to Implement `ISaveable`
+
+1. **Implement `ISaveable` in Your Class**: Your class should inherit from `ISaveable`.
+    ```csharp
+    public class YourClass : MonoBehaviour, ISaveable
+    {
+        // Implementation details...
+    }
+    ```
+
+2. **Define Your Data Structure**: Create a struct or class that represents the data you want to save. This structure needs to be serializable.
+    ```csharp
+    [Serializable]
+    public struct MyCustomData
+    {
+        // Custom data fields
+        public string playerName;
+        public int playerHealth;
+        public Vector3 position;
+        public List<Enemy> enemies;
+        public Dictionary<int, Item> inventory;
+    }
+    ```
+
+3. **Generate and Store a Unique Serializable Guid**: Ensure that your class has a globally unique identifier (a GUID for short). Use the GetSerializableGuid class in the data manager to make sure that your MonoBehaviours and other classes can be identified when being saved and loaded.
+    ```csharp
+    [SerializeField, HideInInspector] byte[] m_guidBytes;
+    public Guid Guid => new(m_guidBytes);
+    void OnValidate() => DataManager.GetSerializableGuid(ref m_guidBytes);
+    ```
+
+4. **Implement `CaptureState` Method**: Implement this method to capture and return the current state of your object.
+    ```csharp
+    public object CaptureState()
+    {
+        return new MyCustomData
+        {
+            playerName = m_playerName,
+            playerHealth = m_playerHealth,
+            position = m_position,
+            enemies = m_enemies,
+            inventory = m_inventory
+        };
+    }
+    ```
+
+5. **Implement `RestoreState` Method**: Implement this method to restore your object's state from the saved data.
+    ```csharp
+    public void RestoreState(object state)
+    {
+        var s = (MyCustomData)state;
+
+        m_playerName = s.playerName;
+        m_playerHealth = s.playerHealth;
+        m_position = s.position;
+        m_enemies = s.enemies;
+        m_inventory = s.inventory;
+    }
+    ```
+
+6. **Register Your Object with `DataManager`**: Register the object with `DataManager`. Generally it's best to do this in your `Awake` method or during initialization. Make sure you do this before calling any save or load methods in the DataManager or your saveables won't be picked up!
+    ```csharp
+    void Awake()
+    {
+        DataManager.RegisterSaveable(this);
+    }
+    ```
+
+For a complete example, check out [this ISaveable implementation](https://github.com/buck-co/unity-pkg-data-management/blob/main/Samples~/GameDataExample.cs) in the sample project.
+
 
 ## DataManager API
 
-The DataManager is intended to be called from another class in your project, such as a Game Manager, or anywhere that you would like to do saving and loading operations. Below you'll find the public interface along with short code examples.
+The DataManager is intended to be called from another class in your project, such as a Game Manager, or anywhere that you would like to do saving and loading operations. You should add the DataManager as a component to a GameObject in your scene (you can name the GameObject something like `Data Manager`). Below you'll find the public interface for interactnig with the DataManager class, along with short code examples.
 
 ### Properties
 - **IsBusy**
@@ -133,7 +240,13 @@ public static byte[] GetSerializableGuid(ref byte[] guidBytes)
   void OnValidate() => DataManager.GetSerializableGuid(ref m_guidBytes);
   ```
 
-### Encryption
+## Best Practices
+
+- **Consistent State Management**: Ensure that your `CaptureState` and `RestoreState` methods consistently manage the object's state. If you update your data structure, be sure to update these methods as well.
+- **Efficient Data Structures**: Generally speaking it's best to avoid deep serialization structures (such as a list of arrays of lists of dictionaries of structs, etc.). It's also a good idea to use simple data types like ints, strings, and structs rather than storing Unity types like GameObjects or ScriptableObjects.
+- **Guid Management**: Manage Guids carefully to ensure uniqueness and avoid conflicts. The example given above should make this fairly straightforward.
+
+## Encryption
 
 Basic XOR encryption is implemented. AES encryption is planned.
 
@@ -157,7 +270,6 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 * **Nick Pettit** - *Initial work* - [nickpettit](https://github.com/nickpettit)
 
 See also the list of [contributors](https://github.com/buck-co/unity-pkg-data-management/contributors) who participated in this project.
-
 
 ## Acknowledgments
 
