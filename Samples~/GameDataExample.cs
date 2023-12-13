@@ -15,7 +15,6 @@ namespace Buck.DataManagementExample
 {
     public class GameDataExample : MonoBehaviour, ISaveable
     {
-
         // ISaveable needs a Guid which is used to identify the object in the DataManager
         // This is typically a serialized byte array that does not change.
         // Use OnValidate to ensure that your ISaveable's Guid has a value when the MonoBehaviour is created.
