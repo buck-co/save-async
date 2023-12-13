@@ -2,7 +2,7 @@
   "name": "co.buck.datamanagement",
   "version": "0.3.0",
   "displayName": "BUCK Data Management",
-  "description": "This is BUCK's Unity package for saving and loading data asynchronously.",
+  "description": "BUCK Data Management is BUCK's Unity package designed for efficient and asynchronous saving and loading of game data. Utilizing Unity's Awaitable class, it allows for smooth and non-blocking file operations in Unity games.",
   "unity": "2023.2",
   "documentationUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
   "changelogUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
@@ -31,10 +31,10 @@
   "enableLockFile": true,
   "resolutionStrategy": "highest",
   "samples": [
-      {
-          "displayName": "Data Management Example",
-          "description": "Contains a simple example scene that demonstrates the use of the DataManager class and two implementations of the ISaveable interface.",
-          "path": "Samples~"
-      }
+    {
+      "displayName": "Data Management Example",
+      "description": "Contains a simple example scene that demonstrates the use of the DataManager class and two implementations of the ISaveable interface.",
+      "path": "Samples~"
+    }
   ]
 }

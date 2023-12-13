@@ -1,3 +1,5 @@
+// MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
+
 using UnityEngine;
 using System.Threading;
 using System.Threading.Tasks;
@@ -103,7 +105,7 @@ namespace Buck.DataManagement
 
         /// <summary>
         /// Deletes a file at the given path or filename. This will remove the file from disk.
-        /// Use <see cref="Erase(string)"/> to fill the file with an empty string without removing it from disk.
+        /// Use <see cref="Erase(string, CancellationToken)"/> to fill the file with an empty string without removing it from disk.
         /// <code>
         /// File example: "MyFile.dat"
         /// Path example: "MyFolder/MyFile.dat"

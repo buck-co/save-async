@@ -1,3 +1,5 @@
+// MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
+
 using System;
 using System.Collections.Generic;
 using Buck.DataManagement;
@@ -21,7 +23,7 @@ namespace Buck.DataManagementExample
         [SerializeField, HideInInspector] byte[] m_guidBytes;
         public Guid Guid => new(m_guidBytes);
         void OnValidate() => DataManager.GetSerializableGuid(ref m_guidBytes);
-        public string FileName => Files.GameData;
+        public string Filename => Files.GameData;
 
         // Your game data
         [SerializeField] string m_playerName = "The Player Name";

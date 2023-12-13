@@ -1,37 +1,4 @@
-/*
-
-TODOS:
-
-    [ ] Add comments and documentation for the samples
-    [ ] Update Github readme
-
-0.4.0
-
-    [ ] Test paths and folders
-    [ ] Add AES encryption
-    [ ] Should the collections be concurrent types?
-    [ ] Add more error handling (i.e. if a file isn't registered that's being saved to, etc.)
-    [ ] On Awake, get all of the Saveables register them rather than having to do it manually?
-
-0.5.0
-
-    [ ] Add save versions and data migrations
-
-0.6.0
-
-    [ ] Add data adapters for platforms where necessary (could be inherited from FileHandler)
-    [ ] Test on closed platforms, i.e. PlayStation, Xbox, Switch, iOS, Android
-
-Post 1.0 Ideas
-
-    [ ] Create a loading bar prefab that can be used for loading screens
-    [ ] Add support for multiple save slots
-    [ ] Add support for multiple users? (particularly on Steam)
-    [ ] Add support for save backups
-    [ ] Add support for save cloud syncing (necessary for cross-platform saves beyond just Steam)
-    [ ] Write tests
-    
-*/
+// MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
 
 using System;
 using System.Collections.Generic;
@@ -50,10 +17,6 @@ namespace Buck.DataManagement
         [SerializeField, Tooltip("The password used to encrypt and decrypt save data. This password should be unique to your game. " +
                                  "Do not change the encryption password once the game has shipped!")]
         string m_encryptionPassword = "password";
-
-        [SerializeField, Tooltip("Enables the use of background threads for saving and loading which greatly improves performance. " +
-                                 "However, only use this if you are not using any Unity objects in your save data!")]
-        bool m_useBackgroundThreads = true;
 
         enum FileOperationType
         {
@@ -77,7 +40,7 @@ namespace Buck.DataManagement
         
         static FileHandler m_fileHandler;
         static Dictionary<Guid, ISaveable> m_saveables = new();
-        static List<SaveableDataWrapper> m_loadedSaveables = new();
+        static List<SaveableObject> m_loadedSaveables = new();
         static Queue<FileOperation> m_fileOperationQueue = new();
         static HashSet<string> m_files = new();
         
@@ -91,7 +54,7 @@ namespace Buck.DataManagement
         };
 
         [Serializable]
-        public class SaveableDataWrapper
+        public class SaveableObject
         {
             public string Guid;
             public object Data;
@@ -123,7 +86,7 @@ namespace Buck.DataManagement
         public static void RegisterSaveable(ISaveable saveable)
         {
             if (m_saveables.TryAdd(saveable.Guid, saveable))
-                m_files.Add(saveable.FileName);
+                m_files.Add(saveable.Filename);
             else
                 Debug.LogError($"Saveable with GUID {saveable.Guid} already exists!");
         }
@@ -164,7 +127,7 @@ namespace Buck.DataManagement
         
         /// <summary>
         /// Erases the files at the given paths or filenames. Each file will still exist on disk, but it will be empty.
-        /// Use <see cref="DeleteAsync(string[], bool)"/> to remove the file from disk.
+        /// Use <see cref="DeleteAsync(string[])"/> to remove the file from disk.
         /// <code>
         /// File example: "MyFile.dat"
         /// Path example: "MyFolder/MyFile.dat"
@@ -240,8 +203,7 @@ namespace Buck.DataManagement
                 IsBusy = true;
                 
                 // Switch to a background thread to process the queue
-                if (Instance.m_useBackgroundThreads)
-                    await Awaitable.BackgroundThreadAsync();
+                await Awaitable.BackgroundThreadAsync();
 
                 while (m_fileOperationQueue.Count > 0)
                 {
@@ -273,7 +235,7 @@ namespace Buck.DataManagement
                 if (m_loadedSaveables.Count > 0)
                 {
                     // Restore state for each ISaveable
-                    foreach (SaveableDataWrapper wrappedData in m_loadedSaveables)
+                    foreach (SaveableObject wrappedData in m_loadedSaveables)
                     {
                         var guid = new Guid(wrappedData.Guid);
 
@@ -303,7 +265,7 @@ namespace Buck.DataManagement
                         
                 // Gather all of the saveables that correspond to the file
                 foreach (ISaveable saveable in m_saveables.Values)
-                    if (saveable.FileName == filename)
+                    if (saveable.Filename == filename)
                         saveablesToSave.Add(saveable);
                         
                 string json = SaveablesToJson(saveablesToSave);
@@ -326,7 +288,7 @@ namespace Buck.DataManagement
                 string json = Encryption.Decrypt(fileContent, Instance.m_encryptionPassword, Instance.m_encryptionType);
                         
                 // Deserialize the JSON data to List of SaveableDataWrapper
-                m_loadedSaveables.AddRange(JsonConvert.DeserializeObject<List<SaveableDataWrapper>>(json, m_jsonSerializerSettings));
+                m_loadedSaveables.AddRange(JsonConvert.DeserializeObject<List<SaveableObject>>(json, m_jsonSerializerSettings));
             }
         }
         
@@ -345,14 +307,14 @@ namespace Buck.DataManagement
             if (saveables == null)
                 throw new ArgumentNullException(nameof(saveables));
 
-            SaveableDataWrapper[] wrappedSaveables = new SaveableDataWrapper[saveables.Count];
+            SaveableObject[] wrappedSaveables = new SaveableObject[saveables.Count];
 
             for (var i = 0; i < saveables.Count; i++)
             {
                 var s = saveables[i];
                 var data = s.CaptureState();
 
-                wrappedSaveables[i] = new SaveableDataWrapper
+                wrappedSaveables[i] = new SaveableObject
                 {
                     Guid = s.Guid.ToString(),
                     Data = data

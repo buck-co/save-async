@@ -1,3 +1,5 @@
+// MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
+
 using System;
 using UnityEngine;
 using Buck.DataManagement;

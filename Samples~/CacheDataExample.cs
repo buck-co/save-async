@@ -1,3 +1,5 @@
+// MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
+
 using System;
 using Buck.DataManagement;
 using UnityEngine;
@@ -12,7 +14,7 @@ namespace Buck.DataManagementExample
         [ShowInInspector]
         public Guid Guid => new(DataManager.GetSerializableGuid(ref m_guidBytes));
         
-        public string FileName => Files.SomeFile;
+        public string Filename => Files.SomeFile;
 
         // Your game data
         [SerializeField] string m_myString = "Some string!";

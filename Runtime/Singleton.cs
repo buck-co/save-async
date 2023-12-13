@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿// MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
+
+using UnityEngine;
 
 namespace Buck.DataManagement
 {

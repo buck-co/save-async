@@ -1,4 +1,4 @@
-using System;
+// MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
 
 namespace Buck.DataManagement
 {
@@ -11,13 +11,13 @@ namespace Buck.DataManagement
         /// This property should be backed by a serialized byte array that does not change.
         /// This is used to identify the object when saving and loading.
         /// </summary>
-        public Guid Guid { get; }
+        public System.Guid Guid { get; }
         
         /// <summary>
         /// This is the file name where this object's data will be saved.
         /// It is recommended to use a static class to store file paths as strings to avoid typos.
         /// </summary>
-        public string FileName { get; }
+        public string Filename { get; }
         
         /// <summary>
         /// This is used by the DataManager class to capture the state of a saveable object.
