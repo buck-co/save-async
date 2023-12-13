@@ -253,7 +253,7 @@ See also the list of [contributors](https://github.com/buck-co/unity-pkg-data-ma
 
 * Thanks to [Tarodev for this tutorial](https://www.youtube.com/watch?v=X9Dtb_4os1o) on using async and await in Unity using the Awaitable class. It gave me the idea for creating an async save system.
 * Thanks to [Dapper Dino for this tutorial](https://www.youtube.com/watch?v=f5GvfZfy3yk) which demonstrated how a form of the inversion of control design pattern could be used to make saving and loading easier.
-* Thanks to [Bronson Zgeb at Unity for this Unity talk](https://www.youtube.com/watch?v=uD7y4T4PVk0) which shows many of the pieces necessary for building a save system in Unity.
+* Thanks to [Bronson Zgeb at Unity for this Unite talk](https://www.youtube.com/watch?v=uD7y4T4PVk0) which shows many of the pieces necessary for building a save system in Unity.
 
 
 ### License
