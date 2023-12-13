@@ -4,9 +4,7 @@
   "displayName": "BUCK Data Management",
   "description": "BUCK Data Management is BUCK's Unity package designed for efficient and asynchronous saving and loading of game data. Utilizing Unity's Awaitable class, it allows for smooth and non-blocking file operations in Unity games.",
   "unity": "2023.2",
-  "documentationUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
-  "changelogUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
-  "licensesUrl": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
+  "documentationUrl": "https://github.com/buck-co/unity-pkg-data-management",
   "keywords": [
     "BUCK",
     "Save",
@@ -18,7 +16,7 @@
     "DataManagement"
   ],
   "repository": {
-    "url": "https://github.com/buck-co/unity-pkg-data-datamanagement.git",
+    "url": "https://github.com/buck-co/unity-pkg-data-management.git",
     "type": "git"
   },
   "author": {
