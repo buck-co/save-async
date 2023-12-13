@@ -6,7 +6,7 @@ _BUCK Data Management_ is BUCK's Unity package designed for asynchronous saving 
 ### Features
 - :watch: **Asynchronous**: Leverages Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class for non-blocking file I/O
 - :zap: **DataManager API**: A suite of static methods for saving and loading data easily
-- :floppy_disk: **ISaveable Interface**: A simple interface that can make any object in your game "saveable" (and "loadable") by capturing and restoring state
+- :floppy_disk: **ISaveable Interface**: A simple interface that gives any object in your game the ability to be saved or loaded
 - :ledger: **JSON Formatting**: Automatic serialization to and from JSON using the [Newtonsoft Json Unity Package](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html)
 
 
