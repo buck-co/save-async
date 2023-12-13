@@ -9,13 +9,11 @@ _BUCK Data Management_ is BUCK's Unity package designed for asynchronous saving 
 - :floppy_disk: **ISaveable Interface**: A simple interface that gives any object in your game the ability to be saved or loaded
 - :ledger: **JSON Formatting**: Automatic serialization to and from JSON using the [Newtonsoft Json Unity Package](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html)
 
+## Installation
 
-
-## Requirements
+### Requirements
 
 This package works with Unity 2023.1 and above as it requires Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class for asynchronous saving and loading.
-
-## Installation
 
 ### Install the Package
 
@@ -226,12 +224,6 @@ Sets the given Guid byte array to a new Guid byte array if it is null, empty, or
   ```
 <br>
 
-## Best Practices
-
-- **Consistent State Management**: Ensure that your `CaptureState` and `RestoreState` methods consistently manage the object's state. If you update your data structure, be sure to update these methods as well.
-- **Efficient Data Structures**: Generally speaking it's best to avoid deep serialization structures (such as a list of arrays of lists of dictionaries of structs, etc.). It's also a good idea to use simple data types like ints, strings, and structs rather than storing Unity types like GameObjects or ScriptableObjects.
-- **Guid Management**: Manage Guids carefully to ensure uniqueness and avoid conflicts. The example given above should make this fairly straightforward.
-
 ## Encryption
 
 If you want to prevent mischeivious gamers from tampering with your save files, you can encrypt them using XOR encryption. To turn it on, use the encryption dropdown menu on the DataManager component in your scene and create a password. XOR is very basic and can be hacked using brute force methods, but it is very fast. AES encryption is planned!
@@ -243,27 +235,27 @@ Figuring out how to save and load your game data can be tricky, but what's even 
 
 We hit these pain points on our game _[Let's! Revolution!](https://store.steampowered.com/app/2111090/Lets_Revolution/)_ and we wanted to come up with a better approach. By combining [`async`](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/async) and [`await`](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/await) with Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class (available in Unity 2023.1 and up), it is now possible to do file operations both asynchronously _and_ on background threads. That means you can save and load data in the background while your game continues to render frames seamlessly. Nice! However, there's still a good bit to learn about how multithreading works in the context of Unity and how to combine that with a JSON serializer and other features like encryption. The _BUCK Data Management_ package aims to take care of these complications and make asynchronous saving and loading data in Unity a breeze!
 
-## Feedback and Contributing
+### Feedback and Contributing
 
 If you have any trouble using the package, feel free to [open an issue](https://github.com/buck-co/unity-pkg-data-management/issues). And if you're interested in contributing, [create a pull request](https://github.com/buck-co/unity-pkg-data-management/pulls) and we'll take a look!
 
-## Versioning
+### Versioning
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/buck-co/unity-pkg-data-management/tags). 
 
-## Authors
+### Authors
 
 * **Nick Pettit** - [nickpettit](https://github.com/nickpettit)
 
 See also the list of [contributors](https://github.com/buck-co/unity-pkg-data-management/contributors) who participated in this project.
 
-## Acknowledgments
+### Acknowledgments
 
 * Thanks to [Tarodev for this tutorial](https://www.youtube.com/watch?v=X9Dtb_4os1o) on using async and await in Unity using the Awaitable class. It gave me the idea for creating an async save system.
 * Thanks to [Dapper Dino for this tutorial](https://www.youtube.com/watch?v=f5GvfZfy3yk) which demonstrated how a form of the inversion of control design pattern could be used to make saving and loading easier.
 * Thanks to [Bronson Zgeb at Unity for this Unity talk](https://www.youtube.com/watch?v=uD7y4T4PVk0) which shows many of the pieces necessary for building a save system in Unity.
 
 
-## License
+### License
 
 MIT License - Copyright (c) 2023 BUCK Design LLC [buck-co](https://github.com/buck-co)
