@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 
 namespace Buck.DataManagement
 {
+    [AddComponentMenu("BUCK/Data Management/Data Manager")]
     public class DataManager : Buck.DataManagement.Singleton<DataManager>
     {
         [SerializeField, Tooltip("Enables encryption for save data. " +

@@ -17,7 +17,8 @@ namespace Buck.DataManagementExample
         StringBuilder m_stringBuilder = new ();
         string[] m_filenames =
         {
-            Files.GameData
+            Files.GameData,
+            Files.SomeFile
         };
         
         enum BenchmarkType
