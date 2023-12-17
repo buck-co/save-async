@@ -10,7 +10,7 @@ _Game State Async_ is a Unity package for asynchronously saving and loading data
 
 # Getting Started
 > [!NOTE]
-> This package works with **Unity 2023.1 and above** as it requires Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class for asynchronous saving and loading.
+> This package works with **Unity 2023.1 and above** as it requires Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class which is not available in earlier versions.
 
 ### Install the Package
 
@@ -22,9 +22,9 @@ _Game State Async_ is a Unity package for asynchronously saving and loading data
 ### Basic Workflow
 After installing the package...
 
-1. Add the Game State component to a GameObject in your scene.
-2. Implement the `ISaveable` interface on at least one class. (more detail on how to do this is available below).
-3. Call GameState API methods like `GameState.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered with the GameState.
+1. Add the `GameState` component to a GameObject in your scene.
+2. Implement the `ISaveable` interface on at least one class (more detail on how to do this is available below).
+3. Call GameState API methods like `GameState.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered.
 
 ### Install Unity Converters for Newtonsoft.Json (strongly recommended)
 
@@ -56,28 +56,28 @@ This package depends on Unity's Json.NET package for serializing data, which is 
 }
 ```
 
-_Yikes!_ Installing the [Unity Converters for Newtonsoft.Json](https://github.com/applejag/Newtonsoft.Json-for-Unity.Converters) package takes care of these issues, as well as many more. Once you've done this, Json.NET should be able to convert Unity's built-in types.
+_Yikes!_ Installing the [Unity Converters for Newtonsoft.Json](https://github.com/applejag/Newtonsoft.Json-for-Unity.Converters) package takes care of these issues, as well as many more. Once you've done this, Json.NET should be able to convert Unity's built-in types. In the future, we'll try to include this as a package dependency, but currently the Unity Package Manager only allows packages to have dependencies that come from the official Unity registry.
 
 ### Included Samples
 
 This package includes a sample project which you can install from the Unity Package Manager by selecting the package from the list and then selecting the `Samples` tab on the right. Then click `Import`. Examining the sample can help you understand how to use the package in your own project.
 
 
-# Saving and Loading Classes using the `ISaveable` Interface
+# Implementing ISaveable and using the GameState API
 
-Any class that should save or load data needs to implement the [`ISaveable`](Runtime/ISaveable.cs) interface which contains key elements that enable an object to be saved and loaded.
+Any class that should save or load data needs to implement the [`ISaveable`](Runtime/ISaveable.cs) interface.
 
 - **Guid Property**: Each `ISaveable` must have a globally unique identifier (Guid) for distinguishing it when saving and loading data.
 - **Filename Property**: Each `ISaveable` must have a filename string that identifies which file it should be saved in.
 - **CaptureState Method**: This method captures and returns the current state of the object in a serializable format.
 - **RestoreState Method**: This method restores the object's state from the provided data.
 
-### Example Implementation: `GameDataExample`
+## Example Implementation: `GameDataExample`
 
 1. **Implement `ISaveable` in Your Class**
-    <br>Your class should inherit from `ISaveable` from the `Buck.DataManagement` namespace.
+    <br>Your class should inherit from `ISaveable` from the `Buck.GameStateAsync` namespace.
     ```csharp
-    using Buck.DataManagement
+    using Buck.GameStateAsync
 
     public class YourClass : MonoBehaviour, ISaveable
     {
@@ -249,7 +249,7 @@ Sets the given Guid byte array to a new Guid byte array if it is null, empty, or
 
 If you want to prevent mischeivious gamers from tampering with your save files, you can encrypt them using XOR encryption. To turn it on, use the encryption dropdown menu on the GameState component in your scene and create a password. XOR is very basic and can be hacked using brute force methods, but it is very fast. AES encryption is planned!
 
-## Additional Project Information
+# Additional Project Information
 
 ### Why did we build this?
 Figuring out how to save and load your game data can be tricky, but what's even more challenging is deciding _when_ to save your game data. Not only is there the issue of data serialization and file I/O, but in addition, save and load operations often end up happening synchronously on Unity's main thread which will cause framerate dips. That's because Unity's renderer is also on the main thread! Furthermore, while most desktops have fast SSDs, sometimes file I/O can take longer than the time it takes to render a frame, especially if you're running your game on a gaming console or a computer with an HDD.
@@ -257,7 +257,7 @@ Figuring out how to save and load your game data can be tricky, but what's even 
 We hit these pain points on our game _[Let's! Revolution!](https://store.steampowered.com/app/2111090/Lets_Revolution/)_ and we wanted to come up with a better approach. By combining [`async`](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/async) and [`await`](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/await) with Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class (available in Unity 2023.1 and up), it is now possible to do file operations both asynchronously _and_ on background threads. That means you can save and load data in the background while your game continues to render frames seamlessly. Nice! However, there's still a good bit to learn about how multithreading works in the context of Unity and how to combine that with a JSON serializer and other features like encryption. The _Game State Async_ package aims to take care of these complications and make asynchronous saving and loading data in Unity a breeze!
 
 ### Why not just use Coroutines?
-While Coroutines have served us well for many years, the Task-based asynchronous pattern (TAP) enabled by async/await and Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class has many advantages. Coroutines can execute piece by piece over time, but they still process on Unity's single main thread. If a Coroutine attempts a long-running operation (like accessing a file) it can cause the whole application to freeze for several frames. For a good overview of the differences between async/await and Coroutines, check out this Unite talk [Best practices: Async vs. coroutines - Unite Copenhagen](https://www.youtube.com/watch?v=7eKi6NKri6I&t=548s)
+While Coroutines have served us well for many years, the Task-based asynchronous pattern (TAP) enabled by async/await and Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class has many advantages. Coroutines can execute piece by piece over time, but they still process on Unity's single main thread. If a Coroutine attempts a long-running operation (like accessing a file) it can cause the whole application to freeze for several frames. For a good overview of the differences between async/await and Coroutines, check out this Unite talk [Best practices: Async vs. coroutines - Unite Copenhagen](https://www.youtube.com/watch?v=7eKi6NKri6I&t=548s).
 
 ### Contributing
 
