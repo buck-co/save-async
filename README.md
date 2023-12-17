@@ -1,5 +1,5 @@
 # What is Game State Async?
-_Game State Async_ is a Unity package for asynchronously saving and loading data in the background using Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class. It includes a simple API that makes it easy to capture and restore state without interrupting Unity's main render thread. That means smoother framerates and fewer load screens!
+_Game State Async_ is BUCK's Unity package for asynchronously saving and loading data in the background using Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class. It includes a simple API that makes it easy to capture and restore state without interrupting Unity's main render thread. That means smoother framerates and fewer load screens!
 
 ### Features
 - :watch: **Asynchronous**: All methods are asynchronously "awaitable" meaning a game can continue running while it waits for a response from the storage device, even if that storage device is slow (like HDDs, external storage, and some consoles)
