@@ -1,6 +1,6 @@
 {
-    "name": "BUCK.BUCKDataManagement.Runtime",
-    "rootNamespace": "Buck.DataManagement",
+    "name": "BUCK.GameStateAsync.Runtime",
+    "rootNamespace": "Buck.GameStateAsync",
     "references": [
         "GUID:b8aac53cec3c8de42a626e550d279519"
     ],

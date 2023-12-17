@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-namespace Buck.DataManagement
+namespace Buck.GameStateAsync
 {
     /// <summary>
     /// Inherit from this base class to create a singleton.

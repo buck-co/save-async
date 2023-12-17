@@ -1,9 +1,9 @@
 {
   "name": "co.buck.datamanagement",
   "version": "0.3.0",
-  "displayName": "BUCK Data Management",
-  "description": "BUCK Data Management is BUCK's Unity package designed for efficient and asynchronous saving and loading of game data. Utilizing Unity's Awaitable class, it allows for smooth and non-blocking file operations in Unity games.",
-  "unity": "2023.2",
+  "displayName": "Game State Async",
+  "description": "Game State Async is BUCK's Unity package for asynchronously saving and loading data in the background using Unity's Awaitable class. Capture and restore state without interrupting Unity's main render thread.",
+  "unity": "2023.1",
   "documentationUrl": "https://github.com/buck-co/unity-pkg-data-management",
   "keywords": [
     "BUCK",
@@ -12,8 +12,8 @@
     "Files",
     "I/O",
     "Data",
-    "DataManager",
-    "DataManagement"
+    "Async",
+    "GameState"
   ],
   "repository": {
     "url": "https://github.com/buck-co/unity-pkg-data-management.git",
@@ -30,9 +30,9 @@
   "resolutionStrategy": "highest",
   "samples": [
     {
-      "displayName": "Data Management Example",
-      "description": "Contains a simple example scene that demonstrates the use of the DataManager class and two implementations of the ISaveable interface.",
-      "path": "Samples~/DataManagementExample"
+      "displayName": "Game State Async Example",
+      "description": "Contains a simple example scene that demonstrates the use of the GameState class and two implementations of the ISaveable interface.",
+      "path": "Samples~/GameStateAsyncExample"
     }
   ]
 }

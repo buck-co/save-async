@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
 
-namespace Buck.DataManagement
+namespace Buck.GameStateAsync
 {
-    [AddComponentMenu("BUCK/Data Management/Data Manager")]
-    public class DataManager : Buck.DataManagement.Singleton<DataManager>
+    [AddComponentMenu("GameStateAsync/GameState")]
+    public class GameState : Singleton<GameState>
     {
         [SerializeField, Tooltip("Enables encryption for save data. " +
                                  "XOR encryption is basic but extremely fast. Support for AES encryption is planned." +
@@ -73,17 +73,17 @@ namespace Buck.DataManagement
             m_isInitialized = true;
         }
 
-        #region DataManager API
+        #region GameState API
 
         /// <summary>
-        /// Boolean indicating whether or not the DataManager is currently busy with a file operation.
+        /// Boolean indicating whether or not a file operation is in progress.
         /// </summary>
         public static bool IsBusy { get; private set; }
 
         /// <summary>
-        /// Registers an ISaveable and its file with the DataManager for saving and loading.
+        /// Registers an ISaveable and its file for saving and loading.
         /// </summary>
-        /// <param name="saveable">The ISaveable to register with the data manager for saving and loading.</param>
+        /// <param name="saveable">The ISaveable to register for saving and loading.</param>
         public static void RegisterSaveable(ISaveable saveable)
         {
             if (m_saveables.TryAdd(saveable.Guid, saveable))
@@ -100,7 +100,7 @@ namespace Buck.DataManagement
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to save.</param>
-        public static async Awaitable SaveAsync(string[] filenames)
+        public static async Awaitable Save(string[] filenames)
             => await DoFileOperation(FileOperationType.Save, filenames);
         
         /// <summary>
@@ -111,31 +111,31 @@ namespace Buck.DataManagement
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to load.</param>
-        public static async Awaitable LoadAsync(string[] filenames)
+        public static async Awaitable Load(string[] filenames)
             => await DoFileOperation(FileOperationType.Load, filenames);
 
         /// <summary>
         /// Deletes the files at the given paths or filenames. Each file will be removed from disk.
-        /// Use <see cref="EraseAsync(string[])"/> to fill each file with an empty string without removing it from disk.
+        /// Use <see cref="Erase"/> to fill each file with an empty string without removing it from disk.
         /// <code>
         /// File example: "MyFile.dat"
         /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to delete.</param>
-        public static async Awaitable DeleteAsync(string[] filenames)
+        public static async Awaitable Delete(string[] filenames)
             => await DoFileOperation(FileOperationType.Delete, filenames);
         
         /// <summary>
         /// Erases the files at the given paths or filenames. Each file will still exist on disk, but it will be empty.
-        /// Use <see cref="DeleteAsync(string[])"/> to remove the file from disk.
+        /// Use <see cref="Delete"/> to remove the file from disk.
         /// <code>
         /// File example: "MyFile.dat"
         /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to erase.</param>
-        public static async Awaitable EraseAsync(string[] filenames)
+        public static async Awaitable Erase(string[] filenames)
             => await DoFileOperation(FileOperationType.Erase, filenames);
         
         /// <summary>
@@ -180,7 +180,6 @@ namespace Buck.DataManagement
         
         static async Awaitable DoFileOperation(FileOperationType operationType, string[] filenames)
         {
-            // Initialize the DataManager if it hasn't been already
             Initialize();
             
             // If the cancellation token has been requested at any point, return

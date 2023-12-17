@@ -1,6 +1,6 @@
 // MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
 
-namespace Buck.DataManagement
+namespace Buck.GameStateAsync
 {
     /// <summary>
     /// Allows an object to be saved and loaded via the DataManager class.
@@ -20,16 +20,14 @@ namespace Buck.DataManagement
         public string Filename { get; }
         
         /// <summary>
-        /// This is used by the DataManager class to capture the state of a saveable object.
+        /// This is used by the GameState class to capture the state of a saveable object.
         /// Typically this is a struct defined by the ISaveable implementing class.
         /// The contents of the struct could be created at the time of saving, or cached in a variable.
-        /// Load the sample project from the BUCK Data Management package in the Unity Package Manager
-        /// to see an example of both approaches.
         /// </summary>
         object CaptureState();
         
         /// <summary>
-        /// This is used by the DataManager class to restore the state of a saveable object.
+        /// This is used by the GameState class to restore the state of a saveable object.
         /// This will be called any time the game is loaded, so you may want to consider
         /// also using this method to initialize any fields that are not saved (i.e. "resetting the object").
         /// </summary>
