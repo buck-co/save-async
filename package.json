@@ -1,5 +1,5 @@
 {
-  "name": "co.buck.datamanagement",
+  "name": "co.buck.gamestateasync",
   "version": "0.3.0",
   "displayName": "Game State Async",
   "description": "Game State Async is BUCK's Unity package for asynchronously saving and loading data in the background using Unity's Awaitable class. Capture and restore state without interrupting Unity's main render thread.",

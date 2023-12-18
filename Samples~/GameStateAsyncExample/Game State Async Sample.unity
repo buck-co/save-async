@@ -730,7 +730,7 @@ GameObject:
   - component: {fileID: 665154988}
   - component: {fileID: 665154987}
   m_Layer: 0
-  m_Name: Data Manager
+  m_Name: Game State
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2227,7 +2227,7 @@ GameObject:
   - component: {fileID: 1751005055}
   - component: {fileID: 1751005056}
   m_Layer: 0
-  m_Name: Data Manager Benchmarks
+  m_Name: Game State Benchmarks
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2407,7 +2407,7 @@ GameObject:
   - component: {fileID: 1815900021}
   - component: {fileID: 1815900020}
   m_Layer: 5
-  m_Name: BUCK Data Management - Header Text
+  m_Name: Game State Async - Header Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2452,7 +2452,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: BUCK Data Management
+  m_text: Game State Async
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 272fbdea3a1504b4f9d871956bc18ba3, type: 2}
   m_sharedMaterial: {fileID: 7034206626912335634, guid: 272fbdea3a1504b4f9d871956bc18ba3, type: 2}

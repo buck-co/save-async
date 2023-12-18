@@ -9,19 +9,19 @@
  */
 
 using System;
-using Buck.DataManagement;
+using Buck.GameStateAsync;
 using UnityEngine;
 
-namespace Buck.DataManagementExample
+namespace Buck.GameStateExample
 {
     public class CacheDataExample : MonoBehaviour, ISaveable
     {
-        // ISaveable needs a Guid which is used to identify the object in the DataManager
+        // ISaveable needs a Guid which is used to identify the object in the save data.
         // This is typically a serialized byte array that does not change.
         // Use OnValidate to ensure that your ISaveable's Guid has a value when the MonoBehaviour is created.
         [SerializeField, HideInInspector] byte[] m_guidBytes;
         public Guid Guid => new(m_guidBytes);
-        void OnValidate() => DataManager.GetSerializableGuid(ref m_guidBytes);
+        void OnValidate() => GameState.GetSerializableGuid(ref m_guidBytes);
         public string Filename => Files.SomeFile;
 
         // Your game data should go in a serializable struct
@@ -42,8 +42,8 @@ namespace Buck.DataManagementExample
         
         void Awake()
         {
-            // Register this ISaveable with the DataManager
-            DataManager.RegisterSaveable(this);
+            // Register this ISaveable
+            GameState.RegisterSaveable(this);
         }
         
         // Use the "Cache Data State" context menu item to update the cached data.
@@ -62,8 +62,8 @@ namespace Buck.DataManagementExample
         }
         
         // Every ISaveable must implement the CaptureState and RestoreState method
-        // CaptureState is called by the DataManager when the game is saved
-        // RestoreState is called by the DataManager when the game is loaded
+        // CaptureState is called when the game is saved with GameState.Save()
+        // RestoreState is called when the game is loaded with GameState.Load()
         public object CaptureState() => m_CachcedSaveDataState;
 
         public void RestoreState(object state)

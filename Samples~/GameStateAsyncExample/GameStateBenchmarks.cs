@@ -2,15 +2,15 @@
 
 using System;
 using UnityEngine;
-using Buck.DataManagement;
+using Buck.GameStateAsync;
 using TMPro;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace Buck.DataManagementExample
+namespace Buck.GameStateExample
 {
-    public class DataManagerBenchmarks : MonoBehaviour
+    public class GameStateBenchmarks : MonoBehaviour
     {
         [SerializeField] TextMeshProUGUI m_debugText;
         List<string> m_debugOutput = new ();
@@ -65,29 +65,29 @@ namespace Buck.DataManagementExample
                     switch (benchmarkType)
                     {
                         case BenchmarkType.SaveGameData:
-                            await DataManager.SaveAsync(m_filenames);
+                            await GameState.Save(m_filenames);
                             break;
                         case BenchmarkType.LoadGameData:
-                            await DataManager.LoadAsync(m_filenames);
+                            await GameState.Load(m_filenames);
                             break;
                         case BenchmarkType.SaveGameDataQueue:
-                            for (int i = 0; i < 10; i++) DataManager.SaveAsync(m_filenames);
+                            for (int i = 0; i < 10; i++) GameState.Save(m_filenames);
                             break;
                         case BenchmarkType.LoadGameDataQueue:
-                            for (int i = 0; i < 10; i++) DataManager.LoadAsync(m_filenames);
+                            for (int i = 0; i < 10; i++) GameState.Load(m_filenames);
                             break;
                         case BenchmarkType.EraseGameData:
-                            await DataManager.EraseAsync(m_filenames);
+                            await GameState.Erase(m_filenames);
                             break;
                         case BenchmarkType.DeleteGameData:
-                            await DataManager.DeleteAsync(m_filenames);
+                            await GameState.Delete(m_filenames);
                             break;
                     }
                     
                     // Switch back to the main thread while waiting
                     Awaitable.MainThreadAsync();
                     
-                    while (DataManager.IsBusy)
+                    while (GameState.IsBusy)
                         await Awaitable.NextFrameAsync();
                     
                     AddDebugOutput(benchmarkType + "() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds +

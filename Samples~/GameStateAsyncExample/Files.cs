@@ -1,6 +1,6 @@
 // MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
 
-namespace Buck.DataManagementExample
+namespace Buck.GameStateExample
 {
     public static class Files
     {
