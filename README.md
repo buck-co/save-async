@@ -158,7 +158,7 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
     }
     ```
 
-For a complete example, check out [this ISaveable implementation](Samples~/GameDataExample.cs) in the sample project.
+For a complete example, check out [this ISaveable implementation](Samples~/GameStateAsyncExample/GameDataExample.cs) in the sample project.
 
 ## GameState API
 
