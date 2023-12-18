@@ -129,7 +129,6 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
         public string playerName;
         public int playerHealth;
         public Vector3 position;
-        public List<Enemy> enemies;
         public Dictionary<int, Item> inventory;
     }
     ```
@@ -144,7 +143,6 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
             playerName = m_playerName,
             playerHealth = m_playerHealth,
             position = m_position,
-            enemies = m_enemies,
             inventory = m_inventory
         };
     }
@@ -156,7 +154,6 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
         m_playerName = s.playerName;
         m_playerHealth = s.playerHealth;
         m_position = s.position;
-        m_enemies = s.enemies;
         m_inventory = s.inventory;
     }
     ```
