@@ -4,7 +4,7 @@ _Game State Async_ is BUCK's Unity package for asynchronously saving and loading
 ### Features
 - :watch: **Asynchronous**: All methods are asynchronously "awaitable" meaning a game can continue running while it waits for a response from the storage device, even if that storage device is slow (like HDDs, external storage, and some consoles)
 - :thread: **Background Threading**: All file I/O occurs on background threads which helps avoid dips in framerate
-- :zap: **GameState API**: Get started fast with a simple API that can be called from anywhere with methods like `GameState.Save()`
+- :zap: **GameState API**: Simple API that can be called from anywhere with methods like `GameState.Save()`
 - :floppy_disk: **ISaveable Interface**: Add the ability for any class to be saved and loaded
 - :ledger: **JSON Serialization**: Data is saved to JSON automatically using Unity's own [Newtonsoft Json Unity Package](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html)
 
