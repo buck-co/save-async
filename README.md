@@ -111,7 +111,7 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
     ```
 
 4. **Register Your Object with `GameState`**
-    <br>Register the object with `GameState`. Generally it's best to do this in your `Awake` method or during initialization. Make sure you do this before calling any save or load methods in the GameState or your saveables won't be picked up!
+    <br>Register the object with `GameState`. Generally it's best to do this in your `Awake` method or during initialization. Make sure you do this before calling any save or load methods in the GameState class or your saveables won't be picked up!
     ```csharp
     void Awake()
     {
@@ -175,7 +175,7 @@ using Buck.GameStateAsync
 ### Properties
 
 #### `bool IsBusy`
-Indicates whether or not the GameState is currently busy with a file operation. This can be useful if you want to wait for one operation to finish before doing another, although because file operations are queued, this generally is only necessary for benchmarking and testing purposes.
+Indicates whether or not the GameState class is currently busy with a file operation. This can be useful if you want to wait for one operation to finish before doing another, although because file operations are queued, this generally is only necessary for benchmarking and testing purposes.
 <br>
 
 **Usage Example**:
@@ -188,7 +188,7 @@ Indicates whether or not the GameState is currently busy with a file operation. 
 ### Methods
 
 #### `void RegisterSaveable(ISaveable saveable)`
-Registers an ISaveable with the GameState for saving and loading.
+Registers an ISaveable with the GameState class for saving and loading.
 
 **Usage Example**:
   ```csharp
