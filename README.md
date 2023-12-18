@@ -24,7 +24,8 @@ After installing the package...
 
 1. Add the `GameState` component to a GameObject in your scene.
 2. Implement the `ISaveable` interface on at least one class (more detail on how to do this is available below).
-3. Call GameState API methods like `GameState.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered.
+3. Register the ISaveable with the GameState instance by calling `GameState.RegisterSaveable(mySaveableObject);` This is usually done in `MonoBehaviour.Awake()`
+4. Call GameState API methods like `GameState.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered.
 
 ### Install Unity Converters for Newtonsoft.Json (strongly recommended)
 
