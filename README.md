@@ -134,7 +134,7 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
     ```
 
 6. **Implement `CaptureState` and `RestoreState` Methods**
-    <br>Implement the `CaptureState` method to capture and return the current state of your object. Then implement the `RestoreState` method to restore your object's state from the saved data. both of these methods will be called by the `GameState` when you call its save and load methods.
+    <br>Implement the `CaptureState` method to capture and return the current state of your object. Then implement the `RestoreState` method to restore your object's state from the saved data. Both of these methods will be called by the `GameState` class when you call its save and load methods.
     ```csharp
     public object CaptureState()
     {
