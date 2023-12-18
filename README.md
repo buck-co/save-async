@@ -19,14 +19,6 @@ _Game State Async_ is BUCK's Unity package for asynchronously saving and loading
 3. Click the plus icon in the upper left and choose `Add package from git URL...`
 4. Paste the git URL into the text field and click the `Add` button.
 
-### Basic Workflow
-After installing the package...
-
-1. Add the `GameState` component to a GameObject in your scene.
-2. Implement the `ISaveable` interface on at least one class (more detail on how to do this is available below).
-3. Register the ISaveable by calling `GameState.RegisterSaveable(mySaveableObject);` This is usually done in `MonoBehaviour.Awake()`
-4. Call GameState API methods like `GameState.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered.
-
 ### Install Unity Converters for Newtonsoft.Json (strongly recommended)
 
 This package depends on Unity's Json.NET package for serializing data, which is already included as a package dependency and will be installed automatically. However, Unity types like Vector3 don't serialize to JSON very nicely, and can include ugly recursive properly loops, like this:
@@ -58,6 +50,14 @@ This package depends on Unity's Json.NET package for serializing data, which is 
 ```
 
 _Yikes!_ Installing the [Unity Converters for Newtonsoft.Json](https://github.com/applejag/Newtonsoft.Json-for-Unity.Converters) package takes care of these issues, as well as many more. Once you've done this, Json.NET should be able to convert Unity's built-in types. In the future, we'll try to include this as a package dependency, but currently the Unity Package Manager only allows packages to have dependencies that come from the official Unity registry.
+
+### Basic Workflow
+After installing the package...
+
+1. Add the `GameState` component to a GameObject in your scene.
+2. Implement the `ISaveable` interface on at least one class (more detail on how to do this is available below).
+3. Register the ISaveable by calling `GameState.RegisterSaveable(mySaveableObject);` This is usually done in `MonoBehaviour.Awake()`
+4. Call GameState API methods like `GameState.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered.
 
 ### Included Samples
 
