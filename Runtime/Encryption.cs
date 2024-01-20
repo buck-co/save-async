@@ -1,3 +1,5 @@
+// MIT License - Copyright (c) 2024 BUCK Design LLC - https://github.com/buck-co
+
 using System;
 
 namespace Buck.SaveAsync

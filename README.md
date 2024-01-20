@@ -1,10 +1,10 @@
-# Game State Async
-_Game State Async_ is BUCK's Unity package for asynchronously saving and loading data in the background using Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class. It includes a simple API that makes it easy to capture and restore state without interrupting Unity's main render thread. That means smoother framerates and fewer load screens!
+# Save Async
+_Save Async_ is BUCK's Unity package for asynchronously saving and loading data in the background using Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class. It includes a simple API that makes it easy to capture and restore state without interrupting Unity's main render thread. That means smoother framerates and fewer load screens!
 
 ### Features
 - :watch: **Asynchronous**: All methods are asynchronously "awaitable" meaning the game can continue running while it waits for a response from the storage device, even if that storage device is slow (like HDDs, external storage, and some consoles)
 - :thread: **Background Threading**: All file I/O occurs on background threads which helps avoid dips in framerate
-- :zap: **GameState API**: Simple API that can be called from anywhere with methods like `GameState.Save()`
+- :zap: **SaveManager API**: Simple API that can be called from anywhere with methods like `SaveManager.Save()`
 - :floppy_disk: **ISaveable Interface**: Implement this interface on any class to give it the ability to be saved and loaded
 - :ledger: **JSON Serialization**: Data is saved to JSON automatically using Unity's own [Newtonsoft Json Unity Package](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html)
 
@@ -54,17 +54,17 @@ _Yikes!_ Installing the [Unity Converters for Newtonsoft.Json](https://github.co
 ### Basic Workflow
 After installing the package...
 
-1. Add the `GameState` component to a GameObject in your scene.
+1. Add the `SaveManager` component to a GameObject in your scene.
 2. Implement the `ISaveable` interface on at least one class (more detail on how to do this is available below).
-3. Register the ISaveable by calling `GameState.RegisterSaveable(mySaveableObject);` This is usually done in `MonoBehaviour.Awake()`
-4. Call GameState API methods like `GameState.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered.
+3. Register the ISaveable by calling `SaveManager.RegisterSaveable(mySaveableObject);` This is usually done in `MonoBehaviour.Awake()`
+4. Call SaveManager API methods like `SaveManager.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered.
 
 ### Included Samples
 
 This package includes a sample project which you can install from the Unity Package Manager by selecting the package from the list and then selecting the `Samples` tab on the right. Then click `Import`. Examining the sample can help you understand how to use the package in your own project.
 
 
-# Implementing ISaveable and using the GameState API
+# Implementing ISaveable and using the SaveManager API
 
 Any class that should save or load data needs to implement the [`ISaveable`](Runtime/ISaveable.cs) interface.
 
@@ -76,9 +76,9 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
 ## Example Implementation: `GameDataExample`
 
 1. **Implement `ISaveable` in Your Class**
-    <br>Your class should inherit from `ISaveable` from the `Buck.GameStateAsync` namespace.
+    <br>Your class should inherit from `ISaveable` from the `Buck.SaveAsync` namespace.
     ```csharp
-    using Buck.GameStateAsync
+    using Buck.SaveAsync
 
     public class YourClass : MonoBehaviour, ISaveable
     {
@@ -103,19 +103,19 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
     ```
 
 3. **Generate and Store a Unique Serializable Guid**
-    <br>Ensure that your class has a globally unique identifier (a GUID for short). Use `GameState.GetSerializableGuid()` to make sure that your MonoBehaviours and other classes can be identified when being saved and loaded.
+    <br>Ensure that your class has a globally unique identifier (a GUID for short). Use `SaveManager.GetSerializableGuid()` to make sure that your MonoBehaviours and other classes can be identified when being saved and loaded.
     ```csharp
     [SerializeField, HideInInspector] byte[] m_guidBytes;
     public Guid Guid => new(m_guidBytes);
-    void OnValidate() => GameState.GetSerializableGuid(ref m_guidBytes);
+    void OnValidate() => SaveManager.GetSerializableGuid(ref m_guidBytes);
     ```
 
-4. **Register Your Object with `GameState`**
-    <br>Register the object with `GameState`. Generally it's best to do this in your `Awake` method or during initialization. Make sure you do this before calling any save or load methods in the GameState class or your saveables won't be picked up!
+4. **Register Your Object with `SaveManager`**
+    <br>Register the object with `SaveManager`. Generally it's best to do this in your `Awake` method or during initialization. Make sure you do this before calling any save or load methods in the SaveManager class or your saveables won't be picked up!
     ```csharp
     void Awake()
     {
-        GameState.RegisterSaveable(this);
+        SaveManager.RegisterSaveable(this);
     }
     ```
 
@@ -134,7 +134,7 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
     ```
 
 6. **Implement `CaptureState` and `RestoreState` Methods**
-    <br>Implement the `CaptureState` method to capture and return the current state of your object. Then implement the `RestoreState` method to restore your object's state from the saved data. Both of these methods will be called by the `GameState` class when you call its save and load methods.
+    <br>Implement the `CaptureState` method to capture and return the current state of your object. Then implement the `RestoreState` method to restore your object's state from the saved data. Both of these methods will be called by the `SaveManager` class when you call its save and load methods.
     ```csharp
     public object CaptureState()
     {
@@ -158,16 +158,16 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
     }
     ```
 
-For a complete example, check out [this ISaveable implementation](Samples~/GameStateAsyncExample/GameDataExample.cs) in the sample project.
+For a complete example, check out [this ISaveable implementation](Samples~/SaveAsyncExample/GameDataExample.cs) in the sample project.
 
-## GameState API
+## SaveManager API
 
-[`GameState`](Runtime/GameState.cs) methods can be called anywhere in your game's logic that you want to save or load, such as in a Game Manager class or a main menu screen. You should add the GameState component to a GameObject in your scene. Below you'll find the public interface for interacting with the GameState class, along with short code examples.
+[`SaveManager`](Runtime/SaveManager.cs) methods can be called anywhere in your game's logic that you want to save or load, such as in a Game Manager class or a main menu screen. You should add the SaveManager component to a GameObject in your scene. Below you'll find the public interface for interacting with the SaveManager class, along with short code examples.
 
 > [!NOTE]
-> The `GameState` class is in the `Buck.GameStateAsync` namespace. Be sure to include this line at the top of any files that make calls to GameState methods or implement the ISaveable interface.
+> The `SaveManager` class is in the `Buck.SaveAsync` namespace. Be sure to include this line at the top of any files that make calls to SaveManager methods or implement the ISaveable interface.
 ```csharp
-using Buck.GameStateAsync
+using Buck.SaveAsync
 ```
 <br>
 
@@ -175,12 +175,12 @@ using Buck.GameStateAsync
 ### Properties
 
 #### `bool IsBusy`
-Indicates whether or not the GameState class is currently busy with a file operation. This can be useful if you want to wait for one operation to finish before doing another, although because file operations are queued, this generally is only necessary for benchmarking and testing purposes.
+Indicates whether or not the SaveManager class is currently busy with a file operation. This can be useful if you want to wait for one operation to finish before doing another, although because file operations are queued, this generally is only necessary for benchmarking and testing purposes.
 <br>
 
 **Usage Example**:
   ```csharp
-  while (GameState.IsBusy)
+  while (SaveManager.IsBusy)
   await Awaitable.NextFrameAsync();
   ```
 <br>
@@ -188,11 +188,11 @@ Indicates whether or not the GameState class is currently busy with a file opera
 ### Methods
 
 #### `void RegisterSaveable(ISaveable saveable)`
-Registers an ISaveable with the GameState class for saving and loading.
+Registers an ISaveable with the SaveManager class for saving and loading.
 
 **Usage Example**:
   ```csharp
-  GameState.RegisterSaveable(mySaveableObject);
+  SaveManager.RegisterSaveable(mySaveableObject);
   ```
 <br>
 
@@ -201,7 +201,7 @@ Asynchronously saves the files at the specified array of paths or filenames.
 
 **Usage Example**:
   ```csharp
-  await GameState.SaveAsync(new string[] {"MyFile.dat"});
+  await SaveManager.SaveAsync(new string[] {"MyFile.dat"});
   ```
 <br>
 
@@ -210,7 +210,7 @@ Asynchronously loads the files at the specified array of paths or filenames.
 
 **Usage Example**:
   ```csharp
-  await GameState.LoadAsync(new string[] {"MyFile.dat"});
+  await SaveManager.LoadAsync(new string[] {"MyFile.dat"});
   ```
 <br>
 
@@ -219,7 +219,7 @@ Asynchronously deletes the files at the specified array of paths or filenames.
 
 **Usage Example**:
   ```csharp
-  await GameState.DeleteAsync(new string[] {"MyFile.dat"});
+  await SaveManager.DeleteAsync(new string[] {"MyFile.dat"});
   ```
 <br>
 
@@ -228,7 +228,7 @@ Asynchronously erases the files at the specified paths or filenames, leaving the
 
 **Usage Example**:
   ```csharp
-  await GameState.EraseAsync(new string[] {"MyFile.dat"});
+  await SaveManager.EraseAsync(new string[] {"MyFile.dat"});
   ```
 <br>
 
@@ -239,20 +239,20 @@ Sets the given Guid byte array to a new Guid byte array if it is null, empty, or
   ```csharp
   [SerializeField, HideInInspector] byte[] m_guidBytes;
   public Guid Guid => new(m_guidBytes);
-  void OnValidate() => GameState.GetSerializableGuid(ref m_guidBytes);
+  void OnValidate() => SaveManager.GetSerializableGuid(ref m_guidBytes);
   ```
 <br>
 
 ## Encryption
 
-If you want to prevent mischeivious gamers from tampering with your save files, you can encrypt them using XOR encryption. To turn it on, use the encryption dropdown menu on the GameState component in your scene and create a password. XOR is very basic and can be hacked using brute force methods, but it is very fast. AES encryption is planned!
+If you want to prevent mischievous gamers from tampering with your save files, you can encrypt them using XOR encryption. To turn it on, use the encryption dropdown menu on the SaveManager component in your scene and create a password. XOR is very basic and can be hacked using brute force methods, but it is very fast. AES encryption is planned!
 
 # Additional Project Information
 
 ### Why did we build this?
 Figuring out how to save and load your game data can be tricky, but what's even more challenging is deciding _when_ to save your game data. Not only is there the issue of data serialization and file I/O, but in addition, save and load operations often end up happening synchronously on Unity's main thread which will cause framerate dips. That's because Unity's renderer is also on the main thread! Furthermore, while most desktops have fast SSDs, sometimes file I/O can take longer than the time it takes to render a frame, especially if you're running your game on a gaming console or a computer with an HDD.
 
-We hit these pain points on our game _[Let's! Revolution!](https://store.steampowered.com/app/2111090/Lets_Revolution/)_ and we wanted to come up with a better approach. By combining [`async`](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/async) and [`await`](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/await) with Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class (available in Unity 2023.1 and up), it is now possible to do file operations both asynchronously _and_ on background threads. That means you can save and load data in the background while your game continues to render frames seamlessly. Nice! However, there's still a good bit to learn about how multithreading works in the context of Unity and how to combine that with a JSON serializer and other features like encryption. The _Game State Async_ package aims to take care of these complications and make asynchronous saving and loading data in Unity a breeze!
+We hit these pain points on our game _[Let's! Revolution!](https://store.steampowered.com/app/2111090/Lets_Revolution/)_ and we wanted to come up with a better approach. By combining [`async`](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/async) and [`await`](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/await) with Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class (available in Unity 2023.1 and up), it is now possible to do file operations both asynchronously _and_ on background threads. That means you can save and load data in the background while your game continues to render frames seamlessly. Nice! However, there's still a good bit to learn about how multithreading works in the context of Unity and how to combine that with a JSON serializer and other features like encryption. The _Save Async_ package aims to take care of these complications and make asynchronous saving and loading data in Unity a breeze!
 
 ### Why not just use Coroutines?
 While Coroutines have served us well for many years, the Task-based asynchronous pattern (TAP) enabled by async/await and Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class has many advantages. Coroutines can execute piece by piece over time, but they still process on Unity's single main thread. If a Coroutine attempts a long-running operation (like accessing a file) it can cause the whole application to freeze for several frames. For a good overview of the differences between async/await and Coroutines, check out this Unite talk [Best practices: Async vs. coroutines - Unite Copenhagen](https://www.youtube.com/watch?v=7eKi6NKri6I&t=548s).
@@ -276,4 +276,4 @@ See also the list of [contributors](https://github.com/buck-co/unity-pkg-data-ma
 
 ### License
 
-MIT License - Copyright (c) 2023 BUCK Design LLC [buck-co](https://github.com/buck-co)
+MIT License - Copyright (c) 2024 BUCK Design LLC [buck-co](https://github.com/buck-co)
