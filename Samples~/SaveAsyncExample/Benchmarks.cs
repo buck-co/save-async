@@ -2,15 +2,15 @@
 
 using System;
 using UnityEngine;
-using Buck.GameStateAsync;
+using Buck.SaveAsync;
 using TMPro;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace Buck.GameStateExample
+namespace Buck.SaveAsyncExample
 {
-    public class GameStateBenchmarks : MonoBehaviour
+    public class Benchmarks : MonoBehaviour
     {
         [SerializeField] TextMeshProUGUI m_debugText;
         List<string> m_debugOutput = new ();
@@ -25,8 +25,6 @@ namespace Buck.GameStateExample
         {
             SaveGameData,
             LoadGameData,
-            SaveGameDataQueue,
-            LoadGameDataQueue,
             EraseGameData,
             DeleteGameData
         }
@@ -65,29 +63,23 @@ namespace Buck.GameStateExample
                     switch (benchmarkType)
                     {
                         case BenchmarkType.SaveGameData:
-                            await GameState.Save(m_filenames);
+                            await SaveManager.Save(m_filenames);
                             break;
                         case BenchmarkType.LoadGameData:
-                            await GameState.Load(m_filenames);
-                            break;
-                        case BenchmarkType.SaveGameDataQueue:
-                            for (int i = 0; i < 10; i++) GameState.Save(m_filenames);
-                            break;
-                        case BenchmarkType.LoadGameDataQueue:
-                            for (int i = 0; i < 10; i++) GameState.Load(m_filenames);
+                            await SaveManager.Load(m_filenames);
                             break;
                         case BenchmarkType.EraseGameData:
-                            await GameState.Erase(m_filenames);
+                            await SaveManager.Erase(m_filenames);
                             break;
                         case BenchmarkType.DeleteGameData:
-                            await GameState.Delete(m_filenames);
+                            await SaveManager.Delete(m_filenames);
                             break;
                     }
                     
                     // Switch back to the main thread while waiting
                     Awaitable.MainThreadAsync();
                     
-                    while (GameState.IsBusy)
+                    while (SaveManager.IsBusy)
                         await Awaitable.NextFrameAsync();
                     
                     AddDebugOutput(benchmarkType + "() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds +
@@ -107,15 +99,9 @@ namespace Buck.GameStateExample
 
         public void SaveGameData()
             => RunBenchmark(BenchmarkType.SaveGameData);
-        
-        public void SaveGameDataQueue()
-            => RunBenchmark(BenchmarkType.SaveGameDataQueue);
 
         public void LoadGameData()
             => RunBenchmark(BenchmarkType.LoadGameData);
-        
-        public void LoadGameDataQueue()
-            => RunBenchmark(BenchmarkType.LoadGameDataQueue);
 
         public void EraseGameData()
             => RunBenchmark(BenchmarkType.EraseGameData);

@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-namespace Buck.GameStateAsync
+namespace Buck.SaveAsync
 {
     /// <summary>
     /// Inherit from this base class to create a singleton.

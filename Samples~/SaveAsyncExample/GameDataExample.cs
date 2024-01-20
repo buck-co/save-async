@@ -8,10 +8,10 @@
 
 using System;
 using System.Collections.Generic;
-using Buck.GameStateAsync;
+using Buck.SaveAsync;
 using UnityEngine;
 
-namespace Buck.GameStateExample
+namespace Buck.SaveAsyncExample
 {
     public class GameDataExample : MonoBehaviour, ISaveable
     {
@@ -20,7 +20,7 @@ namespace Buck.GameStateExample
         // Use OnValidate to ensure that your ISaveable's Guid has a value when the MonoBehaviour is created.
         [SerializeField, HideInInspector] byte[] m_guidBytes;
         public Guid Guid => new(m_guidBytes);
-        void OnValidate() => GameState.GetSerializableGuid(ref m_guidBytes);
+        void OnValidate() => SaveManager.GetSerializableGuid(ref m_guidBytes);
         public string Filename => Files.GameData;
 
         // Your game data should go in a serializable struct
@@ -53,12 +53,12 @@ namespace Buck.GameStateExample
         void Awake()
         {
             // Register this ISaveable
-            GameState.RegisterSaveable(this);
+            SaveManager.RegisterSaveable(this);
         }
         
         // Every ISaveable must implement the CaptureState and RestoreState method
-        // CaptureState is called when the game is saved with GameState.Save()
-        // RestoreState is called when the game is loaded with GameState.Load()
+        // CaptureState is called when the game is saved with SaveManager.Save()
+        // RestoreState is called when the game is loaded with SaveManager.Load()
         
         public object CaptureState()
         {

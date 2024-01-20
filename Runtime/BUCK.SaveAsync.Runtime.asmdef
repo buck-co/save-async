@@ -1,9 +1,7 @@
 {
-    "name": "BUCK.GameStateAsync.Runtime",
-    "rootNamespace": "Buck.GameStateAsync",
-    "references": [
-        "GUID:b8aac53cec3c8de42a626e550d279519"
-    ],
+    "name": "BUCK.SaveAsync.Runtime",
+    "rootNamespace": "Buck.SaveAsync",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

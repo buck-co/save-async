@@ -1,8 +1,8 @@
 {
-  "name": "co.buck.gamestateasync",
-  "version": "0.3.0",
-  "displayName": "Game State Async",
-  "description": "Game State Async is BUCK's Unity package for asynchronously saving and loading data in the background using Unity's Awaitable class. Capture and restore state without interrupting Unity's main render thread.",
+  "name": "co.buck.saveasync",
+  "version": "0.3.1",
+  "displayName": "Save Async",
+  "description": "Save Async is BUCK's Unity package for asynchronously saving and loading data in the background using Unity's Awaitable class. Capture and restore state without interrupting Unity's main render thread.",
   "unity": "2023.1",
   "documentationUrl": "https://github.com/buck-co/unity-pkg-data-management",
   "keywords": [
@@ -12,8 +12,7 @@
     "Files",
     "I/O",
     "Data",
-    "Async",
-    "GameState"
+    "Async"
   ],
   "repository": {
     "url": "https://github.com/buck-co/unity-pkg-data-management.git",
@@ -30,9 +29,9 @@
   "resolutionStrategy": "highest",
   "samples": [
     {
-      "displayName": "Game State Async Example",
-      "description": "Contains a simple example scene that demonstrates the use of the GameState class and two implementations of the ISaveable interface.",
-      "path": "Samples~/GameStateAsyncExample"
+      "displayName": "Save Async Example",
+      "description": "Contains a simple example scene that demonstrates the use of the SaveManager class and two implementations of the ISaveable interface.",
+      "path": "Samples~/SaveAsyncExample"
     }
   ]
 }

@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
 
-namespace Buck.GameStateAsync
+namespace Buck.SaveAsync
 {
-    [AddComponentMenu("GameStateAsync/GameState")]
-    public class GameState : Singleton<GameState>
+    [AddComponentMenu("SaveAsync/SaveManager")]
+    public class SaveManager : Singleton<SaveManager>
     {
         [SerializeField, Tooltip("Enables encryption for save data. " +
                                  "XOR encryption is basic but extremely fast. Support for AES encryption is planned." +
@@ -73,7 +73,7 @@ namespace Buck.GameStateAsync
             m_isInitialized = true;
         }
 
-        #region GameState API
+        #region SaveAsync API
 
         /// <summary>
         /// Boolean indicating whether or not a file operation is in progress.

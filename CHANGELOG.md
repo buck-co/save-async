@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.1] - 2024-01-21
+
+- Renamed the project to "Save Async"
+
 ## [0.3.0] - 2023-12-11
 
 - Fixed lots of potential concurrency issues and race conditions.

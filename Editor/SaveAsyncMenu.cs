@@ -3,11 +3,11 @@ using UnityEditor;
 using System.Diagnostics;
 using System.IO;
 
-namespace Buck.GameStateAsync
+namespace Buck.SaveAsync
 {
-    public class GameStateAsyncMenu
+    public class SaveAsyncMenu
     {
-        [MenuItem("Tools/Game State Async/Open Persistent Data Path", false, 0)]
+        [MenuItem("Tools/Save Async/Open Persistent Data Path", false, 0)]
         static void OpenPersistentDataPath()
         {
             // Get the path to the persistent data directory
@@ -17,7 +17,7 @@ namespace Buck.GameStateAsync
             Process.Start(path);
         }
 
-        [MenuItem("Tools/Game State Async/Clear Persistent Data Path", false, 1)]
+        [MenuItem("Tools/Save Async/Clear Persistent Data Path", false, 1)]
         static void ClearPersistentDataPath()
         {
             // Get the path to the persistent data directory

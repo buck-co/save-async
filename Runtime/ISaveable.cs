@@ -1,6 +1,6 @@
 // MIT License - Copyright (c) 2023 BUCK Design LLC - https://github.com/buck-co
 
-namespace Buck.GameStateAsync
+namespace Buck.SaveAsync
 {
     /// <summary>
     /// Allows an object to be saved and loaded via the DataManager class.

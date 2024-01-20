@@ -1,6 +1,6 @@
 using System;
 
-namespace Buck.GameStateAsync
+namespace Buck.SaveAsync
 {
     public enum EncryptionType
     {
