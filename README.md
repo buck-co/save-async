@@ -12,14 +12,14 @@ _Save Async_ is BUCK's Unity package for asynchronously saving and loading data 
 > [!NOTE]
 > This package works with **Unity 2023.1 and above** as it requires Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class which is not available in earlier versions.
 
-### Install the Package
+### Install the _Save Async_ Package
 
 1. Copy the git URL of this repository: `https://github.com/buck-co/save-async.git`
 2. In Unity, open the Package Manager from the menu by going to `Window > Package Manager`
 3. Click the plus icon in the upper left and choose `Add package from git URL...`
 4. Paste the git URL into the text field and click the `Add` button.
 
-### Install Unity Converters for Newtonsoft.Json (strongly recommended)
+### Install the _Unity Converters for Newtonsoft.Json_ Package (strongly recommended)
 
 1. Copy this git URL: `https://github.com/applejag/Newtonsoft.Json-for-Unity.Converters.git#upm`
 2. In Unity, open the Package Manager from the menu by going to `Window > Package Manager`
