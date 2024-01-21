@@ -14,7 +14,7 @@ _Save Async_ is BUCK's Unity package for asynchronously saving and loading data 
 
 ### Install the Package
 
-1. Copy the git URL of this repository: `https://github.com/buck-co/unity-pkg-data-management.git`
+1. Copy the git URL of this repository: `https://github.com/buck-co/save-async.git`
 2. In Unity, open the Package Manager from the menu by going to `Window > Package Manager`
 3. Click the plus icon in the upper left and choose `Add package from git URL...`
 4. Paste the git URL into the text field and click the `Add` button.
@@ -259,13 +259,13 @@ While Coroutines have served us well for many years, the Task-based asynchronous
 
 ### Contributing
 
-If you have any trouble using the package, feel free to [open an issue](https://github.com/buck-co/unity-pkg-data-management/issues). And if you're interested in contributing, [create a pull request](https://github.com/buck-co/unity-pkg-data-management/pulls) and we'll take a look!
+If you have any trouble using the package, feel free to [open an issue](https://github.com/buck-co/save-async/issues). And if you're interested in contributing, [create a pull request](https://github.com/buck-co/save-async/pulls) and we'll take a look!
 
 ### Authors
 
 * **Nick Pettit** - [nickpettit](https://github.com/nickpettit)
 
-See also the list of [contributors](https://github.com/buck-co/unity-pkg-data-management/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/buck-co/save-async/contributors) who participated in this project.
 
 ### Acknowledgments
 
