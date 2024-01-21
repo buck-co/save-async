@@ -21,7 +21,12 @@ _Save Async_ is BUCK's Unity package for asynchronously saving and loading data 
 
 ### Install Unity Converters for Newtonsoft.Json (strongly recommended)
 
-This package depends on Unity's Json.NET package for serializing data, which is already included as a package dependency and will be installed automatically. However, Unity types like Vector3 don't serialize to JSON very nicely, and can include ugly recursive properly loops, like this:
+1. Copy this git URL: `https://github.com/applejag/Newtonsoft.Json-for-Unity.Converters.git#upm`
+2. In Unity, open the Package Manager from the menu by going to `Window > Package Manager`
+3. Click the plus icon in the upper left and choose `Add package from git URL...`
+4. Paste the git URL into the text field and click the `Add` button.
+
+Save Async depends on Unity's Json.NET package for serializing data, which is already included as a package dependency and will be installed automatically. However, Unity types like Vector3 don't serialize to JSON very nicely, and can include ugly recursive properly loops, like this:
 
 ```json
 {
@@ -49,7 +54,9 @@ This package depends on Unity's Json.NET package for serializing data, which is 
 }
 ```
 
-_Yikes!_ Installing the [Unity Converters for Newtonsoft.Json](https://github.com/applejag/Newtonsoft.Json-for-Unity.Converters) package takes care of these issues, as well as many more. Once you've done this, Json.NET should be able to convert Unity's built-in types. In the future, we'll try to include this as a package dependency, but currently the Unity Package Manager only allows packages to have dependencies that come from the official Unity registry.
+_Yikes!_ Installing the [Unity Converters for Newtonsoft.Json](https://github.com/applejag/Newtonsoft.Json-for-Unity.Converters) package takes care of these issues, as well as many more.
+
+Once you've done this, Json.NET should be able to convert Unity's built-in types. In the future, we'll try to include this as a package dependency, but currently the Unity Package Manager only allows packages to have dependencies that come from the official Unity registry.
 
 ### Basic Workflow
 After installing the package...
