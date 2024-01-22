@@ -3,10 +3,10 @@
 using System;
 using UnityEngine;
 using Buck.SaveAsync;
-using TMPro;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using UnityEngine.UI;
 
 namespace Buck.SaveAsyncExample
 {
@@ -20,7 +20,7 @@ namespace Buck.SaveAsyncExample
     
     public class Benchmarks : MonoBehaviour
     {
-        [SerializeField] TextMeshProUGUI m_debugText;
+        [SerializeField] Text m_debugText;
         List<string> m_debugOutput = new ();
         StringBuilder m_stringBuilder = new ();
         
