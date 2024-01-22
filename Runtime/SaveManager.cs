@@ -104,6 +104,17 @@ namespace Buck.SaveAsync
             => await DoFileOperation(FileOperationType.Save, filenames);
         
         /// <summary>
+        /// Saves the file at the given path or filename.
+        /// <code>
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
+        /// </code>
+        /// </summary>
+        /// <param name="filename">The path or filename to save.</param>
+        public static async Awaitable Save(string filename)
+            => await Save(new[] {filename});
+        
+        /// <summary>
         /// Loads the files at the given paths or filenames.
         /// <code>
         /// File example: "MyFile.dat"
@@ -113,10 +124,21 @@ namespace Buck.SaveAsync
         /// <param name="filenames">The array of paths or filenames to load.</param>
         public static async Awaitable Load(string[] filenames)
             => await DoFileOperation(FileOperationType.Load, filenames);
+        
+        /// <summary>
+        /// Loads the file at the given path or filename.
+        /// <code>
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
+        /// </code>
+        /// </summary>
+        /// <param name="filename">The path or filename to load.</param>
+        public static async Awaitable Load(string filename)
+            => await Load(new[] {filename});
 
         /// <summary>
         /// Deletes the files at the given paths or filenames. Each file will be removed from disk.
-        /// Use <see cref="Erase"/> to fill each file with an empty string without removing it from disk.
+        /// Use <see cref="Erase(string[])"/> to fill each file with an empty string without removing it from disk.
         /// <code>
         /// File example: "MyFile.dat"
         /// Path example: "MyFolder/MyFile.dat"
@@ -127,8 +149,20 @@ namespace Buck.SaveAsync
             => await DoFileOperation(FileOperationType.Delete, filenames);
         
         /// <summary>
+        /// Deletes the file at the given path or filename. The file will be removed from disk.
+        /// Use <see cref="Erase(string)"/> to fill the file with an empty string without removing it from disk.
+        /// <code>
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
+        /// </code>
+        /// </summary>
+        /// <param name="filename">The path or filename to delete.</param>
+        public static async Awaitable Delete(string filename)
+            => await Delete(new[] {filename});
+        
+        /// <summary>
         /// Erases the files at the given paths or filenames. Each file will still exist on disk, but it will be empty.
-        /// Use <see cref="Delete"/> to remove the file from disk.
+        /// Use <see cref="Delete(string[])"/> to remove the files from disk.
         /// <code>
         /// File example: "MyFile.dat"
         /// Path example: "MyFolder/MyFile.dat"
@@ -137,6 +171,18 @@ namespace Buck.SaveAsync
         /// <param name="filenames">The array of paths or filenames to erase.</param>
         public static async Awaitable Erase(string[] filenames)
             => await DoFileOperation(FileOperationType.Erase, filenames);
+        
+        /// <summary>
+        /// Erases the file at the given path or filename. The file will still exist on disk, but it will be empty.
+        /// Use <see cref="Delete(string)"/> to remove the file from disk.
+        /// <code>
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
+        /// </code>
+        /// </summary>
+        /// <param name="filename">The path or filename to erase.</param>
+        public static async Awaitable Erase(string filename)
+            => await Erase(new[] {filename});
         
         /// <summary>
         /// Sets the given Guid byte array to a new Guid byte array if it is null, empty, or an empty Guid.
