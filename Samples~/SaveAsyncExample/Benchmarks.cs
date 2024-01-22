@@ -10,24 +10,19 @@ using System.Text;
 
 namespace Buck.SaveAsyncExample
 {
+    public enum BenchmarkType
+    {
+        SaveGameData,
+        LoadGameData,
+        EraseGameData,
+        DeleteGameData
+    }
+    
     public class Benchmarks : MonoBehaviour
     {
         [SerializeField] TextMeshProUGUI m_debugText;
         List<string> m_debugOutput = new ();
         StringBuilder m_stringBuilder = new ();
-        string[] m_filenames =
-        {
-            Files.GameData,
-            Files.SomeFile
-        };
-        
-        enum BenchmarkType
-        {
-            SaveGameData,
-            LoadGameData,
-            EraseGameData,
-            DeleteGameData
-        }
         
         void AddDebugOutput(string output)
         {
@@ -46,7 +41,7 @@ namespace Buck.SaveAsyncExample
             m_debugText.text = m_stringBuilder.ToString();
         }
 
-        async Awaitable RunBenchmark(BenchmarkType benchmarkType)
+        async Awaitable RunBenchmark(BenchmarkType benchmarkType, string[] filenames)
         {
             while (!destroyCancellationToken.IsCancellationRequested)
             {
@@ -63,16 +58,16 @@ namespace Buck.SaveAsyncExample
                     switch (benchmarkType)
                     {
                         case BenchmarkType.SaveGameData:
-                            await SaveManager.Save(m_filenames);
+                            await SaveManager.Save(filenames);
                             break;
                         case BenchmarkType.LoadGameData:
-                            await SaveManager.Load(m_filenames);
+                            await SaveManager.Load(filenames);
                             break;
                         case BenchmarkType.EraseGameData:
-                            await SaveManager.Erase(m_filenames);
+                            await SaveManager.Erase(filenames);
                             break;
                         case BenchmarkType.DeleteGameData:
-                            await SaveManager.Delete(m_filenames);
+                            await SaveManager.Delete(filenames);
                             break;
                     }
                     
@@ -97,16 +92,16 @@ namespace Buck.SaveAsyncExample
             }
         }
 
-        public void SaveGameData()
-            => RunBenchmark(BenchmarkType.SaveGameData);
+        public async Awaitable SaveGameData(string[] filenames)
+            => await RunBenchmark(BenchmarkType.SaveGameData, filenames);
 
-        public void LoadGameData()
-            => RunBenchmark(BenchmarkType.LoadGameData);
+        public async Awaitable LoadGameData(string[] filenames)
+            => await RunBenchmark(BenchmarkType.LoadGameData, filenames);
 
-        public void EraseGameData()
-            => RunBenchmark(BenchmarkType.EraseGameData);
+        public async Awaitable EraseGameData(string[] filenames)
+            => await RunBenchmark(BenchmarkType.EraseGameData, filenames);
         
-        public void DeleteGameData()
-            => RunBenchmark(BenchmarkType.DeleteGameData);
+        public async Awaitable DeleteGameData(string[] filenames)
+            => await RunBenchmark(BenchmarkType.DeleteGameData, filenames);
     }
 }
