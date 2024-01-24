@@ -3,7 +3,7 @@
 namespace Buck.SaveAsync
 {
     /// <summary>
-    /// Allows an object to be saved and loaded via the DataManager class.
+    /// Allows an object to be saved and loaded via the SaveManager class.
     /// </summary>
     public interface ISaveable
     {
@@ -20,14 +20,14 @@ namespace Buck.SaveAsync
         public string Filename { get; }
         
         /// <summary>
-        /// This is used by the GameState class to capture the state of a saveable object.
+        /// This is used by the SaveManager class to capture the state of a saveable object.
         /// Typically this is a struct defined by the ISaveable implementing class.
         /// The contents of the struct could be created at the time of saving, or cached in a variable.
         /// </summary>
         object CaptureState();
         
         /// <summary>
-        /// This is used by the GameState class to restore the state of a saveable object.
+        /// This is used by the SaveManager class to restore the state of a saveable object.
         /// This will be called any time the game is loaded, so you may want to consider
         /// also using this method to initialize any fields that are not saved (i.e. "resetting the object").
         /// </summary>
