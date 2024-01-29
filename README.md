@@ -1,7 +1,7 @@
 ![opt 03](https://github.com/buck-co/save-async/assets/41124/f1a6ebbc-41aa-49e0-9ae9-5daf4e5bb228)
 
 # Save Async
-_Save Async_ is BUCK's Unity package for asynchronously saving and loading data in the background using Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class. It includes a simple API that makes it easy to capture and restore state without interrupting Unity's main render thread. That means smoother framerates and fewer load screens!
+_Save Async_ is [BUCK](https://buck.co)'s Unity package for asynchronously saving and loading data in the background using Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class. It includes a simple API that makes it easy to capture and restore state without interrupting Unity's main render thread. That means smoother framerates and fewer load screens!
 
 ### Features
 - :watch: **Asynchronous**: All methods are asynchronously "awaitable" meaning the game can continue running while it waits for a response from the storage device, even if that storage device is slow (like HDDs, external storage, and some consoles)
@@ -282,7 +282,10 @@ See also the list of [contributors](https://github.com/buck-co/save-async/contri
 * Thanks to [Dapper Dino for this tutorial](https://www.youtube.com/watch?v=f5GvfZfy3yk) which demonstrated how a form of the inversion of control design pattern could be used to make saving and loading easier.
 * Thanks to [Bronson Zgeb at Unity for this Unite talk](https://www.youtube.com/watch?v=uD7y4T4PVk0) which shows many of the pieces necessary for building a save system in Unity.
 
-
 ### License
 
 MIT License - Copyright (c) 2024 BUCK Design LLC [buck-co](https://github.com/buck-co)
+
+---
+
+_[BUCK](https://buck.co) is a global creative company that brings brands, stories, and experiences to life through art, design, and technology. If you're a Game Developer or Creative Technologist or want to get involved with our work, reach out and say hi via [Github](https://github.com/buck-co), [Instagram](https://www.instagram.com/buck_design/?hl=en) or our [Careers page](https://buck.co/careers). 👋_
