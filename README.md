@@ -28,7 +28,7 @@ _Save Async_ is [BUCK](https://buck.co)'s Unity package for asynchronously savin
 3. Click the plus icon in the upper left and choose `Add package from git URL...`
 4. Paste the git URL into the text field and click the `Add` button.
 
-Save Async depends on Unity's Json.NET package for serializing data, which is already included as a package dependency and will be installed automatically. However, Unity types like Vector3 don't serialize to JSON very nicely, and can include ugly recursive properly loops, like this:
+Save Async depends on Unity's Json.NET package for serializing data, which is already included as a package dependency and will be installed automatically. However, Unity types like Vector3 don't serialize to JSON very nicely, and can include ugly recursive property loops, like this:
 
 ```json
 {
