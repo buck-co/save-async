@@ -12,7 +12,9 @@ _Save Async_ is [BUCK](https://buck.co)'s Unity package for asynchronously savin
 
 # Getting Started
 > [!NOTE]
-> This package works with **Unity 2023.1 and above** as it requires Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class which is not available in earlier versions.
+> This package works with **Unity 2023.1 and above** as it requires Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable.html) class which is not available in earlier versions.>
+
+📺 [Watch the Save Async Tutorial video](https://vimeo.com/buck/save-async) or follow the instructions below.
 
 ### Install the _Save Async_ Package
 
