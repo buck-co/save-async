@@ -207,39 +207,39 @@ Registers an ISaveable with the SaveManager class for saving and loading.
   ```
 <br>
 
-#### `Awaitable SaveAsync(string[] filenames)`
+#### `Awaitable Save(string[] filenames)`
 Asynchronously saves the files at the specified array of paths or filenames.
 
 **Usage Example**:
   ```csharp
-  await SaveManager.SaveAsync(new string[] {"MyFile.dat"});
+  await SaveManager.Save(new string[] {"MyFile.dat"});
   ```
 <br>
 
-#### `Awaitable LoadAsync(string[] filenames)`
+#### `Awaitable Load(string[] filenames)`
 Asynchronously loads the files at the specified array of paths or filenames.
 
 **Usage Example**:
   ```csharp
-  await SaveManager.LoadAsync(new string[] {"MyFile.dat"});
+  await SaveManager.Load(new string[] {"MyFile.dat"});
   ```
 <br>
 
-#### `Awaitable DeleteAsync(string[] filenames)`
+#### `Awaitable Delete(string[] filenames)`
 Asynchronously deletes the files at the specified array of paths or filenames.
 
 **Usage Example**:
   ```csharp
-  await SaveManager.DeleteAsync(new string[] {"MyFile.dat"});
+  await SaveManager.Delete(new string[] {"MyFile.dat"});
   ```
 <br>
 
-#### `Awaitable EraseAsync(string[] filenames)`
+#### `Awaitable Erase(string[] filenames)`
 Asynchronously erases the files at the specified paths or filenames, leaving them empty but still on disk.
 
 **Usage Example**:
   ```csharp
-  await SaveManager.EraseAsync(new string[] {"MyFile.dat"});
+  await SaveManager.Erase(new string[] {"MyFile.dat"});
   ```
 <br>
 
