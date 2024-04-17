@@ -100,7 +100,7 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
 2. **Choose a Filename**
     <br>This is the file name where this object's data will be saved.
     ```csharp
-    public string FileName => Files.GameData;
+    public string Filename => Files.GameData;
     ```
 
     It is recommended to use a static class to store file paths as strings to avoid typos.
