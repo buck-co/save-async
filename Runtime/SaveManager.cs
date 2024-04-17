@@ -2,8 +2,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using Newtonsoft.Json;
+using Sirenix.OdinInspector;
+using Debug = UnityEngine.Debug;
 
 namespace Buck.SaveAsync
 {
@@ -40,7 +43,8 @@ namespace Buck.SaveAsync
         }
         
         static FileHandler m_fileHandler;
-        static Dictionary<Guid, ISaveable> m_saveables = new();
+        //static Dictionary<Guid, ISaveable> m_saveables = new();
+        static Dictionary<Guid, object> m_saveables = new Dictionary<Guid, object>();
         static List<SaveableObject> m_loadedSaveables = new();
         static Queue<FileOperation> m_fileOperationQueue = new();
         static HashSet<string> m_files = new();
@@ -73,6 +77,29 @@ namespace Buck.SaveAsync
             m_isInitialized = true;
         }
 
+        [Button("Print Saveables", ButtonSizes.Gigantic)]
+        public void PrintSaveables()
+        {
+            var allSaveData = new Dictionary<Guid, Dictionary<string, object>>();
+            foreach (var entry in m_saveables)
+            {
+                var saveData = new Dictionary<string, object>();
+                Type type = entry.Value.GetType();
+                foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    if (Attribute.IsDefined(field, typeof(Saveable)))
+                    {
+                        object value = field.GetValue(entry.Value);
+                        saveData.Add(field.Name, value);
+                    }
+                }
+                allSaveData.Add(entry.Key, saveData);
+            }
+
+            string json = JsonConvert.SerializeObject(allSaveData, Formatting.Indented);
+            System.IO.File.WriteAllText(filePath, json);
+        }
+
         #region SaveAsync API
 
         /// <summary>
@@ -84,12 +111,12 @@ namespace Buck.SaveAsync
         /// Registers an ISaveable and its file for saving and loading.
         /// </summary>
         /// <param name="saveable">The ISaveable to register for saving and loading.</param>
-        public static void RegisterSaveable(ISaveable saveable)
+        public static void RegisterSaveable(Guid guid, object saveable)
         {
-            if (m_saveables.TryAdd(saveable.Guid, saveable))
-                m_files.Add(saveable.Filename);
+            if (m_saveables.TryAdd(guid, saveable))
+                Debug.Log("Saveable registered");
             else
-                Debug.LogError($"Saveable with GUID {saveable.Guid} already exists!");
+                Debug.LogError($"Saveable with GUID {guid} already exists!");
         }
 
         /// <summary>
@@ -275,8 +302,10 @@ namespace Buck.SaveAsync
 
                 // Switch back to the main thread before accessing Unity objects and setting IsBusy to false
                 await Awaitable.MainThreadAsync();
+
+                // TODO: Implement a way to restore state using the Saveable attribute
                 
-                // If anything was populated in the loadedDataList, restore state
+                /*// If anything was populated in the loadedDataList, restore state
                 // This is done here because it's better to process the whole queue before switching back to the main thread.
                 if (m_loadedSaveables.Count > 0)
                 {
@@ -293,7 +322,7 @@ namespace Buck.SaveAsync
                 }
                 
                 // Clear the list before the next iteration
-                m_loadedSaveables.Clear();
+                m_loadedSaveables.Clear();*/
 
                 IsBusy = false;
                 
