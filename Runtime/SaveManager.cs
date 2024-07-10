@@ -10,6 +10,12 @@ namespace Buck.SaveAsync
     [AddComponentMenu("SaveAsync/SaveManager")]
     public class SaveManager : Singleton<SaveManager>
     {
+        [SerializeField, Tooltip("This field can be left blank. SaveAsync allows the FileHandler class to be overridden." +
+                                 "This can be useful in scenarios where files should not be saved using local file IO" +
+                                 "(such as cloud saves) or when a platform-specific save API must be used. " +
+                                 "If you want to use a custom file handler, create a new class that inherits from FileHandler and assign it here.")]
+        FileHandler m_customFileHandler;
+        
         [SerializeField, Tooltip("Enables encryption for save data. " +
                                  "XOR encryption is basic but extremely fast. Support for AES encryption is planned." +
                                  "Do not change the encryption type once the game has shipped!")]
@@ -68,8 +74,10 @@ namespace Buck.SaveAsync
         {
             if (m_isInitialized)
                 return;
+
+            // If there is a user-define FileHandler, use it. Otherwise, create a new FileHandler.
+            m_fileHandler = (Instance.m_customFileHandler == null) ? ScriptableObject.CreateInstance<FileHandler>() : Instance.m_customFileHandler;
             
-            m_fileHandler = new FileHandler();
             m_isInitialized = true;
         }
 

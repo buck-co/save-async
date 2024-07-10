@@ -7,17 +7,16 @@ using System.IO;
 
 namespace Buck.SaveAsync
 {
-    public class FileHandler
+    public class FileHandler : ScriptableObject
     {
+        /// <summary>
+        /// Stores the persistent data path for later use, which can only be accessed on the main thread.
+        /// </summary>
         string m_persistentDataPath;
         
-        /// <summary>
-        /// Creates a new FileHandler instance that stores Application.persistentDataPath, which can only be accessed on the main thread.
-        /// Also creates a cancellation token for async methods.
-        /// </summary>
-        public FileHandler()
+        void OnEnable()
             => m_persistentDataPath = Application.persistentDataPath;
-
+        
         /// <summary>
         /// Returns the full path to a file in the persistent data path using the given path or filename.
         /// <code>
@@ -26,7 +25,7 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file that will be combined with the persistent data path.</param>
-        string GetPath(string pathOrFilename)
+        protected virtual string GetPath(string pathOrFilename)
             => Path.Combine(m_persistentDataPath, pathOrFilename);
 
         /// <summary>
@@ -37,13 +36,11 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to check.</param>
-        public bool Exists(string pathOrFilename)
+        public virtual bool Exists(string pathOrFilename)
             => File.Exists(GetPath(pathOrFilename));
 
         /// <summary>
         /// Writes the given content to a file at the given path or filename.
-        /// This is an asynchronous method. If useBackgroundThread is true, it runs on a background thread, 
-        /// otherwise it runs on the main thread.
         /// <code>
         /// File example: "MyFile.dat"
         /// Path example: "MyFolder/MyFile.dat"
@@ -51,24 +48,20 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to write.</param>
         /// <param name="content">The string to write to the file.</param>
-        /// <param name="useBackgroundThread">True by default. Set to false to run on the main thread.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public async Task WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken)
+        public virtual async Task WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken)
             => await File.WriteAllTextAsync(GetPath(pathOrFilename), content, cancellationToken);
 
         /// <summary>
         /// Returns the contents of a file at the given path or filename.
-        /// This is an asynchronous method. If useBackgroundThread is true, it runs on a background thread, 
-        /// otherwise it runs on the main thread.
         /// <code>
         /// File example: "MyFile.dat"
         /// Path example: "MyFolder/MyFile.dat"
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to read.</param>
-        /// <param name="useBackgroundThread">True by default. Set to false to run on the main thread.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
+        public virtual async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
         {
             // If the file does not exist, return an empty string and log a warning.
             if (!Exists(pathOrFilename))
@@ -100,7 +93,7 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to erase.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public async Task Erase(string pathOrFilename, CancellationToken cancellationToken)
+        public virtual async Task Erase(string pathOrFilename, CancellationToken cancellationToken)
             => await WriteFile(pathOrFilename, string.Empty, cancellationToken);
 
         /// <summary>
@@ -112,7 +105,7 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to delete.</param>
-        public void Delete(string pathOrFilename) 
+        public virtual void Delete(string pathOrFilename) 
             => File.Delete(GetPath(pathOrFilename));
     }
 }

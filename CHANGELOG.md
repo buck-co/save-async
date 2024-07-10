@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.2] - 2024-07-09
+
+- The default FileHandler now inherits from ScriptableObject and can be overridden. This can be useful in scenarios where files should not be saved using local file IO (such as cloud saves) or when a platform-specific save API must be used.
+
 ## [0.3.1] - 2024-01-20
 
 - Renamed the project to "Save Async"
