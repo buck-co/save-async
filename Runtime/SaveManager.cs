@@ -75,8 +75,10 @@ namespace Buck.SaveAsync
             if (m_isInitialized)
                 return;
 
-            // If there is a user-define FileHandler, use it. Otherwise, create a new FileHandler.
-            m_fileHandler = (Instance.m_customFileHandler == null) ? ScriptableObject.CreateInstance<FileHandler>() : Instance.m_customFileHandler;
+            // If there is a user-defined FileHandler, use it. Otherwise, create a new FileHandler.
+            m_fileHandler = Instance.m_customFileHandler == null
+                          ? ScriptableObject.CreateInstance<FileHandler>()
+                          : Instance.m_customFileHandler;
             
             m_isInitialized = true;
         }

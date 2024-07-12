@@ -14,7 +14,7 @@ namespace Buck.SaveAsync
         /// </summary>
         string m_persistentDataPath;
         
-        void OnEnable()
+        protected virtual void OnEnable()
             => m_persistentDataPath = Application.persistentDataPath;
         
         /// <summary>
