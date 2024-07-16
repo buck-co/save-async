@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
+using UnityEngine.Serialization;
 
 namespace Buck.SaveAsync
 {
@@ -46,7 +47,7 @@ namespace Buck.SaveAsync
         }
         
         static FileHandler m_fileHandler;
-        static Dictionary<Guid, ISaveable> m_saveables = new();
+        static Dictionary<string, ISaveable> m_saveables = new();
         static List<SaveableObject> m_loadedSaveables = new();
         static Queue<FileOperation> m_fileOperationQueue = new();
         static HashSet<string> m_files = new();
@@ -63,7 +64,7 @@ namespace Buck.SaveAsync
         [Serializable]
         public class SaveableObject
         {
-            public string Guid;
+            public string Key;
             public object Data;
         }
 
@@ -96,11 +97,22 @@ namespace Buck.SaveAsync
         /// <param name="saveable">The ISaveable to register for saving and loading.</param>
         public static void RegisterSaveable(ISaveable saveable)
         {
-            if (m_saveables.TryAdd(saveable.Guid, saveable))
+            if (m_saveables.TryAdd(saveable.Key, saveable))
                 m_files.Add(saveable.Filename);
             else
-                Debug.LogError($"Saveable with GUID {saveable.Guid} already exists!");
+                Debug.LogError($"Saveable with Key {saveable.Key} already exists!");
         }
+        
+        /// <summary>
+        /// Checks if a file exists at the given path or filename.
+        /// <code>
+        /// File example: "MyFile.dat"
+        /// Path example: "MyFolder/MyFile.dat"
+        /// </code>
+        /// </summary>
+        /// <param name="filename">The path or filename to check for existence.</param>
+        public static bool Exists(string filename)
+            => m_fileHandler.Exists(filename);
 
         /// <summary>
         /// Saves the files at the given paths or filenames.
@@ -196,6 +208,7 @@ namespace Buck.SaveAsync
         
         /// <summary>
         /// Sets the given Guid byte array to a new Guid byte array if it is null, empty, or an empty Guid.
+        /// This method can be useful for creating unique keys for ISaveables.
         /// </summary>
         /// <param name="guidBytes">The byte array (passed by reference) that you would like to fill with a serializable guid.</param>
         /// <returns>The same byte array that contains the serializable guid, but returned from the method.</returns>
@@ -204,14 +217,14 @@ namespace Buck.SaveAsync
             // If the byte array is null, return a new Guid byte array.
             if (guidBytes == null)
             {
-                Debug.Log("Guid byte array is null. Generating a new Guid.");
+                Debug.LogWarning("Guid byte array is null. Generating a new Guid.");
                 guidBytes = Guid.NewGuid().ToByteArray();
             }
             
             // If the byte array is empty, return a new Guid byte array.
             if (guidBytes.Length == 0)
             {
-                Debug.Log("Guid byte array is empty. Generating a new Guid.");
+                Debug.LogWarning("Guid byte array is empty. Generating a new Guid.");
                 guidBytes = Guid.NewGuid().ToByteArray();
             }
             
@@ -225,7 +238,7 @@ namespace Buck.SaveAsync
 
             if (guidObj == Guid.Empty)
             {
-                Debug.Log("Guid is empty. Generating a new Guid.");
+                Debug.LogWarning("Guid is empty. Generating a new Guid.");
                 guidBytes = Guid.NewGuid().ToByteArray();
             }
             
@@ -293,12 +306,28 @@ namespace Buck.SaveAsync
                     // Restore state for each ISaveable
                     foreach (SaveableObject wrappedData in m_loadedSaveables)
                     {
-                        var guid = new Guid(wrappedData.Guid);
+                        // Try to get the ISaveable from the dictionary
+                        if (m_saveables.ContainsKey(wrappedData.Key) == false)
+                        {
+                            Debug.LogError("The ISaveable with the key " + wrappedData.Key + " was not found in the saveables dictionary. " +
+                                           "The data will not be restored. This could mean that the string Key for the matching object has " +
+                                           "changed since the save data was created.", Instance.gameObject);
+                            continue;
+                        }
+                        
+                        // Get the ISaveable from the dictionary
+                        var saveable = m_saveables[wrappedData.Key];
 
-                        var saveable = m_saveables[guid];
-
-                        if (saveable != null)
-                            saveable.RestoreState(wrappedData.Data);
+                        // If the ISaveable is null, log an error and continue to the next iteration
+                        if (saveable == null)
+                        {
+                            Debug.LogError("The ISaveable with the key " + wrappedData.Key + " is null. "
+                                           + "The data will not be restored.", Instance.gameObject);
+                            continue;
+                        }
+                        
+                        // Restore the state of the ISaveable
+                        saveable.RestoreState(wrappedData.Data);
                     }
                 }
                 
@@ -372,7 +401,7 @@ namespace Buck.SaveAsync
 
                 wrappedSaveables[i] = new SaveableObject
                 {
-                    Guid = s.Guid.ToString(),
+                    Key = s.Key.ToString(),
                     Data = data
                 };
             }

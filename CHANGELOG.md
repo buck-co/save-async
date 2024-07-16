@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.0] - 2024-07-16
+
+- The ISaveable interface Guid property ISaveable.Guid has been replaced with a string property called ISaveable.Key. This is a breaking change, but it enables the option to use either a unique string key or store a Guid as a string, rather than using Guids and serialized byte arrays exclusively.
+- Added some much needed error checking to validate ISaveable keys when loading data. Previously, if a key was not found in the registered saveables dictionary, it would throw an unhandled exception.
+
 ## [0.3.2] - 2024-07-09
 
 - The default FileHandler now inherits from ScriptableObject and can be overridden. This can be useful in scenarios where files should not be saved using local file IO (such as cloud saves) or when a platform-specific save API must be used.

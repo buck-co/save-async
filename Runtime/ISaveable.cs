@@ -8,10 +8,11 @@ namespace Buck.SaveAsync
     public interface ISaveable
     {
         /// <summary>
-        /// This property should be backed by a serialized byte array that does not change.
-        /// This is used to identify the object when saving and loading.
+        /// This is a unique string used to identify the object when saving and loading.
+        /// If you choose to use a Guid, it is recommended that it is backed by a
+        /// serialized byte array that does not change.
         /// </summary>
-        public System.Guid Guid { get; }
+        public string Key { get; }
         
         /// <summary>
         /// This is the file name where this object's data will be saved.

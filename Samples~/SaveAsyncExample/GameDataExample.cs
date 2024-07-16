@@ -15,12 +15,9 @@ namespace Buck.SaveAsyncExample
 {
     public class GameDataExample : MonoBehaviour, ISaveable
     {
-        // ISaveable needs a Guid which is used to identify the object in the save data.
-        // This is typically a serialized byte array that does not change.
-        // Use OnValidate to ensure that your ISaveable's Guid has a value when the MonoBehaviour is created.
-        [SerializeField, HideInInspector] byte[] m_guidBytes;
-        public Guid Guid => new(m_guidBytes);
-        void OnValidate() => SaveManager.GetSerializableGuid(ref m_guidBytes);
+        // ISaveable needs a unique string "Key" which is used to identify the object in the save data.
+        // For an example that uses a Guid, see CacheDataExample.cs.
+        public string Key => "GameDataExample";
         public string Filename => Files.GameData;
 
         // Your game data should go in a serializable struct

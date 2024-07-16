@@ -79,7 +79,7 @@ This package includes a sample project which you can install from the Unity Pack
 
 Any class that should save or load data needs to implement the [`ISaveable`](Runtime/ISaveable.cs) interface.
 
-- **Guid Property**: Each `ISaveable` must have a globally unique identifier (Guid) for distinguishing it when saving and loading data.
+- **Key Property**: Each `ISaveable` must have a globally unique string for distinguishing it when saving and loading data.
 - **Filename Property**: Each `ISaveable` must have a filename string that identifies which file it should be saved in.
 - **CaptureState Method**: This method captures and returns the current state of the object in a serializable format.
 - **RestoreState Method**: This method restores the object's state from the provided data.
@@ -113,12 +113,16 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
     }
     ```
 
-3. **Generate and Store a Unique Serializable Guid**
-    <br>Ensure that your class has a globally unique identifier (a GUID for short). Use `SaveManager.GetSerializableGuid()` to make sure that your MonoBehaviours and other classes can be identified when being saved and loaded.
+3. **Generate and Store a Unique Serializable Key**
+    <br>Ensure that your class has a globally unique string key, such as "GameDataExample".
     ```csharp
-    [SerializeField, HideInInspector] byte[] m_guidBytes;
-    public Guid Guid => new(m_guidBytes);
-    void OnValidate() => SaveManager.GetSerializableGuid(ref m_guidBytes);
+    public string Key => "GameDataExample";
+    ```
+    Optionally, you can generate and use a serializable Guid to uniquely identify your objects. Use `SaveManager.GetSerializableGuid()` in MonoBehaviour.OnValidate() to get the Guid and then store it as a serialized byte array (since the System.Guid type itself cannot be serialized).
+    ```csharp
+        [SerializeField, HideInInspector] byte[] m_guidBytes;
+        public string Key => new Guid(m_guidBytes).ToString();
+        void OnValidate() => SaveManager.GetSerializableGuid(ref m_guidBytes);
     ```
 
 4. **Register Your Object with `SaveManager`**
@@ -249,7 +253,7 @@ Sets the given Guid byte array to a new Guid byte array if it is null, empty, or
 **Usage Example**:
   ```csharp
   [SerializeField, HideInInspector] byte[] m_guidBytes;
-  public Guid Guid => new(m_guidBytes);
+  public string Key => new Guid(m_guidBytes).ToString();
   void OnValidate() => SaveManager.GetSerializableGuid(ref m_guidBytes);
   ```
 <br>
