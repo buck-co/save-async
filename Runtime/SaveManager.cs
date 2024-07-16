@@ -306,6 +306,13 @@ namespace Buck.SaveAsync
                     // Restore state for each ISaveable
                     foreach (SaveableObject wrappedData in m_loadedSaveables)
                     {
+                        if (wrappedData.Key == null)
+                        {
+                            Debug.LogError("The key for an ISaveable is null. JSON data may be malformed. " +
+                                           "The data will not be restored. ", Instance.gameObject);
+                            continue;
+                        }
+                        
                         // Try to get the ISaveable from the dictionary
                         if (m_saveables.ContainsKey(wrappedData.Key) == false)
                         {
@@ -373,7 +380,20 @@ namespace Buck.SaveAsync
                 string json = Encryption.Decrypt(fileContent, Instance.m_encryptionPassword, Instance.m_encryptionType);
                         
                 // Deserialize the JSON data to List of SaveableDataWrapper
-                m_loadedSaveables.AddRange(JsonConvert.DeserializeObject<List<SaveableObject>>(json, m_jsonSerializerSettings));
+                List<SaveableObject> jsonObjects = null;
+                
+                try
+                {
+                    jsonObjects = JsonConvert.DeserializeObject<List<SaveableObject>>(json, m_jsonSerializerSettings);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("Error deserializing JSON data. JSON data may be malformed. Exception message: " + e.Message, Instance.gameObject);
+                    continue;
+                }
+                
+                if (jsonObjects != null)
+                    m_loadedSaveables.AddRange(jsonObjects);
             }
         }
         

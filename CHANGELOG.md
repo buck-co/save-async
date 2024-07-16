@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.1] - 2024-07-16
+
+- Added additional exception handling for malformed JSON data.
+
 ## [0.4.0] - 2024-07-16
 
 - The ISaveable interface Guid property ISaveable.Guid has been replaced with a string property called ISaveable.Key. This is a breaking change, but it enables the option to use either a unique string key or store a Guid as a string, rather than using Guids and serialized byte arrays exclusively.
