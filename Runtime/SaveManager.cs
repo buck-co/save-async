@@ -11,11 +11,9 @@ namespace Buck.SaveAsync
     [AddComponentMenu("SaveAsync/SaveManager")]
     public class SaveManager : Singleton<SaveManager>
     {
-        [SerializeField, Tooltip("This field can be left blank. SaveAsync allows the FileHandler class to be overridden." +
-                                 "This can be useful in scenarios where files should not be saved using local file IO" +
-                                 "(such as cloud saves) or when a platform-specific save API must be used. " +
-                                 "If you want to use a custom file handler, create a new class that inherits from FileHandler and assign it here.")]
-        FileHandler m_customFileHandler;
+        [SerializeField, Tooltip("Generally you should keep this enabled and only disable it if you believe " + 
+                                 "that it's causing unexpected behavior on a target platform.")]
+        bool m_useBackgroundThread = true;
         
         [SerializeField, Tooltip("Enables encryption for save data. " +
                                  "XOR encryption is basic but extremely fast. Support for AES encryption is planned." +
@@ -25,6 +23,12 @@ namespace Buck.SaveAsync
         [SerializeField, Tooltip("The password used to encrypt and decrypt save data. This password should be unique to your game. " +
                                  "Do not change the encryption password once the game has shipped!")]
         string m_encryptionPassword = "password";
+        
+        [SerializeField, Tooltip("This field can be left blank. SaveAsync allows the FileHandler class to be overridden." +
+                                 "This can be useful in scenarios where files should not be saved using local file IO" +
+                                 "(such as cloud saves) or when a platform-specific save API must be used. " +
+                                 "If you want to use a custom file handler, create a new class that inherits from FileHandler and assign it here.")]
+        FileHandler m_customFileHandler;
 
         enum FileOperationType
         {
@@ -272,7 +276,8 @@ namespace Buck.SaveAsync
                 IsBusy = true;
                 
                 // Switch to a background thread to process the queue
-                await Awaitable.BackgroundThreadAsync();
+                if (Instance.m_useBackgroundThread)
+                    await Awaitable.BackgroundThreadAsync();
 
                 while (m_fileOperationQueue.Count > 0)
                 {
@@ -297,7 +302,8 @@ namespace Buck.SaveAsync
                 }
 
                 // Switch back to the main thread before accessing Unity objects and setting IsBusy to false
-                await Awaitable.MainThreadAsync();
+                if (Instance.m_useBackgroundThread)
+                    await Awaitable.MainThreadAsync();
                 
                 // If anything was populated in the loadedDataList, restore state
                 // This is done here because it's better to process the whole queue before switching back to the main thread.

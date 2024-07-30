@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.2] - 2024-07-30
+
+- Added the ability to disable background threads to help debug issues.
+
 ## [0.4.1] - 2024-07-16
 
 - Added additional exception handling for malformed JSON data.
