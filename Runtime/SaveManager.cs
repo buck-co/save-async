@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json;
@@ -116,7 +117,7 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="filename">The path or filename to check for existence.</param>
         public static async Task<bool> Exists(string filename)
-            => await m_fileHandler.Exists(filename);
+            => await m_fileHandler.Exists(filename, Instance.destroyCancellationToken);
 
         /// <summary>
         /// Saves the files at the given paths or filenames.

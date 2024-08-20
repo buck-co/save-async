@@ -36,7 +36,8 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to check.</param>
-        public virtual async Task<bool> Exists(string pathOrFilename)
+        /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
+        public virtual async Task<bool> Exists(string pathOrFilename, CancellationToken cancellationToken)
             => File.Exists(GetPath(pathOrFilename));
 
         /// <summary>
@@ -64,7 +65,7 @@ namespace Buck.SaveAsync
         public virtual async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
         {
             // If the file does not exist, return an empty string and log a warning.
-            bool exists = await Exists(pathOrFilename);
+            bool exists = await Exists(pathOrFilename, cancellationToken);
             
             if (!exists)
             {
