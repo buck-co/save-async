@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.3] - 2024-08-20
+
+- Converted the SaveManager.Exists method and the default FileHandler method to be async. This isn't necessary for typical file I/O but can be useful in the case of custom file handlers that have a wait time associated with checking for file availability.
+
 ## [0.4.2] - 2024-07-30
 
 - Added the ability to disable background threads to help debug issues.

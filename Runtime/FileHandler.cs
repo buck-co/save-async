@@ -36,7 +36,7 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to check.</param>
-        public virtual bool Exists(string pathOrFilename)
+        public virtual async Task<bool> Exists(string pathOrFilename)
             => File.Exists(GetPath(pathOrFilename));
 
         /// <summary>
@@ -64,7 +64,9 @@ namespace Buck.SaveAsync
         public virtual async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
         {
             // If the file does not exist, return an empty string and log a warning.
-            if (!Exists(pathOrFilename))
+            bool exists = await Exists(pathOrFilename);
+            
+            if (!exists)
             {
                 Debug.LogWarning($"FileHandler: File does not exist at path or filename: {pathOrFilename}" +
                                  $"\nReturning empty string and no data will be loaded.");
