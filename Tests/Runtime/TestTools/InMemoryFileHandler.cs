@@ -13,7 +13,7 @@ namespace Buck.SaveAsync.Tests
     {
         public TimeSpan AllOperationDelay { get; set; } = TimeSpan.Zero;
 
-        Dictionary<string, string> m_files = new();
+        readonly Dictionary<string, string> m_files = new();
         
         protected override string GetPath(string pathOrFilename)
         {

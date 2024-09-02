@@ -31,7 +31,7 @@ namespace Buck.SaveAsync.Tests
             return errorMessage.ToString();
         }
     
-        private static IEnumerable<(int index, string expected, string actual)> DiffLines(string[] expected, string[] actual)
+        static IEnumerable<(int index, string expected, string actual)> DiffLines(string[] expected, string[] actual)
         {
             for (var i = 0; i < expected.Length; i++)
             {

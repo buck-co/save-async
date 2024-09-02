@@ -3,8 +3,8 @@ using UnityEngine;
 namespace Buck.SaveAsync.Tests
 {
     /// <summary>
-    /// A test monobehavior that implements saveable. Its internals are exposed, so it can be piloted
-    /// from a test case.
+    /// A test MonoBehavior that implements saveable. Its internals are exposed since it is piloted
+    /// from test cases.
     /// </summary>
     public class TestSaveableEntity : MonoBehaviour, ISaveable
     {

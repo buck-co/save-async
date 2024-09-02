@@ -16,7 +16,7 @@ namespace Buck.SaveAsync.Tests
         {
             if (!newFileHander)
             {
-                throw new System.ArgumentNullException(nameof(newFileHander));
+                throw new ArgumentNullException(nameof(newFileHander));
             }
             
             var fileHandlerField = typeof(SaveManager)

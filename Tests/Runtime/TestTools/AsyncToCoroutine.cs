@@ -16,15 +16,15 @@ namespace Buck.SaveAsync.Tests
         }
         sealed class ToCoroutineEnumerator : IEnumerator
         {
-            bool completed;
-            Task task;
-            bool isStarted = false;
-            ExceptionDispatchInfo exception;
+            readonly Task m_task;
+            bool m_completed;
+            bool m_isStarted = false;
+            ExceptionDispatchInfo m_exception;
 
             public ToCoroutineEnumerator(Task task)
             {
-                completed = false;
-                this.task = task;
+                m_completed = false;
+                this.m_task = task;
             }
 
             async void RunTask(Task task)
@@ -35,11 +35,11 @@ namespace Buck.SaveAsync.Tests
                 }
                 catch (Exception ex)
                 {
-                    this.exception = ExceptionDispatchInfo.Capture(ex);
+                    this.m_exception = ExceptionDispatchInfo.Capture(ex);
                 }
                 finally
                 {
-                    completed = true;
+                    m_completed = true;
                 }
             }
 
@@ -47,24 +47,22 @@ namespace Buck.SaveAsync.Tests
 
             public bool MoveNext()
             {
-                if (!isStarted)
+                if (!m_isStarted)
                 {
-                    isStarted = true;
-                    RunTask(task);
+                    m_isStarted = true;
+                    RunTask(m_task);
                 }
 
-                if (exception != null)
+                if (m_exception != null)
                 {
-                    exception.Throw();
+                    m_exception.Throw();
                     return false;
                 }
 
-                return !completed;
+                return !m_completed;
             }
 
-            void IEnumerator.Reset()
-            {
-            }
+            void IEnumerator.Reset() { }
         }
     }
 }

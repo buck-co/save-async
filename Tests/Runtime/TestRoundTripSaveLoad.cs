@@ -6,6 +6,10 @@ using UnityEngine.TestTools;
 
 namespace Buck.SaveAsync.Tests
 {
+    /// <summary>
+    /// These tests verify round-trip save to load by saving a state, changing the state,
+    /// and then loading the saved state.
+    /// </summary>
     public class TestRoundTripSaveLoad : TestCaseBase
     {
         [UnityTest]
