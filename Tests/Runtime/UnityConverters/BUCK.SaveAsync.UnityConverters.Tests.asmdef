@@ -1,0 +1,31 @@
+{
+    "name": "BUCK.SaveAsync.Tests.UnityConverters",
+    "rootNamespace": "Buck.SaveAsync.Tests",
+    "references": [
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:ad4bea86cb6093347bcf3482d1635cc9",
+        "GUID:06d4c76cc3914fce9036eb37a7ec33ae",
+        "GUID:c55d28459d9c4444ebb4788be912e1f1"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "HAVE_JSON_FOR_UNITY_CONVERTERS"
+    ],
+    "versionDefines": [
+        {
+            "name": "jillejr.newtonsoft.json-for-unity.converters",
+            "expression": "",
+            "define": "HAVE_JSON_FOR_UNITY_CONVERTERS"
+        }
+    ],
+    "noEngineReferences": false
+}

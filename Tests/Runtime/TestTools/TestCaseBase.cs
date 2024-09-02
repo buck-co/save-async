@@ -1,15 +1,19 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using NUnit.Framework;
 using UnityEngine;
 
 namespace Buck.SaveAsync.Tests
 {
     public class TestCaseBase
     {
-        protected void SetupSaveManager(FileHandler withFileHandler)
+        protected virtual void SetupSaveManager(FileHandler withFileHandler)
         {
-            SaveManagerReflectionExtensions.SetCustomFileHandler(withFileHandler);
+            ReflectionExtensions.SetCustomFileHandler(withFileHandler);
+            // ensure that the default settings are not overriden, for test consistency.
+            JsonConvert.DefaultSettings = null;
         }
 
         protected FileHandler CreateFileHandler(TimeSpan? withEmulatedDelay = null)

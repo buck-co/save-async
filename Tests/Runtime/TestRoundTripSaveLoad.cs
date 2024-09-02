@@ -7,7 +7,7 @@ using UnityEngine.TestTools;
 namespace Buck.SaveAsync.Tests
 {
     /// <summary>
-    /// These tests verify round-trip save to load by saving a state, changing the state,
+    /// These tests verify round-trip save and load by saving a state, changing the state,
     /// and then loading the saved state.
     /// </summary>
     public class TestRoundTripSaveLoad : TestCaseBase
@@ -88,8 +88,6 @@ namespace Buck.SaveAsync.Tests
                 Assert.AreEqual(0, (expected - actual.NestedVector3).magnitude, 0.0001f);
             });
         
-        
-        // TODO: this test passes only when -not- using the Json-for-Unity Vector3 converter 
         [UnityTest]
         public IEnumerator TestSaveSystem_WhenSavesVector3State_AndChangesState_RestoresState() 
             => AsyncToCoroutine.AsCoroutine(async () => 

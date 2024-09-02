@@ -20,7 +20,7 @@ namespace Buck.SaveAsync.Tests
     /// <remarks>
     /// install from https://github.com/applejag/Newtonsoft.Json-for-Unity.Converters
     /// </remarks>
-    public class TestSaveFileFormatWithUnityConverters : TestCaseBase
+    public class TestSaveFileFormatWithUnityConverters : UnityConverterTestCaseBase
     {
         [UnityTest]
         public IEnumerator TestSaveSystem_WhenSavesUnityObjects_SavesJson() 
@@ -45,7 +45,7 @@ namespace Buck.SaveAsync.Tests
   {{
     ""Key"": ""{key}"",
     ""Data"": {{
-      ""$type"": ""{TestConstants.Namespace}.TestUnitySaveObject, {TestConstants.Assembly}"",
+      ""$type"": ""{TestConstants.Namespace}.TestUnitySaveObject, {TestConstants.Assembly}.UnityConverters"",
       ""Vector3Value"": {{
         ""x"": 1.0,
         ""y"": 2.0,

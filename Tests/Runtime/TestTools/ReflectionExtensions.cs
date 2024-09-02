@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace Buck.SaveAsync.Tests
 {
@@ -6,7 +7,7 @@ namespace Buck.SaveAsync.Tests
     /// These are extensions to configure the SaveManager in potentially nonstandard ways, required in order to test it.
     /// Could be placed inside SaveManager if it is appropriate to expose a public API for these functions, rather than a testing-only API.
     /// </summary>
-    public static class SaveManagerReflectionExtensions
+    public static class ReflectionExtensions
     {
         /// <summary>
         /// Set the static file handler used by the SaveManager singleton.
