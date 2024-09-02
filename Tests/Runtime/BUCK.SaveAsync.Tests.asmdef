@@ -1,0 +1,11 @@
+{
+  "name": "BUCK.SaveAsync.Tests",
+  "references": [
+    "BUCK.SaveAsync.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": []
+}
