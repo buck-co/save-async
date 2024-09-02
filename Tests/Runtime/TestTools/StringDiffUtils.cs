@@ -4,6 +4,9 @@ using NUnit.Framework;
 
 namespace Buck.SaveAsync.Tests
 {
+    /// <summary>
+    /// Helpers to make assertion messages on multiline strings more readable 
+    /// </summary>
     public class StringDiffUtils
     {
         public static void AssertMultilineStringEqual(string expected, string actual)

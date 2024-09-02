@@ -14,28 +14,34 @@ namespace Buck.SaveAsync.Tests
     /// specifically meant for testing integration with Json-for-Unity converters
     /// </remarks>
     public class TestRoundTripSaveLoadWithUnityConverters : UnityConverterTestCaseBase
-    { 
+    {
+        class SaveObjectWithNestedVector3
+        {
+            public Vector3 NestedVector3 { get; set; }
+        }
+
+        [UnityTest]
+        public IEnumerator TestSaveSystem_WhenSavesVector3StateInNestedProperty_AndChangesState_RestoresState() 
+            => AsyncToCoroutine.AsCoroutine(async () => 
+            {
+                var expected = new Vector3(1, 2.3f, 10000.2f);
+                var actual = await GetRoundTrip(new SaveObjectWithNestedVector3
+                    {
+                        NestedVector3 = expected
+                    },
+                    new SaveObjectWithNestedVector3
+                    {
+                        NestedVector3 = Vector3.zero
+                    });
+                Assert.AreEqual(0, (expected - actual.NestedVector3).magnitude, 0.0001f);
+            });
+        
         [UnityTest]
         public IEnumerator TestSaveSystem_WhenSavesVector3State_AndChangesState_RestoresState() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
-                // Arrange
-                var seed = Guid.NewGuid().ToString();
-                
-                var fileHandler = CreateFileHandler();
-                SetupSaveManager(fileHandler);
-                var saveable = CreateSaveableEntity("saveable_" + seed, "test.dat");
-                
                 var expected = new Vector3(1, 2.3f, 10000.2f);
-                saveable.CurrentState = expected;
-                await SaveManager.Save("test.dat");
-
-                // Act
-                saveable.CurrentState = Vector3.zero;
-                await SaveManager.Load("test.dat");
-            
-                // Assert
-                var actual = (Vector3)saveable.CurrentState;
+                var actual = await GetRoundTrip(expected, Vector3.zero);
                 Assert.AreEqual(0, (expected - actual).magnitude, 0.0001f);
             });
     }

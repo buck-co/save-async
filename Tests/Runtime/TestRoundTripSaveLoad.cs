@@ -16,44 +16,19 @@ namespace Buck.SaveAsync.Tests
         public IEnumerator TestSaveSystem_WhenSavesStringState_AndChangesState_RestoresState() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
-                // Arrange
-                var seed = Guid.NewGuid().ToString();
+                var expected = "Hello, World!";
+                var actual = await GetRoundTrip(expected, "Goodbye, World!");
                 
-                var fileHandler = CreateFileHandler();
-                SetupSaveManager(fileHandler);
-                var saveable = CreateSaveableEntity("saveable_" + seed, "test.dat");
-                
-                saveable.CurrentState = "Hello, World!";
-                await SaveManager.Save("test.dat");
-
-                // Act
-                saveable.CurrentState = "Goodbye, World!";
-                await SaveManager.Load("test.dat");
-            
-                // Assert
-                Assert.AreEqual("Hello, World!", saveable.CurrentState);
+                Assert.AreEqual(expected, actual);
             });
         
         [UnityTest]
         public IEnumerator TestSaveSystem_WhenSavesStringState_AndChangesState_RestoresState_WithDelay() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
-                // Arrange
-                var seed = Guid.NewGuid().ToString();
-                
-                var fileHandler = CreateFileHandler(TimeSpan.FromSeconds(0.3f));
-                SetupSaveManager(fileHandler);
-                var saveable = CreateSaveableEntity("saveable_" + seed, "test.dat");
-                
-                saveable.CurrentState = "Hello, World!";
-                await SaveManager.Save("test.dat");
-
-                // Act
-                saveable.CurrentState = "Goodbye, World!";
-                await SaveManager.Load("test.dat");
-            
-                // Assert
-                Assert.AreEqual("Hello, World!", saveable.CurrentState);
+                var expected = "Hello, World!";
+                var actual = await GetRoundTrip(expected, "Goodbye, World!", TimeSpan.FromSeconds(0.3f));
+                Assert.AreEqual(expected, actual);
             });
         
         class SaveObjectWithNestedVector3
@@ -65,26 +40,15 @@ namespace Buck.SaveAsync.Tests
         public IEnumerator TestSaveSystem_WhenSavesVector3StateInNestedProperty_AndChangesState_RestoresState() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
-                // Arrange
-                var seed = Guid.NewGuid().ToString();
-                
-                var fileHandler = CreateFileHandler();
-                SetupSaveManager(fileHandler);
-                var saveable = CreateSaveableEntity("saveable_" + seed, "test.dat");
-                
                 var expected = new Vector3(1, 2.3f, 10000.2f);
-                saveable.CurrentState = new SaveObjectWithNestedVector3
+                var actual = await GetRoundTrip(new SaveObjectWithNestedVector3
                 {
                     NestedVector3 = expected
-                };
-                await SaveManager.Save("test.dat");
-
-                // Act
-                saveable.CurrentState = Vector3.zero;
-                await SaveManager.Load("test.dat");
-            
-                // Assert
-                var actual = (SaveObjectWithNestedVector3)saveable.CurrentState;
+                },
+                new SaveObjectWithNestedVector3
+                {
+                    NestedVector3 = Vector3.zero
+                });
                 Assert.AreEqual(0, (expected - actual.NestedVector3).magnitude, 0.0001f);
             });
         
@@ -92,23 +56,8 @@ namespace Buck.SaveAsync.Tests
         public IEnumerator TestSaveSystem_WhenSavesVector3State_AndChangesState_RestoresState() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
-                // Arrange
-                var seed = Guid.NewGuid().ToString();
-                
-                var fileHandler = CreateFileHandler();
-                SetupSaveManager(fileHandler);
-                var saveable = CreateSaveableEntity("saveable_" + seed, "test.dat");
-                
                 var expected = new Vector3(1, 2.3f, 10000.2f);
-                saveable.CurrentState = expected;
-                await SaveManager.Save("test.dat");
-
-                // Act
-                saveable.CurrentState = Vector3.zero;
-                await SaveManager.Load("test.dat");
-            
-                // Assert
-                var actual = (Vector3)saveable.CurrentState;
+                var actual = await GetRoundTrip(expected, Vector3.zero);
                 Assert.AreEqual(0, (expected - actual).magnitude, 0.0001f);
             });
     }
