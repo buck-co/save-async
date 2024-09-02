@@ -37,6 +37,13 @@ namespace Buck.SaveAsync.Tests
             return saveable;
         }
 
+        /// <summary>
+        /// Creates a saveable object, saves it to an emulated file handler, and returns
+        /// the serialized string from the emulated file handler.
+        /// </summary>
+        /// <param name="key">The key of the saveable object</param>
+        /// <param name="savedObject">The data to place inside the saveable object</param>
+        /// <returns>The string value which is saved to file when the temporary saveable object is saved</returns>
         protected async Task<string> GetSerializedFileForObject(string key, object savedObject)
         {
             var fileName = Guid.NewGuid() + ".dat";
@@ -51,6 +58,15 @@ namespace Buck.SaveAsync.Tests
             return await fileHandler.ReadFile(fileName, CancellationToken.None);
         }
 
+        /// <summary>
+        /// Tests round-trip serialization of a given value.
+        /// <paramref name="initial"/> is round-tripped through the save system backed by a temporary file handler.
+        /// </summary>
+        /// <param name="initial">The value to be round-tripped</param>
+        /// <param name="resetTo">A value used to clear the saveable's internal state, to ensure the round-trip isn't a result of a cached value.</param>
+        /// <param name="fileHandlerDelay">Optional artificial delay applied to the file handler</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>The value in the saveable after it has been Loaded</returns>
         protected async Task<T> GetRoundTrip<T>(T initial, T resetTo, TimeSpan? fileHandlerDelay = null)
         {
             // Arrange

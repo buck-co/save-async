@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace Buck.SaveAsync.Tests
 {
     /// <summary>
-    /// Helpers to make assertion messages on multiline strings more readable 
+    /// Helpers which assert equality of multiline strings in a readable way 
     /// </summary>
     public class StringDiffUtils
     {
