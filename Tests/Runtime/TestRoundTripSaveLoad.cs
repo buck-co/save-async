@@ -13,7 +13,7 @@ namespace Buck.SaveAsync.Tests
     public class TestRoundTripSaveLoad : TestCaseBase
     {
         [UnityTest]
-        public IEnumerator TestSaveSystem_WhenSavesStringState_AndChangesState_RestoresState() 
+        public IEnumerator Test_RoundTrip_String() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 var expected = "Hello, World!";
@@ -23,7 +23,7 @@ namespace Buck.SaveAsync.Tests
             });
         
         [UnityTest]
-        public IEnumerator TestSaveSystem_WhenSavesStringState_AndChangesState_RestoresState_WithDelay() 
+        public IEnumerator Test_RoundTrip_String_WithDelay() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 var expected = "Hello, World!";
@@ -37,7 +37,7 @@ namespace Buck.SaveAsync.Tests
         }
         
         [UnityTest]
-        public IEnumerator TestSaveSystem_WhenSavesVector3StateInNestedProperty_AndChangesState_RestoresState() 
+        public IEnumerator Test_RoundTrip_Vector3Nested() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 var expected = new Vector3(1, 2.3f, 10000.2f);
@@ -53,7 +53,7 @@ namespace Buck.SaveAsync.Tests
             });
         
         [UnityTest]
-        public IEnumerator TestSaveSystem_WhenSavesVector3State_AndChangesState_RestoresState() 
+        public IEnumerator Test_RoundTrip_Vector3Raw() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 var expected = new Vector3(1, 2.3f, 10000.2f);

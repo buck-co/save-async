@@ -23,7 +23,7 @@ namespace Buck.SaveAsync.Tests
     public class TestSaveFileFormatWithUnityConverters : UnityConverterTestCaseBase
     {
         [UnityTest]
-        public IEnumerator TestSaveSystem_WhenSavesUnityObjects_SavesJson() 
+        public IEnumerator TestUnityConverter_SaveFormat_UnityPrimitiveObjects() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 // Arrange
@@ -90,6 +90,33 @@ namespace Buck.SaveAsync.Tests
         ""preWrapMode"": ""ClampForever"",
         ""postWrapMode"": ""ClampForever""
       }}
+    }}
+  }}
+]
+";
+                StringDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
+            });
+        
+        [UnityTest]
+        public IEnumerator TestUnityConverter_SaveFormat_Vector3Raw() 
+            => AsyncToCoroutine.AsCoroutine(async () => 
+            {
+                // Arrange
+                var nestedObject = new Vector3(1, 2, 3.5f);
+                
+                // Act
+                var key = Guid.NewGuid().ToString();
+                var serializedFile = await GetSerializedFileForObject(key, nestedObject);
+                
+                // Assert
+                var expected = $@"
+[
+  {{
+    ""Key"": ""{key}"",
+    ""Data"": {{
+      ""x"": 1.0,
+      ""y"": 2.0,
+      ""z"": 3.5
     }}
   }}
 ]

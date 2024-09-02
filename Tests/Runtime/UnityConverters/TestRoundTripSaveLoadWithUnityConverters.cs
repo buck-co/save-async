@@ -21,7 +21,7 @@ namespace Buck.SaveAsync.Tests
         }
 
         [UnityTest]
-        public IEnumerator TestSaveSystem_WhenSavesVector3StateInNestedProperty_AndChangesState_RestoresState() 
+        public IEnumerator TestUnityConverter_RoundTrip_Vector3Nested() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 var expected = new Vector3(1, 2.3f, 10000.2f);
@@ -37,7 +37,7 @@ namespace Buck.SaveAsync.Tests
             });
         
         [UnityTest]
-        public IEnumerator TestSaveSystem_WhenSavesVector3State_AndChangesState_RestoresState() 
+        public IEnumerator TestUnityConverter_RoundTrip_Vector3Raw() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 var expected = new Vector3(1, 2.3f, 10000.2f);

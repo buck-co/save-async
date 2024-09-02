@@ -18,7 +18,7 @@ namespace Buck.SaveAsync.Tests
     public class TestSaveFileFormat : TestCaseBase
     {
         [UnityTest]
-        public IEnumerator TestSaveSystem_WhenSavesNestedDictionary_SavesNestedJson() 
+        public IEnumerator Test_SaveFormat_NestedDictionary() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 // Arrange
@@ -61,7 +61,7 @@ namespace Buck.SaveAsync.Tests
             });
         
         [UnityTest]
-        public IEnumerator TestSaveSystem_WhenSavesObject_SavesJson() 
+        public IEnumerator Test_SaveFormat_BasicObject() 
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 // Arrange
