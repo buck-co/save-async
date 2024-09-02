@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
 namespace Tests.Runtime
@@ -11,10 +12,58 @@ namespace Tests.Runtime
     {
         public static IEnumerator AsCoroutine(Func<Task> taskFactory)
         {
-            Task task = taskFactory();
-            while (!task.IsCompleted)
+            return new ToCoroutineEnumerator(taskFactory());
+        }
+        sealed class ToCoroutineEnumerator : IEnumerator
+        {
+            bool completed;
+            Task task;
+            bool isStarted = false;
+            ExceptionDispatchInfo exception;
+
+            public ToCoroutineEnumerator(Task task)
             {
-                yield return null;
+                completed = false;
+                this.task = task;
+            }
+
+            async void RunTask(Task task)
+            {
+                try
+                {
+                    await task;
+                }
+                catch (Exception ex)
+                {
+                    this.exception = ExceptionDispatchInfo.Capture(ex);
+                }
+                finally
+                {
+                    completed = true;
+                }
+            }
+
+            public object Current => null;
+
+            public bool MoveNext()
+            {
+                if (!isStarted)
+                {
+                    isStarted = true;
+                    RunTask(task);
+                }
+
+                if (exception != null)
+                {
+                    exception.Throw();
+                    return false;
+                }
+
+                return !completed;
+            }
+
+            void IEnumerator.Reset()
+            {
             }
         }
     }
