@@ -1,5 +1,6 @@
 {
   "name": "BUCK.SaveAsync.Tests",
+  "rootNamespace": "Buck.SaveAsync.Tests",
   "references": [
     "BUCK.SaveAsync.Runtime"
   ],

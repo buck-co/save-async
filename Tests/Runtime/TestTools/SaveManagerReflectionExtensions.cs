@@ -1,8 +1,6 @@
 using System;
-using Buck.SaveAsync;
-using UnityEngine;
 
-namespace Tests.Runtime
+namespace Buck.SaveAsync.Tests
 {
     /// <summary>
     /// These are extensions to configure the SaveManager in potentially nonstandard ways, required in order to test it.

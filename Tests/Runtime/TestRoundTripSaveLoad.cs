@@ -1,14 +1,12 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using Buck.SaveAsync;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Tests.Runtime
+namespace Buck.SaveAsync.Tests
 {
-    public class TestRoundTripSaveLoad
+    public class TestRoundTripSaveLoad : TestCaseBase
     {
         [UnityTest]
         public IEnumerator TestSaveSystem_WhenSavesState_AndChangesState_RestoresState() 
@@ -17,19 +15,11 @@ namespace Tests.Runtime
                 // Arrange
                 var seed = Guid.NewGuid().ToString();
                 
-                var fileHandler = ScriptableObject.CreateInstance<InMemoryFileHandler>();
-                fileHandler.AllOperationDelay = TimeSpan.Zero;
-            
-                var saveManagerGo = new GameObject();
-                var saveManager = saveManagerGo.AddComponent<SaveManager>();
-                SaveManagerReflectionExtensions.SetCustomFileHandler(fileHandler);
-
-                var saveableEntity = new GameObject();
-                var saveable = saveableEntity.AddComponent<TestSaveableEntity>();
-                saveable.Key = "saveable_" + seed;
-                saveable.Filename = "test.dat";
+                var fileHandler = CreateFileHandler();
+                SetupSaveManager(fileHandler);
+                var saveable = CreateSaveableEntity("saveable_" + seed, "test.dat");
+                
                 saveable.CurrentState = "Hello, World!";
-                saveable.RegisterSelf();
                 await SaveManager.Save("test.dat");
 
                 // Act
@@ -47,19 +37,11 @@ namespace Tests.Runtime
                 // Arrange
                 var seed = Guid.NewGuid().ToString();
                 
-                var fileHandler = ScriptableObject.CreateInstance<InMemoryFileHandler>();
-                fileHandler.AllOperationDelay = TimeSpan.FromSeconds(0.3f);
-            
-                var saveManagerGo = new GameObject();
-                var saveManager = saveManagerGo.AddComponent<SaveManager>();
-                SaveManagerReflectionExtensions.SetCustomFileHandler(fileHandler);
-
-                var saveableEntity = new GameObject();
-                var saveable = saveableEntity.AddComponent<TestSaveableEntity>();
-                saveable.Key = "saveable_" + seed;
-                saveable.Filename = "test.dat";
+                var fileHandler = CreateFileHandler(TimeSpan.FromSeconds(0.3f));
+                SetupSaveManager(fileHandler);
+                var saveable = CreateSaveableEntity("saveable_" + seed, "test.dat");
+                
                 saveable.CurrentState = "Hello, World!";
-                saveable.RegisterSelf();
                 await SaveManager.Save("test.dat");
 
                 // Act

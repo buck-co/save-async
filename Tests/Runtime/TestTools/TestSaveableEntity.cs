@@ -1,8 +1,6 @@
-using System;
-using Buck.SaveAsync;
 using UnityEngine;
 
-namespace Tests.Runtime
+namespace Buck.SaveAsync.Tests
 {
     /// <summary>
     /// A test monobehavior that implements saveable. Its internals are exposed, so it can be piloted

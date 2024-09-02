@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Buck.SaveAsync;
 
-namespace Tests.Runtime
+namespace Buck.SaveAsync.Tests
 {
     /// <summary>
     /// A FileHandler used for testing which does not write anything to disk, but instead

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
-namespace Tests.Runtime
+namespace Buck.SaveAsync.Tests
 {
     /// <summary>
     /// Functions to allow writing a test as an async function, but run it under UnityTest as a coroutine.
