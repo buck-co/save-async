@@ -23,25 +23,25 @@ namespace Tests.Runtime
 
         public override async Task<bool> Exists(string pathOrFilename, CancellationToken cancellationToken)
         {
-            await AwaitableExtensions.Delay(AllOperationDelay, cancellationToken);
+            await Task.Delay(AllOperationDelay, cancellationToken);
             return m_files.ContainsKey(pathOrFilename);
         }
         
         public override async Task WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken)
         {
-            await AwaitableExtensions.Delay(AllOperationDelay, cancellationToken);
+            await Task.Delay(AllOperationDelay, cancellationToken);
             m_files[pathOrFilename] = content;
         }
         
         public override async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
         {
-            await AwaitableExtensions.Delay(AllOperationDelay, cancellationToken);
+            await Task.Delay(AllOperationDelay, cancellationToken);
             return m_files[pathOrFilename] ?? "";
         }
 
         public override async Task Erase(string pathOrFilename, CancellationToken cancellationToken)
         {
-            await AwaitableExtensions.Delay(AllOperationDelay, cancellationToken);
+            await Task.Delay(AllOperationDelay, cancellationToken);
             m_files[pathOrFilename] = "";
         }
         
