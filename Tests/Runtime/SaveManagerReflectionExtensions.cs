@@ -29,7 +29,5 @@ namespace Tests.Runtime
             }
             fileHandlerField.SetValue(null, newFileHander);
         }
-        
-        
     }
 }

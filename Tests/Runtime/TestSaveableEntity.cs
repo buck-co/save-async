@@ -16,7 +16,7 @@ namespace Tests.Runtime
         public object CaptureState() => CurrentState;
         public void RestoreState(object state) => this.CurrentState = state;
 
-        void Awake()
+        public void RegisterSelf()
         {
             SaveManager.RegisterSaveable(this);
         }

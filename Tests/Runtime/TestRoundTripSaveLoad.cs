@@ -15,6 +15,8 @@ namespace Tests.Runtime
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 // Arrange
+                var seed = Guid.NewGuid().ToString();
+                
                 var fileHandler = ScriptableObject.CreateInstance<InMemoryFileHandler>();
                 fileHandler.AllOperationDelay = TimeSpan.Zero;
             
@@ -24,8 +26,10 @@ namespace Tests.Runtime
 
                 var saveableEntity = new GameObject();
                 var saveable = saveableEntity.AddComponent<TestSaveableEntity>();
+                saveable.Key = "saveable_" + seed;
                 saveable.Filename = "test.dat";
                 saveable.CurrentState = "Hello, World!";
+                saveable.RegisterSelf();
                 await SaveManager.Save("test.dat");
 
                 // Act
@@ -41,6 +45,8 @@ namespace Tests.Runtime
             => AsyncToCoroutine.AsCoroutine(async () => 
             {
                 // Arrange
+                var seed = Guid.NewGuid().ToString();
+                
                 var fileHandler = ScriptableObject.CreateInstance<InMemoryFileHandler>();
                 fileHandler.AllOperationDelay = TimeSpan.FromSeconds(0.3f);
             
@@ -50,8 +56,10 @@ namespace Tests.Runtime
 
                 var saveableEntity = new GameObject();
                 var saveable = saveableEntity.AddComponent<TestSaveableEntity>();
+                saveable.Key = "saveable_" + seed;
                 saveable.Filename = "test.dat";
                 saveable.CurrentState = "Hello, World!";
+                saveable.RegisterSelf();
                 await SaveManager.Save("test.dat");
 
                 // Act
