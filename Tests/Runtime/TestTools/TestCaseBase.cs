@@ -9,8 +9,6 @@ namespace Buck.SaveAsync.Tests
     {
         protected void SetupSaveManager(FileHandler withFileHandler)
         {
-            var saveManagerGo = new GameObject();
-            var saveManager = saveManagerGo.AddComponent<SaveManager>();
             SaveManagerReflectionExtensions.SetCustomFileHandler(withFileHandler);
         }
 
