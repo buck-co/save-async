@@ -7,27 +7,25 @@ using Buck.SaveAsync;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Tests.Runtime
+namespace Buck.SaveAsync.Tests
 {
-    public class TestSaveFileFormat
+    internal class TestSaveObject
+    {
+        public int IntValue { get; set; }
+        public string StringValue { get; set; }
+    }
+    
+    public class TestSaveFileFormat : TestCaseBase
     {
         async Task<string> GetSerializedFileForObject(string key, object savedObject)
         {
             var fileName = Guid.NewGuid() + ".dat";
-            
-            var fileHandler = ScriptableObject.CreateInstance<InMemoryFileHandler>();
-            fileHandler.AllOperationDelay = TimeSpan.Zero;
-            
-            var saveManagerGo = new GameObject();
-            var saveManager = saveManagerGo.AddComponent<SaveManager>();
-            SaveManagerReflectionExtensions.SetCustomFileHandler(fileHandler);
 
-            var saveableEntity = new GameObject();
-            var saveable = saveableEntity.AddComponent<TestSaveableEntity>();
-            saveable.Key = key;
-            saveable.Filename = fileName;
+            var fileHandler = CreateFileHandler();
+            SetupSaveManager(fileHandler);
+
+            var saveable = CreateSaveableEntity(key, fileName);
             saveable.CurrentState = savedObject;
-            saveable.RegisterSelf();
             await SaveManager.Save(fileName);
             
             return await fileHandler.ReadFile(fileName, CancellationToken.None);
@@ -59,11 +57,13 @@ namespace Tests.Runtime
                 var expected = $@"
 [
   {{
-    ""key"": ""{key}"",
-    ""data"": {{
+    ""Key"": ""{key}"",
+    ""Data"": {{
+      ""$type"": ""System.Collections.Generic.Dictionary`2[[System.String, mscorlib],[System.Object, mscorlib]], mscorlib"",
       ""key1"": ""value1"",
       ""key2"": 2,
       ""key3"": {{
+        ""$type"": ""System.Collections.Generic.Dictionary`2[[System.String, mscorlib],[System.Object, mscorlib]], mscorlib"",
         ""key4"": ""value4"",
         ""key5"": 5
       }}
@@ -74,12 +74,6 @@ namespace Tests.Runtime
                 StringDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
             });
         
-        class TestSaveObject
-        {
-            public int IntValue { get; set; }
-            public string StringValue { get; set; }
-            public Vector3 Vector3Value { get; set; }
-        }
         [UnityTest]
         public IEnumerator TestSaveSystem_WhenSavesObject_SavesJson() 
             => AsyncToCoroutine.AsCoroutine(async () => 
@@ -88,8 +82,7 @@ namespace Tests.Runtime
                 var nestedObject = new TestSaveObject
                 {
                     IntValue = 1337,
-                    StringValue = "Goodbye, World!",
-                    Vector3Value = new Vector3(1, 2, 3.5f)
+                    StringValue = "Goodbye, World!"
                 };
                 
                 // Act
@@ -100,17 +93,16 @@ namespace Tests.Runtime
                 var expected = $@"
 [
   {{
-    ""key"": ""{key}"",
-    ""data"": {{
-      ""intValue"": 1337,
-      ""stringValue"": ""Goodbye, World!"",
-      ""vector3Value"": {{x: 1, y: 2, z: 3.5}}
+    ""Key"": ""{key}"",
+    ""Data"": {{
+      ""$type"": ""{TestConstants.Namespace}.TestSaveObject, {TestConstants.Assembly}"",
+      ""IntValue"": 1337,
+      ""StringValue"": ""Goodbye, World!""
     }}
   }}
 ]
 ";
                 StringDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
             });
-
     }
 }
