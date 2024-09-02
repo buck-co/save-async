@@ -15,10 +15,7 @@ namespace Buck.SaveAsync.Tests
 
         readonly Dictionary<string, string> m_files = new();
         
-        protected override string GetPath(string pathOrFilename)
-        {
-            return pathOrFilename;
-        }
+        protected override string GetPath(string pathOrFilename) => pathOrFilename;
 
         public override async Task<bool> Exists(string pathOrFilename, CancellationToken cancellationToken)
         {

@@ -7,7 +7,7 @@ namespace Buck.SaveAsync.Tests
     /// <summary>
     /// Helpers which assert equality of multiline strings in a readable way 
     /// </summary>
-    public class StringDiffUtils
+    public class MultilineDiffUtils
     {
         public static void AssertMultilineStringEqual(string expected, string actual)
         {

@@ -15,7 +15,7 @@ namespace Buck.SaveAsync.Tests
     {
         protected virtual void SetupSaveManager(FileHandler withFileHandler)
         {
-            ReflectionExtensions.SetCustomFileHandler(withFileHandler);
+            SaveManagerExtensions.SetCustomFileHandler(withFileHandler);
             // ensure that the default settings are not overriden, for test consistency.
             JsonConvert.DefaultSettings = null;
         }

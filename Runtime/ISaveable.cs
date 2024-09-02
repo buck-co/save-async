@@ -22,7 +22,7 @@ namespace Buck.SaveAsync
         /// It is recommended to use a static class to store file paths as strings to avoid typos.
         /// </summary>
         /// <remarks>
-        /// This is invoked on Unity's main thread, save to use thread unsafe APIs.
+        /// This is invoked on Unity's main thread, safe to use thread unsafe APIs.
         /// </remarks>
         public string Filename { get; }
         
@@ -42,7 +42,7 @@ namespace Buck.SaveAsync
         /// also using this method to initialize any fields that are not saved (i.e. "resetting the object").
         /// </summary>
         /// <remarks>
-        /// This is invoked on Unity's main thread, save to use thread unsafe APIs.
+        /// This is invoked on Unity's main thread, safe to use thread unsafe APIs.
         /// </remarks>
         void RestoreState(object state);
     }

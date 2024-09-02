@@ -8,7 +8,7 @@ namespace Buck.SaveAsync.Tests
         protected override void SetupSaveManager(FileHandler withFileHandler)
         {
             base.SetupSaveManager(withFileHandler);
-            // ensure we are using the default unity converters
+            // ensure we are using the default Json-for-Unity converters
             var jsonSettings = UnityConverterInitializer.defaultUnityConvertersSettings;
             JsonConvert.DefaultSettings = () => jsonSettings;
         }
