@@ -1,9 +1,7 @@
-using System;
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using static Buck.SaveAsync.Tests.AsyncToCoroutine;
 
 namespace Buck.SaveAsync.Tests
 {
@@ -23,26 +21,35 @@ namespace Buck.SaveAsync.Tests
         }
 
         [UnityTest]
-        public IEnumerator TestUnityConverter_RoundTrip_Vector3Nested() => AsCoroutine(async () => 
-        {
-            var expected = new Vector3(1, 2.3f, 10000.2f);
-            var actual = await GetRoundTrip(new SaveObjectWithNestedVector3
-                {
-                    NestedVector3 = expected
-                },
-                new SaveObjectWithNestedVector3
-                {
-                    NestedVector3 = Vector3.zero
-                });
-            Assert.AreEqual(0, (expected - actual.NestedVector3).magnitude, 0.0001f);
-        });
-        
+        public IEnumerator TestUnityConverter_RoundTrip_Vector3Nested() {
+            async Awaitable Impl()
+            {
+                var expected = new Vector3(1, 2.3f, 10000.2f);
+                var actual = await GetRoundTrip(new SaveObjectWithNestedVector3
+                    {
+                        NestedVector3 = expected
+                    },
+                    new SaveObjectWithNestedVector3
+                    {
+                        NestedVector3 = Vector3.zero
+                    });
+                Assert.AreEqual(0, (expected - actual.NestedVector3).magnitude, 0.0001f);
+            }
+
+            return Impl();
+        }
+
         [UnityTest]
-        public IEnumerator TestUnityConverter_RoundTrip_Vector3Raw() => AsCoroutine(async () => 
+        public IEnumerator TestUnityConverter_RoundTrip_Vector3Raw()
         {
-            var expected = new Vector3(1, 2.3f, 10000.2f);
-            var actual = await GetRoundTrip(expected, Vector3.zero);
-            Assert.AreEqual(0, (expected - actual).magnitude, 0.0001f);
-        });
+            async Awaitable Impl()
+            {
+                var expected = new Vector3(1, 2.3f, 10000.2f);
+                var actual = await GetRoundTrip(expected, Vector3.zero);
+                Assert.AreEqual(0, (expected - actual).magnitude, 0.0001f);
+            }
+
+            return Impl();
+        }
     }
 }

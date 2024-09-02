@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.TestTools;
-using static Buck.SaveAsync.Tests.AsyncToCoroutine;
 
 namespace Buck.SaveAsync.Tests
 {
@@ -24,24 +23,23 @@ namespace Buck.SaveAsync.Tests
     /// </remarks>
     public class TestSaveFileFormatWithUnityConverters : UnityConverterTestCaseBase
     {
-        [UnityTest]
-        public IEnumerator TestUnityConverter_SaveFormat_UnityPrimitiveObjects() => AsCoroutine(async () => 
-        {
-            // Arrange
-            var nestedObject = new TestUnitySaveObject
-            {
-                Vector3Value = new Vector3(1, 2, 3.5f),
-                QuaternionValue = new Quaternion(0.1f, 0.2f, 0.3f, 0.4f),
-                ColorValue = new Color(0.1f, 0.2f, 0.3f, 0.4f),
-                AnimationCurveValue = AnimationCurve.EaseInOut(0, 0, 1, 1)
-            };
-            
-            // Act
-            var key = Guid.NewGuid().ToString();
-            var serializedFile = await GetSerializedFileForObject(key, nestedObject);
-            
-            // Assert
-            var expected = $@"
+        [UnityTest] 
+        public IEnumerator TestUnityConverter_SaveFormat_UnityPrimitiveObjects() { 
+            async Awaitable Impl() {
+                // Arrange
+                var nestedObject = new TestUnitySaveObject
+                {
+                    Vector3Value = new Vector3(1, 2, 3.5f),
+                    QuaternionValue = new Quaternion(0.1f, 0.2f, 0.3f, 0.4f),
+                    ColorValue = new Color(0.1f, 0.2f, 0.3f, 0.4f),
+                    AnimationCurveValue = AnimationCurve.EaseInOut(0, 0, 1, 1)
+                };
+                // Act
+                var key = Guid.NewGuid().ToString();
+                var serializedFile = await GetSerializedFileForObject(key, nestedObject);
+    
+                // Assert
+                var expected = $@"
 [
   {{
     ""Key"": ""{key}"",
@@ -95,21 +93,26 @@ namespace Buck.SaveAsync.Tests
   }}
 ]
 ";
-            MultilineDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
-        });
-        
+                MultilineDiffUtils.AssertMultilineStringEqual(expected, serializedFile);
+            }
+            
+            return Impl();
+        }
+
         [UnityTest]
-        public IEnumerator TestUnityConverter_SaveFormat_Vector3Raw() => AsCoroutine(async () => 
+        public IEnumerator TestUnityConverter_SaveFormat_Vector3Raw()
         {
-            // Arrange
-            var nestedObject = new Vector3(1, 2, 3.5f);
-            
-            // Act
-            var key = Guid.NewGuid().ToString();
-            var serializedFile = await GetSerializedFileForObject(key, nestedObject);
-            
-            // Assert
-            var expected = $@"
+            async Awaitable Impl()
+            {
+              // Arrange
+              var nestedObject = new Vector3(1, 2, 3.5f);
+              
+              // Act
+              var key = Guid.NewGuid().ToString();
+              var serializedFile = await GetSerializedFileForObject(key, nestedObject);
+              
+              // Assert
+              var expected = $@"
 [
   {{
     ""Key"": ""{key}"",
@@ -121,7 +124,10 @@ namespace Buck.SaveAsync.Tests
   }}
 ]
 ";
-            MultilineDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
-        });
+                MultilineDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
+            }
+
+            return Impl();
+        }
     }
 }

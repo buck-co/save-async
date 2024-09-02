@@ -1,8 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.TestTools;
-using static Buck.SaveAsync.Tests.AsyncToCoroutine;
 
 namespace Buck.SaveAsync.Tests
 {
@@ -19,28 +19,30 @@ namespace Buck.SaveAsync.Tests
     public class TestSaveFileFormat : TestCaseBase
     {
         [UnityTest]
-        public IEnumerator Test_SaveFormat_NestedDictionary() => AsCoroutine(async () => 
+        public IEnumerator Test_SaveFormat_NestedDictionary()
         {
-            // Arrange
-            var nestedObject = new Dictionary<string, object>
+            async Awaitable Impl()
             {
-                { "key1", "value1" },
-                { "key2", 2 },
+                // Arrange
+                var nestedObject = new Dictionary<string, object>
                 {
-                    "key3", new Dictionary<string, object>
+                    { "key1", "value1" },
+                    { "key2", 2 },
                     {
-                        { "key4", "value4" },
-                        { "key5", 5 }
+                        "key3", new Dictionary<string, object>
+                        {
+                            { "key4", "value4" },
+                            { "key5", 5 }
+                        }
                     }
-                }
-            };
-            
-            // Act
-            var key = Guid.NewGuid().ToString();
-            var serializedFile = await GetSerializedFileForObject(key, nestedObject);
-            
-            // Assert
-            var expected = $@"
+                };
+                
+                // Act
+                var key = Guid.NewGuid().ToString();
+                var serializedFile = await GetSerializedFileForObject(key, nestedObject);
+                
+                // Assert
+                var expected = $@"
 [
   {{
     ""Key"": ""{key}"",
@@ -57,25 +59,30 @@ namespace Buck.SaveAsync.Tests
   }}
 ]
 ";
-            MultilineDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
-        });
+                MultilineDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
+            }
+
+            return Impl();
+        }
         
         [UnityTest]
-        public IEnumerator Test_SaveFormat_BasicObject() => AsCoroutine(async () => 
+        public IEnumerator Test_SaveFormat_BasicObject()
         {
-            // Arrange
-            var nestedObject = new TestSaveObject
+            async Awaitable Impl()
             {
-                IntValue = 1337,
-                StringValue = "Goodbye, World!"
-            };
-            
-            // Act
-            var key = Guid.NewGuid().ToString();
-            var serializedFile = await GetSerializedFileForObject(key, nestedObject);
-            
-            // Assert
-            var expected = $@"
+                // Arrange
+                var nestedObject = new TestSaveObject
+                {
+                    IntValue = 1337,
+                    StringValue = "Goodbye, World!"
+                };
+                
+                // Act
+                var key = Guid.NewGuid().ToString();
+                var serializedFile = await GetSerializedFileForObject(key, nestedObject);
+                
+                // Assert
+                var expected = $@"
 [
   {{
     ""Key"": ""{key}"",
@@ -87,7 +94,10 @@ namespace Buck.SaveAsync.Tests
   }}
 ]
 ";
-            MultilineDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
-        });
+                MultilineDiffUtils.AssertMultilineStringEqual(expected,serializedFile);
+            }
+
+            return Impl();
+        }
     }
 }

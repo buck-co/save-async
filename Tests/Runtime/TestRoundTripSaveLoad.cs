@@ -3,7 +3,6 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using static Buck.SaveAsync.Tests.AsyncToCoroutine;
 
 namespace Buck.SaveAsync.Tests
 {
@@ -14,21 +13,31 @@ namespace Buck.SaveAsync.Tests
     public class TestRoundTripSaveLoad : TestCaseBase
     {
         [UnityTest]
-        public IEnumerator Test_RoundTrip_String() => AsCoroutine(async () => 
+        public IEnumerator Test_RoundTrip_String()
         {
-            var expected = "Hello, World!";
-            var actual = await GetRoundTrip(expected, "Goodbye, World!");
-            
-            Assert.AreEqual(expected, actual);
-        });
+            async Awaitable Impl()
+            {
+                var expected = "Hello, World!";
+                var actual = await GetRoundTrip(expected, "Goodbye, World!");
+                
+                Assert.AreEqual(expected, actual);
+            }
+
+            return Impl();
+        }
         
         [UnityTest]
-        public IEnumerator Test_RoundTrip_String_WithDelay() => AsCoroutine(async () => 
+        public IEnumerator Test_RoundTrip_String_WithDelay()
         {
-            var expected = "Hello, World!";
-            var actual = await GetRoundTrip(expected, "Goodbye, World!", TimeSpan.FromSeconds(0.3f));
-            Assert.AreEqual(expected, actual);
-        });
+            async Awaitable Impl()
+            {
+                var expected = "Hello, World!";
+                var actual = await GetRoundTrip(expected, "Goodbye, World!", TimeSpan.FromSeconds(0.3f));
+                Assert.AreEqual(expected, actual);
+            }
+
+            return Impl();
+        }
         
         class SaveObjectWithNestedVector3
         {
@@ -36,26 +45,36 @@ namespace Buck.SaveAsync.Tests
         }
         
         [UnityTest]
-        public IEnumerator Test_RoundTrip_Vector3Nested() => AsCoroutine(async () => 
+        public IEnumerator Test_RoundTrip_Vector3Nested()
         {
-            var expected = new Vector3(1, 2.3f, 10000.2f);
-            var actual = await GetRoundTrip(new SaveObjectWithNestedVector3
+            async Awaitable Impl()
             {
-                NestedVector3 = expected
-            },
-            new SaveObjectWithNestedVector3
-            {
-                NestedVector3 = Vector3.zero
-            });
-            Assert.AreEqual(0, (expected - actual.NestedVector3).magnitude, 0.0001f);
-        });
+                var expected = new Vector3(1, 2.3f, 10000.2f);
+                var actual = await GetRoundTrip(new SaveObjectWithNestedVector3
+                {
+                    NestedVector3 = expected
+                },
+                new SaveObjectWithNestedVector3
+                {
+                    NestedVector3 = Vector3.zero
+                });
+                Assert.AreEqual(0, (expected - actual.NestedVector3).magnitude, 0.0001f);
+            }
+
+            return Impl();
+        }
         
         [UnityTest]
-        public IEnumerator Test_RoundTrip_Vector3Raw() => AsCoroutine(async () => 
+        public IEnumerator Test_RoundTrip_Vector3Raw()
         {
-            var expected = new Vector3(1, 2.3f, 10000.2f);
-            var actual = await GetRoundTrip(expected, Vector3.zero);
-            Assert.AreEqual(0, (expected - actual).magnitude, 0.0001f);
-        });
+            async Awaitable Impl()
+            {
+                var expected = new Vector3(1, 2.3f, 10000.2f);
+                var actual = await GetRoundTrip(expected, Vector3.zero);
+                Assert.AreEqual(0, (expected - actual).magnitude, 0.0001f);
+            }
+
+            return Impl();
+        }
     }
 }
