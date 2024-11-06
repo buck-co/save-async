@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -31,6 +32,15 @@ namespace Buck.SaveAsync
                                  "If you want to use a custom file handler, create a new class that inherits from FileHandler and assign it here.")]
         FileHandler m_customFileHandler;
 
+        [SerializeField, Tooltip("Enables device save conflicts before each r/w operation. " +
+                                 "Ex: conflict is raised if current device is Android and last save was on IOS.")] 
+        private bool _validateDeviceMatchOnEachSave;
+        [SerializeField, Tooltip("Enabling this will skip device match validation.")]
+        private bool _ignoreDeviceMatching;
+        
+        
+        
+
         enum FileOperationType
         {
             Save,
@@ -50,14 +60,28 @@ namespace Buck.SaveAsync
                 Filenames = filenames;
             }
         }
+
+        public static string DeviceSaveDataFile => m_deviceSaveData.Filename;
+
+        /// <summary>
+        /// Action raised when discrepancy in device data.
+        /// </summary>
+        public static Action<DeviceSaveDataConflict> DeviceConflictFoundEvent = conflict => { };
+        /// <summary>
+        /// Action raised when discrepancy in device data.
+        /// </summary>
+        public static Action ConflictOverwriteOccurredEvent = () => { };
         
+
+        static DeviceSaveData m_deviceSaveData;
         static FileHandler m_fileHandler;
         static Dictionary<string, ISaveable> m_saveables = new();
         static List<SaveableObject> m_loadedSaveables = new();
         static Queue<FileOperation> m_fileOperationQueue = new();
-        static HashSet<string> m_files = new();
+        static readonly HashSet<string> m_files = new();
         
         static bool m_isInitialized;
+        static bool m_conflictLock;
         
         static readonly JsonSerializerSettings m_jsonSerializerSettings = new()
         {
@@ -86,7 +110,11 @@ namespace Buck.SaveAsync
                           ? ScriptableObject.CreateInstance<FileHandler>()
                           : Instance.m_customFileHandler;
             
+            m_deviceSaveData = new DeviceSaveData();
+            RegisterSaveable(m_deviceSaveData);
+            
             m_isInitialized = true;
+            
         }
 
         #region SaveAsync API
@@ -251,10 +279,27 @@ namespace Buck.SaveAsync
         }
         
         #endregion
+
+        public static async Awaitable ResolveConflict(bool keepLocal)
+        {
+            if (keepLocal)
+            {
+                await DoFileOperation(FileOperationType.Save, m_files.ToArray(), true);
+            }
+            else
+            {
+                await DoFileOperation(FileOperationType.Load, m_files.Where(f => f != m_deviceSaveData.Filename).ToArray(), true);
+                await DoFileOperation(FileOperationType.Save, new []{m_deviceSaveData.Filename}, true);
+            }
+            m_conflictLock = false;
+        }
         
-        static async Awaitable DoFileOperation(FileOperationType operationType, string[] filenames)
+        static async Awaitable DoFileOperation(FileOperationType operationType, string[] filenames, bool force = false)
         {
             Initialize();
+            
+            // Don't accept file operations while conflict requires resolving.
+            if (m_conflictLock && !force) return;
             
             // If the cancellation token has been requested at any point, return
             while (!Instance.destroyCancellationToken.IsCancellationRequested)
@@ -283,10 +328,24 @@ namespace Buck.SaveAsync
                 while (m_fileOperationQueue.Count > 0)
                 {
                     m_fileOperationQueue.TryDequeue(out FileOperation fileOperation);
+                    
+                    // run device match validation according to settings
+                    if (!force && Instance._validateDeviceMatchOnEachSave 
+                        && !Instance._ignoreDeviceMatching 
+                        && fileOperation.Type is FileOperationType.Save or FileOperationType.Load)
+                    {
+                        if (await RunDeviceConflictCheck(false))
+                        {
+                            m_fileOperationQueue.Clear();
+                            continue;
+                        }
+                    }
+                    
                     switch (fileOperation.Type)
                     {
                         case FileOperationType.Save:
-                            await SaveFileOperationAsync(fileOperation.Filenames);
+                            // Always write device save data on every operation.
+                            await SaveFileOperationAsync(fileOperation.Filenames.Append(m_deviceSaveData.Filename).ToArray());
                             break;
                         case FileOperationType.Load:
                             await LoadFileOperationAsync(fileOperation.Filenames);
@@ -364,10 +423,13 @@ namespace Buck.SaveAsync
                         
                 // Gather all of the saveables that correspond to the file
                 foreach (ISaveable saveable in m_saveables.Values)
-                    if (saveable.Filename == filename)
+                    if (saveable.Filename == filename){
                         saveablesToSave.Add(saveable);
+                    }
+                        
                         
                 string json = SaveablesToJson(saveablesToSave);
+
                 json = Encryption.Encrypt(json, Instance.m_encryptionPassword, Instance.m_encryptionType);
                 await m_fileHandler.WriteFile(filename, json, Instance.destroyCancellationToken);
             }
@@ -392,6 +454,12 @@ namespace Buck.SaveAsync
                 try
                 {
                     jsonObjects = JsonConvert.DeserializeObject<List<SaveableObject>>(json, m_jsonSerializerSettings);
+                    string debugString = "";
+                    foreach (var j in jsonObjects)
+                    {
+                        debugString += $"{j.Key} : {j.Data.ToString()}\n";
+                    }
+                    Debug.Log($"Loaded Save Data {debugString}");
                 }
                 catch (Exception e)
                 {
@@ -413,6 +481,74 @@ namespace Buck.SaveAsync
                 else
                     m_fileHandler.Delete(filename);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>True, if conflict was found</returns>
+        public static async Task<bool> RunDeviceConflictCheck(bool awaitResolution)
+        {
+            var result = await CheckDeviceInfo(Instance.destroyCancellationToken);
+            if (result.Conflict != null)
+            {
+                m_conflictLock = true;
+                if (!Instance.m_useBackgroundThread)
+                {
+                    await Awaitable.MainThreadAsync();
+                }
+
+                DeviceConflictFoundEvent?.Invoke((DeviceSaveDataConflict)result.Conflict);
+                while (awaitResolution && m_conflictLock)
+                {
+                    if (Instance.m_useBackgroundThread)
+                    {
+                        await Awaitable.WaitForSecondsAsync(0.1f, Instance.destroyCancellationToken);
+                    }
+                    else
+                    {
+                        await Awaitable.NextFrameAsync(Instance.destroyCancellationToken);
+                    }
+                }
+                return true;
+            }
+
+            return false;
+        }
+        
+        /// <summary>
+        /// Ensures Device save data exists and returns conflict if it exists
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        static async Task<DeviceSaveDataResult> CheckDeviceInfo(CancellationToken cancellationToken)
+        {
+
+            
+            if (!await m_fileHandler.Exists(m_deviceSaveData.Filename, cancellationToken))
+            {
+                await m_fileHandler.WriteFile(m_deviceSaveData.Filename, SaveablesToJson(new List<ISaveable>(){m_deviceSaveData}), cancellationToken);
+            }
+
+            var fileContent = await m_fileHandler.ReadFile(m_deviceSaveData.Filename, cancellationToken);
+            Debug.Log($"Remote Device Info Save Data {fileContent}");
+            
+            try
+            {
+                var json = Encryption.Decrypt(fileContent, Instance.m_encryptionPassword, Instance.m_encryptionType);
+                Debug.Log($"Remote Device Info Save Data {json}");
+                var remoteInfo = JsonConvert.DeserializeObject<List<SaveableObject>>(json, m_jsonSerializerSettings);
+                
+
+                return m_deviceSaveData.Equals(remoteInfo[0].Data) 
+                    ? new DeviceSaveDataResult((DeviceSaveData.SaveData)remoteInfo[0].Data) 
+                    : new DeviceSaveDataResult(new DeviceSaveDataConflict(m_deviceSaveData.LastSavedState, (DeviceSaveData.SaveData)remoteInfo[0].Data));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Error deserializing JSON data. JSON data may be malformed. Exception message: " + e.Message, Instance.gameObject);
+                throw;
+            }
+        }
         
         static string SaveablesToJson(List<ISaveable> saveables)
         {
@@ -420,7 +556,6 @@ namespace Buck.SaveAsync
                 throw new ArgumentNullException(nameof(saveables));
 
             SaveableObject[] wrappedSaveables = new SaveableObject[saveables.Count];
-
             for (var i = 0; i < saveables.Count; i++)
             {
                 var s = saveables[i];
@@ -433,7 +568,51 @@ namespace Buck.SaveAsync
                 };
             }
 
+            
+            
+
             return JsonConvert.SerializeObject(wrappedSaveables, m_jsonSerializerSettings);
+        }
+
+        public static string SavableToJson(ISaveable saveable)
+        {
+            var saveableObject = new SaveableObject()
+            {
+                Key = saveable.Key,
+                Data = saveable.CaptureState()
+            };
+            return JsonConvert.SerializeObject(saveable.CaptureState(), m_jsonSerializerSettings);
+        }
+        
+        
+        public struct DeviceSaveDataResult
+        {
+            public readonly DeviceSaveData.SaveData? SaveData;
+            public readonly DeviceSaveDataConflict? Conflict;
+
+            public DeviceSaveDataResult(DeviceSaveData.SaveData data)
+            {
+                SaveData = data;
+                Conflict = null;
+            }
+
+            public DeviceSaveDataResult(DeviceSaveDataConflict conflict)
+            {
+                SaveData = null;
+                Conflict = conflict;
+            }
+        }
+    
+        public struct DeviceSaveDataConflict
+        {
+            public readonly DeviceSaveData.SaveData Local;
+            public readonly DeviceSaveData.SaveData Remote;
+
+            public DeviceSaveDataConflict(DeviceSaveData.SaveData local, DeviceSaveData.SaveData remote)
+            {
+                Local = local;
+                Remote = remote;
+            }
         }
     }
 }

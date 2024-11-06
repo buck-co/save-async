@@ -1,5 +1,6 @@
 // MIT License - Copyright (c) 2024 BUCK Design LLC - https://github.com/buck-co
 
+using System;
 using UnityEngine;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,8 +15,9 @@ namespace Buck.SaveAsync
         /// </summary>
         string m_persistentDataPath;
         
-        protected virtual void OnEnable()
-            => m_persistentDataPath = Application.persistentDataPath;
+        protected virtual void OnEnable() =>
+            m_persistentDataPath = Application.persistentDataPath;
+
         
         /// <summary>
         /// Returns the full path to a file in the persistent data path using the given path or filename.
@@ -40,6 +42,9 @@ namespace Buck.SaveAsync
         public virtual async Task<bool> Exists(string pathOrFilename, CancellationToken cancellationToken)
             => File.Exists(GetPath(pathOrFilename));
 
+        
+
+            
         /// <summary>
         /// Writes the given content to a file at the given path or filename.
         /// <code>
@@ -73,7 +78,12 @@ namespace Buck.SaveAsync
                                  $"\nReturning empty string and no data will be loaded.");
                 return string.Empty;
             }
+            /*
+            if (!await CheckDeviceInfo(cancellationToken))
+            {
                 
+            }
+            */
             string fileContent = await File.ReadAllTextAsync(GetPath(pathOrFilename), cancellationToken);
             
             // If the file is empty, return an empty string and log a warning.
