@@ -40,7 +40,7 @@ namespace Buck.SaveAsync
             {
                 deviceModel = _deviceModel,
                 deviceType = _deviceType,
-                deviceUniqueIdentifier = _deviceUniqueIdentifier + "asdfasdf",
+                deviceUniqueIdentifier = _deviceUniqueIdentifier,
                 deviceOS = _deviceOS,
                 deviceName = _deviceName,
                 timeStamp = _timeStamp.ToString(CultureInfo.InvariantCulture)
