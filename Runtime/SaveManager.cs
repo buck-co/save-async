@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,6 +80,7 @@ namespace Buck.SaveAsync
         static List<SaveableObject> m_loadedSaveables = new();
         static Queue<FileOperation> m_fileOperationQueue = new();
         static readonly HashSet<string> m_files = new();
+        static HashSet<string> m_filesToResave = new();
         
         static bool m_isInitialized;
         static bool m_conflictLock;
@@ -117,6 +119,36 @@ namespace Buck.SaveAsync
             
         }
 
+        class TimeStamp : ISaveable
+        {
+            public static readonly string TimestampPrefix = "Timestamp_{0}";
+            public string Key => string.Format(TimestampPrefix, _filename);
+            public string Filename => _filename;
+            private string _filename;
+            public void SetFile(string filename)
+            {
+                _filename = filename;
+            }
+            
+            [Serializable]
+            public struct SaveData
+            {
+                public string timestamp;
+            }
+            
+            public object CaptureState()
+            {
+                return new SaveData()
+                {
+                    timestamp = DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)
+                };
+            }
+
+            public void RestoreState(object state)
+            {
+                
+            }
+        }
         #region SaveAsync API
 
         /// <summary>
@@ -131,11 +163,21 @@ namespace Buck.SaveAsync
         public static void RegisterSaveable(ISaveable saveable)
         {
             if (m_saveables.TryAdd(saveable.Key, saveable))
+            {
+                // Attempt to add a timestamp savable to each file registered
+                var timestampObject = new TimeStamp();
+                timestampObject.SetFile(saveable.Filename);
+                if (m_saveables.TryAdd(timestampObject.Key, timestampObject))
+                {
+                    Debug.LogWarning($"timecheck. Successfully Added {timestampObject.Key}");
+                }
                 m_files.Add(saveable.Filename);
+            }
+                
             else
                 Debug.LogError($"Saveable with Key {saveable.Key} already exists!");
         }
-        
+
         /// <summary>
         /// Checks if a file exists at the given path or filename.
         /// <code>
@@ -145,7 +187,10 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="filename">The path or filename to check for existence.</param>
         public static async Task<bool> Exists(string filename)
-            => await m_fileHandler.Exists(filename, Instance.destroyCancellationToken);
+        {
+            var existsResult = await m_fileHandler.Exists(filename, Instance.destroyCancellationToken);
+            return existsResult.Local || existsResult.Remote;
+        }
 
         /// <summary>
         /// Saves the files at the given paths or filenames.
@@ -403,10 +448,6 @@ namespace Buck.SaveAsync
                         saveable.RestoreState(wrappedData.Data);
                     }
                 }
-                
-                // Clear the list before the next iteration
-                m_loadedSaveables.Clear();
-
                 IsBusy = false;
                 
                 // Return, otherwise we will loop forever
@@ -437,41 +478,123 @@ namespace Buck.SaveAsync
 
         static async Awaitable LoadFileOperationAsync(string[] filenames)
         {
+            List<string> filesToResave = new();
             // Load the files
             foreach (string filename in filenames)
             {
-                string fileContent = await m_fileHandler.ReadFile(filename, Instance.destroyCancellationToken);
-                        
+                var loadResult = await m_fileHandler.ReadFile(filename, Instance.destroyCancellationToken);
+                
+                
                 // If the file is empty, skip it
-                if (string.IsNullOrEmpty(fileContent))
+                if (string.IsNullOrEmpty(loadResult.Local) && string.IsNullOrEmpty(loadResult.Local))
                     continue;
-                        
-                string json = Encryption.Decrypt(fileContent, Instance.m_encryptionPassword, Instance.m_encryptionType);
-                        
+                
+                string localJson = Encryption.Decrypt(loadResult.Remote, Instance.m_encryptionPassword, Instance.m_encryptionType);
+                    
                 // Deserialize the JSON data to List of SaveableDataWrapper
-                List<SaveableObject> jsonObjects = null;
+                List<SaveableObject> localjsonObjects = null;
+                List<SaveableObject> remotejsonObjects = null;
+                try
+                {
+                    localjsonObjects = JsonConvert.DeserializeObject<List<SaveableObject>>(localJson, m_jsonSerializerSettings);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("Error deserializing JSON data. JSON data may be malformed. Exception message: " + e.Message, Instance.gameObject);
+                }
+                    
+                string remoteJson = Encryption.Decrypt(loadResult.Remote, Instance.m_encryptionPassword, Instance.m_encryptionType);
                 
                 try
                 {
-                    jsonObjects = JsonConvert.DeserializeObject<List<SaveableObject>>(json, m_jsonSerializerSettings);
-                    string debugString = "";
+                    remotejsonObjects = JsonConvert.DeserializeObject<List<SaveableObject>>(remoteJson, m_jsonSerializerSettings);
+                    
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("Error deserializing JSON data. JSON data may be malformed. Exception message: " + e.Message, Instance.gameObject);
+                    
+                }
+                Debug.LogWarning($"timecheck. local:{!string.IsNullOrEmpty(localJson)}  remote: {!string.IsNullOrEmpty(remoteJson)} error: {loadResult.NetworkError} local content: {localJson} remote content: {remoteJson}");
+                if (string.IsNullOrEmpty(localJson) && !string.IsNullOrEmpty(remoteJson))
+                {
+                    Debug.LogWarning($"timecheck. Load remote, write to local");
+                    m_loadedSaveables.AddRange(remotejsonObjects);
+                    filesToResave.Add(filename);
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(localJson) && string.IsNullOrEmpty(remoteJson))
+                {
+                    Debug.LogWarning($"timecheck. load local");
+                    m_loadedSaveables.AddRange(localjsonObjects);
+                    if (!loadResult.NetworkError)
+                    {
+                        Debug.LogWarning($"timecheck. Write local to remote");
+                        filesToResave.Add(filename);
+                    }
+                    continue;
+                }
+
+                if (!(string.IsNullOrEmpty(localJson) && string.IsNullOrEmpty(remoteJson)))
+                {
+                    Debug.LogWarning($"timecheck. both local and remote have data");
+                    var localHasTimestamp = localjsonObjects.Exists(obj =>
+                        obj.Key == string.Format(TimeStamp.TimestampPrefix, filename));
+                    var remoteHasTimestamp = remotejsonObjects.Exists(obj =>
+                        obj.Key == string.Format(TimeStamp.TimestampPrefix, filename));
+                    Debug.LogWarning($"timecheck. local timestamp exists {localHasTimestamp} remote timestamp exists {localHasTimestamp} ");
+                    
+                    if (localHasTimestamp != remoteHasTimestamp)
+                    {
+                        Debug.LogWarning($"timecheck. Loading local? {localHasTimestamp}");
+                        m_loadedSaveables.AddRange(localHasTimestamp ? localjsonObjects : remotejsonObjects);
+                        if (!(loadResult.NetworkError && localHasTimestamp))
+                        {
+                            Debug.LogWarning($"timecheck. Write local to remote because timestamps are missing");
+                            filesToResave.Add(filename);
+                        }
+                        continue;
+                    }
+                    if (!(localHasTimestamp && remoteHasTimestamp))
+                    {
+                        Debug.LogWarning($"timecheck. Neither has timestamp, load objects and write file again to add timestamps");
+                        m_loadedSaveables.AddRange(remotejsonObjects);
+                        filesToResave.Add(filename);
+                        continue;
+                    }
+                    var localTimestamp = localjsonObjects.Find(obj => obj.Key == string.Format(TimeStamp.TimestampPrefix, filename));
+                    var remoteTimestamp = remotejsonObjects.Find(obj => obj.Key == string.Format(TimeStamp.TimestampPrefix, filename));
+
+                    
+                    if (((TimeStamp.SaveData)localTimestamp.Data).timestamp !=
+                                                    ((TimeStamp.SaveData)remoteTimestamp.Data).timestamp)
+                    {
+                        var localTime = DateTime.Parse(((TimeStamp.SaveData)localTimestamp.Data).timestamp);
+                        var remoteTime = DateTime.Parse(((TimeStamp.SaveData)remoteTimestamp.Data).timestamp);
+                        Debug.LogWarning($"timecheck. remote not null, {localTime > remoteTime} local:{localTime} remote: {remoteTime}");
+                        m_loadedSaveables.AddRange(localTime > remoteTime ? localjsonObjects : remotejsonObjects);
+                        filesToResave.Add(filename);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"timecheck. Timestamps match, loading remote data");
+                        m_loadedSaveables.AddRange(remotejsonObjects);
+                    }
+                }
+                    
+            }
+            m_fileOperationQueue.Enqueue(new FileOperation(FileOperationType.Save, filesToResave.ToArray()));
+        }
+        
+        /*
+         string debugString = "";
                     foreach (var j in jsonObjects)
                     {
                         debugString += $"{j.Key} : {j.Data.ToString()}\n";
                     }
                     Debug.Log($"Loaded Save Data {debugString}");
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError("Error deserializing JSON data. JSON data may be malformed. Exception message: " + e.Message, Instance.gameObject);
-                    continue;
-                }
-                
-                if (jsonObjects != null)
-                    m_loadedSaveables.AddRange(jsonObjects);
-            }
-        }
-        
+         */
         static async Awaitable DeleteFileOperationAsync(string[] filenames, bool eraseAndKeepFile = false)
         {
             // Delete the files from disk
@@ -523,24 +646,27 @@ namespace Buck.SaveAsync
         static async Task<DeviceSaveDataResult> CheckDeviceInfo(CancellationToken cancellationToken)
         {
 
-            
-            if (!await m_fileHandler.Exists(m_deviceSaveData.Filename, cancellationToken))
+            var exists = await m_fileHandler.Exists(m_deviceSaveData.Filename, cancellationToken);
+            if (!(exists.Local || exists.Remote))
             {
                 await m_fileHandler.WriteFile(m_deviceSaveData.Filename, SaveablesToJson(new List<ISaveable>(){m_deviceSaveData}), cancellationToken);
             }
-
+            exists = await m_fileHandler.Exists(m_deviceSaveData.Filename, cancellationToken);
             var fileContent = await m_fileHandler.ReadFile(m_deviceSaveData.Filename, cancellationToken);
             Debug.Log($"Remote Device Info Save Data {fileContent}");
-            
+            if (!exists.Remote)
+            {
+                fileContent.Remote = fileContent.Local;
+            }
             try
             {
-                var json = Encryption.Decrypt(fileContent, Instance.m_encryptionPassword, Instance.m_encryptionType);
+                var json = Encryption.Decrypt(fileContent.Remote, Instance.m_encryptionPassword, Instance.m_encryptionType);
                 Debug.Log($"Remote Device Info Save Data {json}");
                 var remoteInfo = JsonConvert.DeserializeObject<List<SaveableObject>>(json, m_jsonSerializerSettings);
+                //if (remoteInfo == null) return 
                 
-
-                return m_deviceSaveData.Equals(remoteInfo[0].Data) 
-                    ? new DeviceSaveDataResult((DeviceSaveData.SaveData)remoteInfo[0].Data) 
+                return remoteInfo != null && m_deviceSaveData.Equals(remoteInfo.Find(o => o.Key == m_deviceSaveData.Key).Data) 
+                    ? new DeviceSaveDataResult((DeviceSaveData.SaveData)remoteInfo.Find(o => o.Key == m_deviceSaveData.Key).Data) 
                     : new DeviceSaveDataResult(new DeviceSaveDataConflict(m_deviceSaveData.LastSavedState, (DeviceSaveData.SaveData)remoteInfo[0].Data));
             }
             catch (Exception e)
@@ -567,23 +693,8 @@ namespace Buck.SaveAsync
                     Data = data
                 };
             }
-
-            
-            
-
             return JsonConvert.SerializeObject(wrappedSaveables, m_jsonSerializerSettings);
         }
-
-        public static string SavableToJson(ISaveable saveable)
-        {
-            var saveableObject = new SaveableObject()
-            {
-                Key = saveable.Key,
-                Data = saveable.CaptureState()
-            };
-            return JsonConvert.SerializeObject(saveable.CaptureState(), m_jsonSerializerSettings);
-        }
-        
         
         public struct DeviceSaveDataResult
         {
