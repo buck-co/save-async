@@ -72,7 +72,6 @@ namespace Buck.SaveAsync
         public virtual async Task WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken)
         {
             pathOrFilename = GetModifiedFileName(pathOrFilename);
-            Debug.LogWarning($"timecheck. SAVE LOCAL {GetPath(pathOrFilename)}");
             await File.WriteAllTextAsync(GetPath(pathOrFilename), content, cancellationToken);
         }
 
@@ -111,13 +110,11 @@ namespace Buck.SaveAsync
                                  $"\nReturning empty string and no data will be loaded.");
                 return result;
             }
-            Debug.LogWarning($"timecheck. LOAD LOCAL {GetPath(pathOrFilename)}");
             result.Local = await File.ReadAllTextAsync(GetPath(pathOrFilename), cancellationToken);
             
             // If the file is empty, return an empty string and log a warning.
             if (string.IsNullOrEmpty(result.Local))
             {
-                Debug.LogWarning($"timecheck. LOAD LOCAL FAILED {GetPath(pathOrFilename)}");
                 Debug.LogWarning($"FileHandler: Attempted to load {pathOrFilename} but the file was empty.");
             }
 
