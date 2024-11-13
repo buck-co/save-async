@@ -1,5 +1,6 @@
 // MIT License - Copyright (c) 2024 BUCK Design LLC - https://github.com/buck-co
 
+using System;
 using UnityEngine;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,8 +15,9 @@ namespace Buck.SaveAsync
         /// </summary>
         string m_persistentDataPath;
         
-        protected virtual void OnEnable()
-            => m_persistentDataPath = Application.persistentDataPath;
+        protected virtual void OnEnable() =>
+            m_persistentDataPath = Application.persistentDataPath;
+
         
         /// <summary>
         /// Returns the full path to a file in the persistent data path using the given path or filename.
@@ -29,6 +31,14 @@ namespace Buck.SaveAsync
             => Path.Combine(m_persistentDataPath, pathOrFilename);
 
         /// <summary>
+        /// For user or profile specific files, we want to use a modified file name only on io functions.
+        /// Otherwise all other calls should use an unmodified filename.
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        protected virtual string GetModifiedFileName(string fileName) => fileName;
+
+        /// <summary>
         /// Returns true if a file exists at the given path or filename.
         /// <code>
         /// File example: "MyFile.dat"
@@ -37,8 +47,17 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to check.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public virtual async Task<bool> Exists(string pathOrFilename, CancellationToken cancellationToken)
-            => File.Exists(GetPath(pathOrFilename));
+        public virtual async Task<ExistsResult> Exists(string pathOrFilename, CancellationToken cancellationToken)
+        {
+            var result = new ExistsResult
+            {
+                Local = File.Exists(GetPath(GetModifiedFileName(pathOrFilename)))
+            };
+            result.Remote = false;
+            return result;
+        }
+
+
 
         /// <summary>
         /// Writes the given content to a file at the given path or filename.
@@ -51,8 +70,23 @@ namespace Buck.SaveAsync
         /// <param name="content">The string to write to the file.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
         public virtual async Task WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken)
-            => await File.WriteAllTextAsync(GetPath(pathOrFilename), content, cancellationToken);
+        {
+            pathOrFilename = GetModifiedFileName(pathOrFilename);
+            await File.WriteAllTextAsync(GetPath(pathOrFilename), content, cancellationToken);
+        }
 
+        public class ReadResult
+        {
+            public string Local = "";
+            public string Remote = "";
+            public bool NetworkError;
+        }
+        
+        public class ExistsResult
+        {
+            public bool Local;
+            public bool Remote;
+        }
         /// <summary>
         /// Returns the contents of a file at the given path or filename.
         /// <code>
@@ -62,28 +96,29 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to read.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public virtual async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
+        public virtual async Task<ReadResult> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
         {
             // If the file does not exist, return an empty string and log a warning.
-            bool exists = await Exists(pathOrFilename, cancellationToken);
+            var exists = await Exists(pathOrFilename, cancellationToken);
             
-            if (!exists)
+            // Exists() should handle it's own modification of the pathOrFilename, so we don't want to alter it until we make that call.
+            pathOrFilename = GetModifiedFileName(pathOrFilename);
+            var result = new ReadResult();
+            if (!exists.Local)
             {
                 Debug.LogWarning($"FileHandler: File does not exist at path or filename: {pathOrFilename}" +
                                  $"\nReturning empty string and no data will be loaded.");
-                return string.Empty;
+                return result;
             }
-                
-            string fileContent = await File.ReadAllTextAsync(GetPath(pathOrFilename), cancellationToken);
+            result.Local = await File.ReadAllTextAsync(GetPath(pathOrFilename), cancellationToken);
             
             // If the file is empty, return an empty string and log a warning.
-            if (string.IsNullOrEmpty(fileContent))
+            if (string.IsNullOrEmpty(result.Local))
             {
                 Debug.LogWarning($"FileHandler: Attempted to load {pathOrFilename} but the file was empty.");
-                return string.Empty;
             }
 
-            return fileContent;
+            return result;
         }
         
         /// <summary>
@@ -97,7 +132,7 @@ namespace Buck.SaveAsync
         /// <param name="pathOrFilename">The path or filename of the file to erase.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
         public virtual async Task Erase(string pathOrFilename, CancellationToken cancellationToken)
-            => await WriteFile(pathOrFilename, string.Empty, cancellationToken);
+            => await WriteFile(GetModifiedFileName(pathOrFilename), string.Empty, cancellationToken);
 
         /// <summary>
         /// Deletes a file at the given path or filename. This will remove the file from disk.
@@ -109,6 +144,6 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to delete.</param>
         public virtual void Delete(string pathOrFilename) 
-            => File.Delete(GetPath(pathOrFilename));
+            => File.Delete(GetPath(GetModifiedFileName(pathOrFilename)));
     }
 }

@@ -1,7 +1,9 @@
 {
     "name": "BUCK.SaveAsync.Runtime",
     "rootNamespace": "Buck.SaveAsync",
-    "references": [],
+    "references": [
+        "Unity.TextMeshPro"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
