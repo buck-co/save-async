@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.0] - 2024-11-18
+
+- Added conflict resolution that reconciles local/remote saves when devices change.
+
 ## [0.4.3] - 2024-08-20
 
 - Converted the SaveManager.Exists method and the default FileHandler method to be async. This isn't necessary for typical file I/O but can be useful in the case of custom file handlers that have a wait time associated with checking for file availability.
