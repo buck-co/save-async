@@ -448,6 +448,10 @@ namespace Buck.SaveAsync
                         saveable.RestoreState(wrappedData.Data);
                     }
                 }
+                
+                // Clear the list before the next iteration
+                m_loadedSaveables.Clear();
+                
                 IsBusy = false;
                 
                 // Return, otherwise we will loop forever
