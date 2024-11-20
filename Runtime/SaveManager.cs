@@ -34,10 +34,12 @@ namespace Buck.SaveAsync
         FileHandler m_customFileHandler;
 
         [SerializeField, Tooltip("Enables device save conflicts before each r/w operation. " +
-                                 "Ex: conflict is raised if current device is Android and last save was on IOS.")] 
-        private bool _validateDeviceMatchOnEachSave;
+                                 "Ex: conflict is raised if current device is Android and last save was on IOS.")]
+        
+        bool _validateDeviceMatchOnEachSave;
+        
         [SerializeField, Tooltip("Enabling this will skip device match validation.")]
-        private bool _ignoreDeviceMatching;
+        bool _ignoreDeviceMatching;
         
         
         
@@ -80,7 +82,7 @@ namespace Buck.SaveAsync
         static List<SaveableObject> m_loadedSaveables = new();
         static Queue<FileOperation> m_fileOperationQueue = new();
         static readonly HashSet<string> m_files = new();
-        static HashSet<string> m_filesToResave = new();
+        static List<string> m_filesToResave = new();
         
         static bool m_isInitialized;
         static bool m_conflictLock;
@@ -295,20 +297,20 @@ namespace Buck.SaveAsync
             // If the byte array is null, return a new Guid byte array.
             if (guidBytes == null)
             {
-                Debug.LogWarning("SaveManager.cs: Guid byte array is null. Generating a new Guid.");
+                Debug.LogWarning("SaveManager.GetSerializableGuid() - Guid byte array is null. Generating a new Guid.");
                 guidBytes = Guid.NewGuid().ToByteArray();
             }
             
             // If the byte array is empty, return a new Guid byte array.
             if (guidBytes.Length == 0)
             {
-                Debug.LogWarning("SaveManager.cs: Guid byte array is empty. Generating a new Guid.");
+                Debug.LogWarning("SaveManager.GetSerializableGuid() - Guid byte array is empty. Generating a new Guid.");
                 guidBytes = Guid.NewGuid().ToByteArray();
             }
             
             // If the byte array is not empty, but is not 16 bytes long, throw an exception.
             if (guidBytes.Length != 16)
-                throw new ArgumentException("SaveManager.cs: Guid byte array must be 16 bytes long.");
+                throw new ArgumentException("SaveManager.GetSerializableGuid() - Guid byte array must be 16 bytes long.");
 
             // If the byte array is not an empty Guid, return a new Guid byte array.
             // Otherwise, return the given Guid byte array.
@@ -316,7 +318,7 @@ namespace Buck.SaveAsync
 
             if (guidObj == Guid.Empty)
             {
-                Debug.LogWarning("SaveManager.cs: Guid is empty. Generating a new Guid.");
+                Debug.LogWarning("SaveManager.GetSerializableGuid() - Guid is empty. Generating a new Guid.");
                 guidBytes = Guid.NewGuid().ToByteArray();
             }
             
@@ -351,13 +353,17 @@ namespace Buck.SaveAsync
             {
                 if (m_saveables.Count == 0)
                 {
-                    Debug.LogError("SaveManager.cs: No saveables have been registered! You must call RegisterSaveable on your" +
+                    Debug.LogError("SaveManager.DoFileOperation() - No saveables have been registered! You must call RegisterSaveable on your" +
                                    " ISaveable classes before using save, load, erase, or delete methods.", Instance.gameObject);
                     return;
                 }
                 
                 // Create the file operation struct and queue it
                 m_fileOperationQueue.Enqueue(new FileOperation(operationType, filenames));
+                
+                // Print the file operation that is being performed.
+                foreach (var file in filenames)
+                    Debug.Log($"SaveManager.DoFileOperation() - {operationType} operation queued for {file}.");
 
                 // If we are already doing file I/O, return
                 if (IsBusy)
@@ -365,6 +371,8 @@ namespace Buck.SaveAsync
 
                 // Prevent duplicate file operations from processing the queue
                 IsBusy = true;
+                
+                
                 
                 // Switch to a background thread to process the queue
                 if (Instance.m_useBackgroundThread)
@@ -419,7 +427,7 @@ namespace Buck.SaveAsync
                     {
                         if (wrappedData.Key == null)
                         {
-                            Debug.LogError("SaveManager.cs: The key for an ISaveable is null. JSON data may be malformed. " +
+                            Debug.LogError("SaveManager.DoFileOperation() - The key for an ISaveable is null. JSON data may be malformed. " +
                                            "The data will not be restored. ", Instance.gameObject);
                             continue;
                         }
@@ -427,7 +435,7 @@ namespace Buck.SaveAsync
                         // Try to get the ISaveable from the dictionary
                         if (m_saveables.ContainsKey(wrappedData.Key) == false)
                         {
-                            Debug.LogError("SaveManager.cs: The ISaveable with the key " + wrappedData.Key + " was not found in the saveables dictionary. " +
+                            Debug.LogError("SaveManager.DoFileOperation() - The ISaveable with the key " + wrappedData.Key + " was not found in the saveables dictionary. " +
                                            "The data will not be restored. This could mean that the string Key for the matching object has " +
                                            "changed since the save data was created.", Instance.gameObject);
                             continue;
@@ -439,7 +447,7 @@ namespace Buck.SaveAsync
                         // If the ISaveable is null, log an error and continue to the next iteration
                         if (saveable == null)
                         {
-                            Debug.LogError("SaveManager.cs: The ISaveable with the key " + wrappedData.Key + " is null. "
+                            Debug.LogError("SaveManager.DoFileOperation() - The ISaveable with the key " + wrappedData.Key + " is null. "
                                            + "The data will not be restored.", Instance.gameObject);
                             continue;
                         }
@@ -449,11 +457,25 @@ namespace Buck.SaveAsync
                     }
                 }
                 
-                // Clear the list before the next iteration
-                m_loadedSaveables.Clear();
-                
                 IsBusy = false;
                 
+                // Clear the lists before the next iteration
+                m_loadedSaveables.Clear();
+                
+                if (m_filesToResave.Count > 0)
+                {
+                    // Print the list of files
+                    foreach (var file in m_filesToResave)
+                        Debug.Log($"SaveManager.DoFileOperation() - {file} has been queued for resaving.");
+                    
+                    // Copy the list of files to resave and clear the original list so this doesn't repeat
+                    List<string> filesToResaveCopy = new List<string>(m_filesToResave);
+                    m_filesToResave.Clear();
+                    
+                    // Resave the files
+                    await DoFileOperation(FileOperationType.Save, filesToResaveCopy.ToArray());
+                }
+
                 // Return, otherwise we will loop forever
                 return;
             }
@@ -468,10 +490,8 @@ namespace Buck.SaveAsync
                         
                 // Gather all of the saveables that correspond to the file
                 foreach (ISaveable saveable in m_saveables.Values)
-                    if (saveable.Filename == filename){
+                    if (saveable.Filename == filename)
                         saveablesToSave.Add(saveable);
-                    }
-                        
                         
                 string json = SaveablesToJson(saveablesToSave);
 
@@ -482,8 +502,6 @@ namespace Buck.SaveAsync
 
         static async Awaitable LoadFileOperationAsync(string[] filenames)
         {
-            List<string> filesToResave = new();
-            
             // Helper function to safely deserialize JSON and log errors
             List<SaveableObject> DeserializeJson(string json, string context)
             {
@@ -493,7 +511,7 @@ namespace Buck.SaveAsync
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"SaveManager.cs: Error deserializing {context} JSON. Exception: {e.Message}", Instance.gameObject);
+                    Debug.LogError($"SaveManager.LoadFileOperationAsync() - Error deserializing {context} JSON. Exception: {e.Message}", Instance.gameObject);
                     return null;
                 }
             }
@@ -506,7 +524,7 @@ namespace Buck.SaveAsync
                 // If the file is empty, skip it
                 if (string.IsNullOrEmpty(loadResult.Local) && string.IsNullOrEmpty(loadResult.Remote))
                 {
-                    Debug.Log($"SaveManager.cs: {filename} Both results were null or empty");
+                    Debug.Log($"SaveManager.LoadFileOperationAsync() - {filename} Both results were null or empty. Skipping file.");
                     continue;
                 }
                     
@@ -518,12 +536,14 @@ namespace Buck.SaveAsync
                 var localjsonObjects = DeserializeJson(localJson, "local");
                 var remotejsonObjects = DeserializeJson(remoteJson, "remote");
                 
-                Debug.Log($"SaveManager.cs: {filename} local:{!string.IsNullOrEmpty(localJson)}  remote: {!string.IsNullOrEmpty(remoteJson)} networkError: {loadResult.NetworkError}\nlocal content: {localJson} \nremote content: {remoteJson}");
+                Debug.Log($"SaveManager.LoadFileOperationAsync() - Filename: {filename} Local: {!string.IsNullOrEmpty(localJson)} Remote: {!string.IsNullOrEmpty(remoteJson)} Network Error: {loadResult.NetworkError}" +
+                          $"\nLocal content: {localJson}" +
+                          $"\nRemote content: {remoteJson}");
                 
                 // Load remote data if it is the only existing data.
                 if (string.IsNullOrEmpty(localJson) && !string.IsNullOrEmpty(remoteJson))
                 {
-                    Debug.Log($"SaveManager.cs: {filename} Load remote data, write data to local file");
+                    Debug.Log($"SaveManager.LoadFileOperationAsync() - Filename: {filename} Load remote data, write data to local file");
                     m_loadedSaveables.AddRange(remotejsonObjects);
                     continue;
                 }
@@ -531,41 +551,41 @@ namespace Buck.SaveAsync
                 // Load local data if it is the only existing data
                 if (!string.IsNullOrEmpty(localJson) && string.IsNullOrEmpty(remoteJson))
                 {
-                    Debug.Log($"SaveManager.cs: {filename} load local");
+                    Debug.Log($"SaveManager.LoadFileOperationAsync() - Filename: {filename} load local");
                     m_loadedSaveables.AddRange(localjsonObjects);
                     if (!loadResult.NetworkError)
                     {
-                        Debug.Log($"SaveManager.cs: {filename} Write local to remote");
-                        filesToResave.Add(filename);
+                        Debug.Log($"SaveManager.LoadFileOperationAsync() - Filename: {filename} Write local to remote");
+                        m_filesToResave.Add(filename);
                     }
                     continue;
                 }
 
                 if (!(string.IsNullOrEmpty(localJson) && string.IsNullOrEmpty(remoteJson)))
                 {
-                    Debug.Log($"SaveManager.cs: {filename} both local and remote have data");
+                    Debug.Log($"SaveManager.LoadFileOperationAsync() - {filename} both local and remote have data");
                     var localHasTimestamp = localjsonObjects.Exists(obj =>
                         obj.Key == string.Format(TimeStamp.TimestampPrefix, filename));
                     var remoteHasTimestamp = remotejsonObjects.Exists(obj =>
                         obj.Key == string.Format(TimeStamp.TimestampPrefix, filename));
-                    Debug.Log($"SaveManager.cs: {filename} local timestamp exists {localHasTimestamp} remote timestamp exists {localHasTimestamp} ");
+                    Debug.Log($"SaveManager.LoadFileOperationAsync() - {filename} local timestamp exists {localHasTimestamp} remote timestamp exists {localHasTimestamp} ");
                     
                     if (localHasTimestamp != remoteHasTimestamp)
                     {
-                        Debug.Log($"SaveManager.cs: {filename} Loading local? {localHasTimestamp}");
+                        Debug.Log($"SaveManager.LoadFileOperationAsync() - {filename} Loading local? {localHasTimestamp}");
                         m_loadedSaveables.AddRange(localHasTimestamp ? localjsonObjects : remotejsonObjects);
                         if (!(loadResult.NetworkError && localHasTimestamp))
                         {
-                            Debug.Log($"SaveManager.cs: {filename} Write local to remote because timestamps are missing");
-                            filesToResave.Add(filename);
+                            Debug.Log($"SaveManager.LoadFileOperationAsync() - {filename} Write local to remote because timestamps are missing");
+                            m_filesToResave.Add(filename);
                         }
                         continue;
                     }
                     if (!(localHasTimestamp && remoteHasTimestamp))
                     {
-                        Debug.Log($"SaveManager.cs: {filename} Neither has timestamp, load objects and write file again to add timestamps");
+                        Debug.Log($"SaveManager.LoadFileOperationAsync() - {filename} Neither has timestamp, load objects and write file again to add timestamps");
                         m_loadedSaveables.AddRange(remotejsonObjects);
-                        filesToResave.Add(filename);
+                        m_filesToResave.Add(filename);
                         continue;
                     }
                     var localTimestamp = localjsonObjects.Find(obj => obj.Key == string.Format(TimeStamp.TimestampPrefix, filename));
@@ -577,19 +597,18 @@ namespace Buck.SaveAsync
                     {
                         var localTime = DateTime.Parse(((TimeStamp.SaveData)localTimestamp.Data).timestamp);
                         var remoteTime = DateTime.Parse(((TimeStamp.SaveData)remoteTimestamp.Data).timestamp);
-                        Debug.Log($"SaveManager.cs: {filename} remote not null, {localTime > remoteTime} local:{localTime} remote: {remoteTime}");
+                        Debug.Log($"SaveManager.LoadFileOperationAsync() - {filename} remote not null, {localTime > remoteTime} local:{localTime} remote: {remoteTime}");
                         m_loadedSaveables.AddRange(localTime > remoteTime ? localjsonObjects : remotejsonObjects);
-                        Debug.Log($"SaveManager.cs: {filename} Resaving file");
-                        filesToResave.Add(filename);
+                        Debug.Log($"SaveManager.LoadFileOperationAsync() - {filename} Resaving file");
+                        m_filesToResave.Add(filename);
                     }
                     else
                     {
-                        Debug.Log($"SaveManager.cs: {filename} Timestamps match, loading remote data");
+                        Debug.Log($"SaveManager.LoadFileOperationAsync() - {filename} Timestamps match, loading remote data");
                         m_loadedSaveables.AddRange(remotejsonObjects);
                     }
                 }
             }
-            m_fileOperationQueue.Enqueue(new FileOperation(FileOperationType.Save, filesToResave.ToArray()));
         }
         
         static async Awaitable DeleteFileOperationAsync(string[] filenames, bool eraseAndKeepFile = false)
@@ -609,26 +628,23 @@ namespace Buck.SaveAsync
         public static async Task<bool> RunDeviceConflictCheck(bool awaitResolution)
         {
             var result = await CheckDeviceInfo(Instance.destroyCancellationToken);
+            
             if (result.Conflict != null)
             {
                 m_conflictLock = true;
                 if (!Instance.m_useBackgroundThread)
-                {
                     await Awaitable.MainThreadAsync();
-                }
 
                 DeviceConflictFoundEvent?.Invoke((DeviceSaveDataConflict)result.Conflict);
+                
                 while (awaitResolution && m_conflictLock)
                 {
                     if (Instance.m_useBackgroundThread)
-                    {
                         await Awaitable.WaitForSecondsAsync(0.1f, Instance.destroyCancellationToken);
-                    }
                     else
-                    {
                         await Awaitable.NextFrameAsync(Instance.destroyCancellationToken);
-                    }
                 }
+                
                 return true;
             }
 
@@ -638,28 +654,29 @@ namespace Buck.SaveAsync
         /// <summary>
         /// Ensures Device save data exists and returns conflict if it exists
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         static async Task<DeviceSaveDataResult> CheckDeviceInfo(CancellationToken cancellationToken)
         {
-
             var exists = await m_fileHandler.Exists(m_deviceSaveData.Filename, cancellationToken);
+            
             if (!(exists.Local || exists.Remote))
             {
-                Debug.Log($"SaveManager.cs: Device Info exists for (Local: {exists.Local}) (remote: {exists.Remote}) rewriting");
+                Debug.Log($"SaveManager.CheckDeviceInfo() - Device Info exists for (Local: {exists.Local}) (remote: {exists.Remote}) rewriting");
                 await m_fileHandler.WriteFile(m_deviceSaveData.Filename, SaveablesToJson(new List<ISaveable>(){m_deviceSaveData}), cancellationToken);
             }
+            
             exists = await m_fileHandler.Exists(m_deviceSaveData.Filename, cancellationToken);
             var fileContent = await m_fileHandler.ReadFile(m_deviceSaveData.Filename, cancellationToken);
-            Debug.Log($"SaveManager.cs: Remote Device Info Save Data {fileContent.Remote}");
+            Debug.Log($"SaveManager.CheckDeviceInfo() - Remote Device Info Save Data {fileContent.Remote}");
+            
             if (!exists.Remote)
             {
                 fileContent.Remote = fileContent.Local;
             }
+            
             try
             {
                 var json = Encryption.Decrypt(fileContent.Remote, Instance.m_encryptionPassword, Instance.m_encryptionType);
-                Debug.Log($"SaveManager.cs: Remote Device Info:\n{json}");
+                Debug.Log($"SaveManager.CheckDeviceInfo() - Remote Device Info:\n{json}");
                 var remoteInfo = JsonConvert.DeserializeObject<List<SaveableObject>>(json, m_jsonSerializerSettings);
                 
                 return remoteInfo != null && m_deviceSaveData.Equals(remoteInfo.Find(o => o.Key == m_deviceSaveData.Key).Data) 
@@ -668,7 +685,7 @@ namespace Buck.SaveAsync
             }
             catch (Exception e)
             {
-                Debug.LogError("SaveManager.cs: Error deserializing JSON data. JSON data may be malformed. Exception message: " + e.Message, Instance.gameObject);
+                Debug.LogError("SaveManager.CheckDeviceInfo() - Error deserializing JSON data. JSON data may be malformed. Exception message: " + e.Message, Instance.gameObject);
                 throw;
             }
         }
@@ -690,6 +707,7 @@ namespace Buck.SaveAsync
                     Data = data
                 };
             }
+            
             return JsonConvert.SerializeObject(wrappedSaveables, m_jsonSerializerSettings);
         }
         
