@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.1] - 2024-11-19
+
+- Fixed an issue where loaded saveables would not be cleared on subsequent file operations.
+- Fixed an issue where files that needed to be resaved were not being queued properly.
+- Formatting updates to comments and code style.
+
 ## [0.5.0] - 2024-11-18
 
 - Added conflict resolution that reconciles local/remote saves when devices change.
