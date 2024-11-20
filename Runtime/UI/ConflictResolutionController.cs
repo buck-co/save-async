@@ -2,23 +2,24 @@
 
 using UnityEngine;
 
-namespace Buck.SaveAsync 
+namespace Buck.SaveAsync
 {
     public class ConflictResolutionController : MonoBehaviour
     {
-        [SerializeField] private CanvasGroup m_canvasGroup;
-        [SerializeField] private ConflictResolutionButton m_localButton;
-        [SerializeField] private ConflictResolutionButton m_remoteButton;
+        [SerializeField] CanvasGroup m_canvasGroup;
+        [SerializeField] ConflictResolutionButton m_localButton;
+        [SerializeField] ConflictResolutionButton m_remoteButton;
         [Header("Settings")] 
-        [SerializeField] private bool m_stopTime;
+        [SerializeField] bool m_stopTime;
 
-        private float _cachedTimeScale;
+        float _cachedTimeScale;
         protected virtual void Awake()
         {
             SaveManager.DeviceConflictFoundEvent += SaveConflictEvent;
             m_localButton.OnClick += ResolveLocal;
             m_remoteButton.OnClick += ResolveRemote;
         }
+        
         protected virtual void OnDestroy()
         {
             SaveManager.DeviceConflictFoundEvent -= SaveConflictEvent;
@@ -56,7 +57,5 @@ namespace Buck.SaveAsync
             m_canvasGroup.interactable = false;
             m_canvasGroup.blocksRaycasts = false;
         }
-
-        
     }
 }

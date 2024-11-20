@@ -1,4 +1,5 @@
 // MIT License - Copyright (c) 2024 BUCK Design LLC - https://github.com/buck-co
+
 using System;
 using System.Globalization;
 using UnityEngine;
@@ -14,12 +15,12 @@ namespace Buck.SaveAsync
 #else
             "DeviceInfo";
 #endif
-        private string _deviceName => SystemInfo.deviceName;
-        private string _deviceType => SystemInfo.deviceType.ToString();
-        private string _deviceModel => SystemInfo.deviceModel;
-        private DateTime _timeStamp => DateTime.UtcNow;
-        private string _deviceUniqueIdentifier => SystemInfo.deviceUniqueIdentifier;
-        private string _deviceOS => SystemInfo.operatingSystem;
+        string _deviceName => SystemInfo.deviceName;
+        string _deviceType => SystemInfo.deviceType.ToString();
+        string _deviceModel => SystemInfo.deviceModel;
+        DateTime _timeStamp => DateTime.UtcNow;
+        string _deviceUniqueIdentifier => SystemInfo.deviceUniqueIdentifier;
+        string _deviceOS => SystemInfo.operatingSystem;
 
         public SaveData LastSavedState;
         

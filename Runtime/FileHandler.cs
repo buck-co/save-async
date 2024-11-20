@@ -31,7 +31,7 @@ namespace Buck.SaveAsync
             => Path.Combine(m_persistentDataPath, pathOrFilename);
 
         /// <summary>
-        /// For user or profile specific files, we want to use a modified file name only on io functions.
+        /// For user or profile specific files, we want to use a modified file name only on IO functions.
         /// Otherwise all other calls should use an unmodified filename.
         /// </summary>
         /// <param name="fileName"></param>
@@ -53,11 +53,12 @@ namespace Buck.SaveAsync
             {
                 Local = File.Exists(GetPath(GetModifiedFileName(pathOrFilename)))
             };
+            
+            // If using a remote service, override this method in a derived class and set Remote to true if the file exists.
             result.Remote = false;
+            
             return result;
         }
-
-
 
         /// <summary>
         /// Writes the given content to a file at the given path or filename.
