@@ -52,9 +52,20 @@ namespace Buck.SaveAsync
         }
         
         static FileHandler m_fileHandler;
+        /// <summary>
+        /// Saveables which have registered themselves inside the manager.
+        /// </summary>
         static Dictionary<string, ISaveable> m_saveables = new();
+        /// <summary>
+        /// Temporary working memory used during a <see cref="FileOperationType.Load"/> operation. Stores
+        /// data which was loaded from a save file and will be restored to ISaveables after the load operation completes.
+        /// </summary>
         static List<SaveableObject> m_loadedSaveables = new();
         static Queue<FileOperation> m_fileOperationQueue = new();
+        /// <summary>
+        /// A set of all files associated with currently registered ISaveables.
+        /// Currently unused.
+        /// </summary>
         static HashSet<string> m_files = new();
         
         static bool m_isInitialized;
