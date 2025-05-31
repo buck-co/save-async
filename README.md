@@ -9,6 +9,7 @@ _Save Async_ is [BUCK](https://buck.co)'s Unity package for asynchronously savin
 - :zap: **SaveManager API**: Simple API that can be called from anywhere with methods like `SaveManager.Save()`
 - :floppy_disk: **ISaveable Interface**: Implement this interface on any class to give it the ability to be saved and loaded
 - :ledger: **JSON Serialization**: Data is saved to JSON automatically using Unity's own [Newtonsoft Json Unity Package](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html)
+- :game_die: **Battle-Tested**: Used in production on multiple shipped games including [_Let's! Revolution!_](https://store.steampowered.com/app/2111090/Lets_Revolution/) and [The Electric State: Kid Cosmo](https://apps.apple.com/us/app/the-electric-state-kid-cosmo/id6475495298)
 
 # Getting Started
 > [!NOTE]
@@ -272,25 +273,29 @@ We hit these pain points on our game _[Let's! Revolution!](https://store.steampo
 ### Why not just use Coroutines?
 While Coroutines have served us well for many years, the Task-based asynchronous pattern (TAP) enabled by async/await and Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class has many advantages. Coroutines can execute piece by piece over time, but they still process on Unity's single main thread. If a Coroutine attempts a long-running operation (like accessing a file) it can cause the whole application to freeze for several frames. For a good overview of the differences between async/await and Coroutines, check out this Unite talk [Best practices: Async vs. coroutines - Unite Copenhagen](https://www.youtube.com/watch?v=7eKi6NKri6I&t=548s).
 
-### Contributing
+# Contributing
 
-If you have any trouble using the package, feel free to [open an issue](https://github.com/buck-co/save-async/issues). And if you're interested in contributing, [create a pull request](https://github.com/buck-co/save-async/pulls) and we'll take a look!
+Found a bug or have a feature request? We'd love to hear from you!
 
-### Authors
+- [Open an issue](https://github.com/buck-co/save-async/issues) for problems or suggestions
+- [Create a pull request](https://github.com/buck-co/save-async/pulls) if you'd like to contribute code
+- Check our [contribution guidelines](CONTRIBUTING.md) before submitting
+
+# Authors
 
 * **Nick Pettit** - [nickpettit](https://github.com/nickpettit)
 
-See also the list of [contributors](https://github.com/buck-co/save-async/contributors) who participated in this project.
+See the full list of [contributors](https://github.com/buck-co/save-async/contributors).
 
-### Acknowledgments
+# Acknowledgments
 
 * Thanks to [Tarodev for this tutorial](https://www.youtube.com/watch?v=X9Dtb_4os1o) on using async and await in Unity using the Awaitable class. It gave me the idea for creating an async save system.
 * Thanks to [Dapper Dino for this tutorial](https://www.youtube.com/watch?v=f5GvfZfy3yk) which demonstrated how a form of the inversion of control design pattern could be used to make saving and loading easier.
 * Thanks to [Bronson Zgeb at Unity for this Unite talk](https://www.youtube.com/watch?v=uD7y4T4PVk0) which shows many of the pieces necessary for building a save system in Unity.
 
-### License
+# License
 
-MIT License - Copyright (c) 2024 BUCK Design LLC [buck-co](https://github.com/buck-co)
+MIT License - Copyright (c) 2025 BUCK Design LLC [buck-co](https://github.com/buck-co)
 
 ---
 
