@@ -9,7 +9,7 @@ _Save Async_ is [BUCK](https://buck.co)'s Unity package for asynchronously savin
 - :zap: **SaveManager API**: Simple API that can be called from anywhere with methods like `SaveManager.Save()`
 - :floppy_disk: **ISaveable Interface**: Implement this interface on any class to give it the ability to be saved and loaded
 - :ledger: **JSON Serialization**: Data is saved to JSON automatically using Unity's own [Newtonsoft Json Unity Package](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html)
-- :game_die: **Battle-Tested**: Used in production on shipped games including [The Electric State: Kid Cosmo](https://apps.apple.com/us/app/the-electric-state-kid-cosmo/id6475495298)
+- :game_die: **Battle-Tested**: Used in production on shipped games including [_The Electric State: Kid Cosmo_](https://apps.apple.com/us/app/the-electric-state-kid-cosmo/id6475495298)
 
 # Getting Started
 > [!NOTE]
