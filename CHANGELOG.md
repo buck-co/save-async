@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.3] - 2024-07-09
+
+- The variable m_persistentDataPath in the FileHandler class is now protected rather than private, allowing child classes to override its value. This can be helpful for programmatically adding prefixes or suffixes to paths or filenames.
+
 ## [0.4.3] - 2024-08-20
 
 - Converted the SaveManager.Exists method and the default FileHandler method to be async. This isn't necessary for typical file I/O but can be useful in the case of custom file handlers that have a wait time associated with checking for file availability.

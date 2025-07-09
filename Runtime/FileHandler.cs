@@ -12,7 +12,7 @@ namespace Buck.SaveAsync
         /// <summary>
         /// Stores the persistent data path for later use, which can only be accessed on the main thread.
         /// </summary>
-        string m_persistentDataPath;
+        protected string m_persistentDataPath;
         
         protected virtual void OnEnable()
             => m_persistentDataPath = Application.persistentDataPath;
