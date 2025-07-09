@@ -1,6 +1,13 @@
 # Changelog
 
-## [0.4.3] - 2024-07-09
+## [0.6.0] - 2025-07-09
+
+- The FileHandler class will now add the suffix "_editor" via the FilenameSuffix string property to any files saved from the Unity Editor. This property is protected and can be overridden by child FileHandler classes.
+- The FileHandler class now has a protected FilenameExtension string property that will be added to the end of filenames. It is set to ".dat" by default, but can be overridden by child FileHandler classes.
+- FileHanlder.GetPath() has been replaced by the protected GetPartialPath() method (which is the filename or path with the filename suffix and file extension) and the FileHandler.GetFullPath() method (which appends the persistent data path to the return value of the GetPartialPath() method). These can be breaking changes in some instances, which is why the minor version has been incremented.
+- Fixed a few issues in CHANGELOG.md. Also, the reason version 0.5.0 was skipped was due to a previous 0.5.0 being released and rolled back.
+
+## [0.4.4] - 2025-07-09
 
 - The variable m_persistentDataPath in the FileHandler class is now protected rather than private, allowing child classes to override its value. This can be helpful for programmatically adding prefixes or suffixes to paths or filenames.
 

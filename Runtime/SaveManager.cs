@@ -111,8 +111,8 @@ namespace Buck.SaveAsync
         /// <summary>
         /// Checks if a file exists at the given path or filename.
         /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to check for existence.</param>
@@ -122,8 +122,8 @@ namespace Buck.SaveAsync
         /// <summary>
         /// Saves the files at the given paths or filenames.
         /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to save.</param>
@@ -133,8 +133,8 @@ namespace Buck.SaveAsync
         /// <summary>
         /// Saves the file at the given path or filename.
         /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to save.</param>
@@ -144,8 +144,8 @@ namespace Buck.SaveAsync
         /// <summary>
         /// Loads the files at the given paths or filenames.
         /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to load.</param>
@@ -155,8 +155,8 @@ namespace Buck.SaveAsync
         /// <summary>
         /// Loads the file at the given path or filename.
         /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to load.</param>
@@ -167,8 +167,8 @@ namespace Buck.SaveAsync
         /// Deletes the files at the given paths or filenames. Each file will be removed from disk.
         /// Use <see cref="Erase(string[])"/> to fill each file with an empty string without removing it from disk.
         /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to delete.</param>
@@ -179,8 +179,8 @@ namespace Buck.SaveAsync
         /// Deletes the file at the given path or filename. The file will be removed from disk.
         /// Use <see cref="Erase(string)"/> to fill the file with an empty string without removing it from disk.
         /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to delete.</param>
@@ -191,8 +191,8 @@ namespace Buck.SaveAsync
         /// Erases the files at the given paths or filenames. Each file will still exist on disk, but it will be empty.
         /// Use <see cref="Delete(string[])"/> to remove the files from disk.
         /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to erase.</param>
@@ -203,8 +203,8 @@ namespace Buck.SaveAsync
         /// Erases the file at the given path or filename. The file will still exist on disk, but it will be empty.
         /// Use <see cref="Delete(string)"/> to remove the file from disk.
         /// <code>
-        /// File example: "MyFile.dat"
-        /// Path example: "MyFolder/MyFile.dat"
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to erase.</param>
