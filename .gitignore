@@ -58,3 +58,9 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+# Ignoring .meta files for specific non-Unity files
+README.md.meta
+LICENSE.md.meta
+CHANGELOG.md.meta
+CODE_OF_CONDUCT.md.meta
+.gitignore.meta
