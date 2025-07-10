@@ -212,6 +212,19 @@ Registers an ISaveable with the SaveManager class for saving and loading.
   ```
 <br>
 
+#### `bool Exists(string filename)`
+Checks if a file exists at the given path or filename.
+
+**Usage Example**:
+  ```csharp
+  if (SaveManager.Exists("MyFile.dat"))
+  {
+      await SaveManager.Load("MyFile.dat");
+  }
+  ```
+
+<br>
+
 #### `Awaitable Save(string[] filenames)`
 Asynchronously saves the files at the specified array of paths or filenames.
 
