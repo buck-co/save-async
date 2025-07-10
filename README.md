@@ -1,5 +1,9 @@
 ![opt 03](https://github.com/buck-co/save-async/assets/41124/f1a6ebbc-41aa-49e0-9ae9-5daf4e5bb228)
 
+![Unity](https://img.shields.io/badge/Unity-2023.1%2B-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Version](https://img.shields.io/github/v/release/buck-co/save-async)
+
 # Save Async
 _Save Async_ is [BUCK](https://buck.co)'s Unity package for asynchronously saving and loading data in the background using Unity's [`Awaitable`](https://docs.unity3d.com/2023.2/Documentation/ScriptReference/Awaitable) class. It includes a simple API that makes it easy to capture and restore state without interrupting Unity's main render thread. That means smoother framerates and fewer load screens!
 
