@@ -102,12 +102,14 @@ namespace Buck.SaveAsync
         /// <param name="saveable">The ISaveable to register for saving and loading.</param>
         public static void RegisterSaveable(ISaveable saveable)
         {
+            Initialize();
+            
             if (m_saveables.TryAdd(saveable.Key, saveable))
                 m_files.Add(saveable.Filename);
             else
                 Debug.LogError($"Saveable with Key {saveable.Key} already exists!");
         }
-        
+
         /// <summary>
         /// Checks if a file exists at the given path or filename.
         /// <code>
@@ -116,8 +118,12 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to check for existence.</param>
-        public static async Task<bool> Exists(string filename)
-            => await m_fileHandler.Exists(filename, Instance.destroyCancellationToken);
+        /// <returns>True if the file exists; otherwise, false.</returns>
+        public static bool Exists(string filename)
+        {
+            Initialize();
+            return m_fileHandler.Exists(filename);
+        }
 
         /// <summary>
         /// Saves the files at the given paths or filenames.
@@ -411,7 +417,7 @@ namespace Buck.SaveAsync
                 if (eraseAndKeepFile)
                     await m_fileHandler.Erase(filename, Instance.destroyCancellationToken);
                 else
-                    m_fileHandler.Delete(filename);
+                    await m_fileHandler.Delete(filename, Instance.destroyCancellationToken);
         }
         
         static string SaveablesToJson(List<ISaveable> saveables)

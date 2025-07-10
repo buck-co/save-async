@@ -16,7 +16,7 @@ namespace Buck.SaveAsync
         static T m_Instance;
 
         /// <summary>
-        /// Access singleton instance through this propriety.
+        /// Access singleton instance through this property.
         /// </summary>
         public static T Instance
         {

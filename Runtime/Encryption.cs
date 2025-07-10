@@ -40,10 +40,13 @@ namespace Buck.SaveAsync
         
         static string EncryptDecryptXOR(string content, string password)
         {
-            string newContent = "";
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+        
+            char[] result = new char[content.Length];
             for (int i = 0; i < content.Length; i++)
-                newContent += (char)(content[i] ^ password[i % password.Length]);
-            return newContent;
+                result[i] = (char)(content[i] ^ password[i % password.Length]);
+            return new string(result);
         }
     }
 }

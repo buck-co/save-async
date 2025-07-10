@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.7.0] - 2025-07-09
+
+- **Breaking Change**: FileHandler.Delete() now accepts a CancellationToken parameter for consistency with other async methods. Overloads without CancellationToken have been added for convenience.
+- Added comprehensive path validation to FileHandler to prevent directory traversal attacks and ensure paths are well-formed.
+- FileHandler.WriteFile() now automatically creates any missing directory structure before writing files, eliminating the need for manual directory creation.
+- Added convenience method overloads to FileHandler for WriteFile(), ReadFile(), Erase(), and Delete() that don't require a CancellationToken parameter.
+- Fixed SaveManager.Exists() method to correctly return bool instead of void.
+- Added Initialize() calls to SaveManager.RegisterSaveable() and SaveManager.Exists() to prevent potential null reference exceptions when called before Awake().
+- Optimized XOR encryption performance by eliminating string concatenation in favor of char array manipulation.
+- Added password validation to Encryption class to ensure passwords are not null or empty.
+- Fixed potential null reference issue in Singleton class by using explicit null checks.
+- Improved error handling in FileHandler.ReadFile() to catch UnauthorizedAccessException and IOException.
+- Added comprehensive XML documentation to ValidatePath() and all method overloads.
+- FileHandler.ValidatePath() now throws ArgumentException with descriptive messages for invalid paths.
+- Fixed typo in Singleton class XML documentation ("property" instead of "propriety").
+- Improved SaveAsyncMenu editor utility with cross-platform support using EditorUtility.RevealInFinder() instead of Process.Start().
+- SaveAsyncMenu now displays the full path in confirmation dialogs and includes comprehensive error handling.
+- Added SaveAsyncMenu.ClearEditorSaveFiles() method to selectively delete only editor test files with '_editor' suffix.
+- SaveAsyncMenu class is now properly marked as static and includes XML documentation.
+
 ## [0.6.0] - 2025-07-09
 
 - The FileHandler class will now add the suffix "_editor" via the FilenameSuffix string property to any files saved from the Unity Editor. This property is protected and can be overridden by child FileHandler classes.
@@ -10,6 +30,7 @@
 ## [0.4.4] - 2025-07-09
 
 - The variable m_persistentDataPath in the FileHandler class is now protected rather than private, allowing child classes to override its value. This can be helpful for programmatically adding prefixes or suffixes to paths or filenames.
+
 
 ## [0.4.3] - 2024-08-20
 
