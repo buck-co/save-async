@@ -71,6 +71,50 @@ After installing the package...
 3. Register the ISaveable by calling `SaveManager.RegisterSaveable(mySaveableObject);` This is usually done in `MonoBehaviour.Awake()`
 4. Call SaveManager API methods like `SaveManager.Save()` from elsewhere in your project, such as from a Game Manager class. Do this _after_ all your ISaveable implementations are registered.
 
+### Quick Start Example
+
+```csharp
+using UnityEngine;
+using Buck.SaveAsync;
+
+public class PlayerData : MonoBehaviour, ISaveable
+{
+    public string Key => "PlayerData";
+    public string Filename => "SaveGame.dat";
+    
+    private int score;
+    private string playerName;
+    
+    void Awake()
+    {
+        SaveManager.RegisterSaveable(this);
+    }
+    
+    public object CaptureState()
+    {
+        return new SaveData { score = this.score, name = this.playerName };
+    }
+    
+    public void RestoreState(object state)
+    {
+        var data = (SaveData)state;
+        score = data.score;
+        playerName = data.name;
+    }
+    
+    [System.Serializable]
+    struct SaveData
+    {
+        public int score;
+        public string name;
+    }
+}
+```
+
+### Custom File Handlers
+
+Save Async supports custom file handlers for platform-specific save systems or cloud saves. Simply create a class that inherits from `FileHandler` and assign it to the SaveManager component. This allows you to implement custom save/load logic while keeping the same simple API.
+
 ### Included Samples
 
 This package includes a sample project which you can install from the Unity Package Manager by selecting the package from the list and then selecting the `Samples` tab on the right. Then click `Import`. Examining the sample can help you understand how to use the package in your own project.
@@ -109,8 +153,8 @@ Any class that should save or load data needs to implement the [`ISaveable`](Run
     ```csharp
     public static class Files
     {
-        public const string GameData = "GameData.dat";
-        public const string SomeFile = "SomeFile.dat";
+        public const string GameData = "GameData";
+        public const string SomeFile = "SomeFile";
     }
     ```
 
@@ -212,12 +256,25 @@ Registers an ISaveable with the SaveManager class for saving and loading.
   ```
 <br>
 
+#### `bool Exists(string filename)`
+Checks if a file exists at the given path or filename.
+
+**Usage Example**:
+  ```csharp
+  if (SaveManager.Exists("MyFile"))
+  {
+      await SaveManager.Load("MyFile");
+  }
+  ```
+
+<br>
+
 #### `Awaitable Save(string[] filenames)`
 Asynchronously saves the files at the specified array of paths or filenames.
 
 **Usage Example**:
   ```csharp
-  await SaveManager.Save(new string[] {"MyFile.dat"});
+  await SaveManager.Save(new string[] {"MyFile"});
   ```
 <br>
 
@@ -226,7 +283,7 @@ Asynchronously loads the files at the specified array of paths or filenames.
 
 **Usage Example**:
   ```csharp
-  await SaveManager.Load(new string[] {"MyFile.dat"});
+  await SaveManager.Load(new string[] {"MyFile"});
   ```
 <br>
 
@@ -235,7 +292,7 @@ Asynchronously deletes the files at the specified array of paths or filenames.
 
 **Usage Example**:
   ```csharp
-  await SaveManager.Delete(new string[] {"MyFile.dat"});
+  await SaveManager.Delete(new string[] {"MyFile"});
   ```
 <br>
 
@@ -244,7 +301,7 @@ Asynchronously erases the files at the specified paths or filenames, leaving the
 
 **Usage Example**:
   ```csharp
-  await SaveManager.Erase(new string[] {"MyFile.dat"});
+  await SaveManager.Erase(new string[] {"MyFile"});
   ```
 <br>
 
@@ -264,6 +321,15 @@ Sets the given Guid byte array to a new Guid byte array if it is null, empty, or
 If you want to prevent mischievous gamers from tampering with your save files, you can encrypt them using XOR encryption. To turn it on, use the encryption dropdown menu on the SaveManager component in your scene and create a password. XOR is very basic and can be hacked using brute force methods, but it is very fast. AES encryption is planned!
 
 # Additional Project Information
+
+### Editor Utilities
+
+Save Async includes helpful editor tools under `Tools > Save Async`:
+- **Open Persistent Data Path**: Opens the save data directory in your file explorer
+- **Clear Persistent Data Path**: Deletes all save data (with confirmation)
+- **Clear Editor Save Files**: Deletes only test files created in the Unity Editor (files with `_editor` suffix)
+
+These tools make it easy to manage save data during development without manually navigating to Unity's persistent data path.
 
 ### Why did we build this?
 Figuring out how to save and load your game data can be tricky, but what's even more challenging is deciding _when_ to save your game data. Not only is there the issue of data serialization and file I/O, but in addition, save and load operations often end up happening synchronously on Unity's main thread which will cause framerate dips. That's because Unity's renderer is also on the main thread! Furthermore, while most desktops have fast SSDs, sometimes file I/O can take longer than the time it takes to render a frame, especially if you're running your game on a gaming console or a computer with an HDD.
