@@ -1,6 +1,6 @@
 {
   "name": "co.buck.saveasync",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "displayName": "Save Async",
   "description": "Save Async is BUCK's Unity package for asynchronously saving and loading data in the background using Unity's Awaitable class. Capture and restore state without interrupting Unity's main render thread.",
   "unity": "2023.1",

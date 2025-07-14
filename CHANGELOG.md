@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0] - 2025-07-14
+
+- **Breaking Change**: RestoreState() will now be called on all registered ISaveables, regardless of whether they are found in save data. That means they need to handle a null state in their RestoreState() method, which should be used to set an ISaveable's default state.
+- The Delete() and Erase() methods will now automatically call the Load() method internally to refresh the state of all ISaveables. This behavior can be overridden by setting restoreDefaultSaveState to false in either method.
+- Updated the included Samples to reflect the changes in the last few versions.
+- Added a few comments throughout for clarity.
+
 ## [0.7.0] - 2025-07-09
 
 - **Breaking Change**: FileHandler.Delete() now accepts a CancellationToken parameter for consistency with other async methods. Overloads without CancellationToken have been added for convenience.
