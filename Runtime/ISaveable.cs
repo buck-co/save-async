@@ -30,8 +30,9 @@ namespace Buck.SaveAsync
         
         /// <summary>
         /// This is used by the SaveManager class to restore the state of a saveable object.
-        /// This will be called any time the game is loaded, so you may want to consider
-        /// also using this method to initialize any fields that are not saved (i.e. "resetting the object").
+        /// This will be called any time the game is loaded, so you need to handle cases where the "state" parameter is a null object.
+        /// In cases where the state is null, you should initialize the object to a default state.
+        /// You may also consider using this method to initialize any fields that are not saved (i.e. "resetting the object").
         /// </summary>
         void RestoreState(object state);
     }
