@@ -146,8 +146,7 @@ namespace Buck.SaveAsync
                 // If the file does not exist, return an empty string and log a warning.
                 if (!Exists(pathOrFilename))
                 {
-                    Debug.LogWarning($"FileHandler: File does not exist at path or filename: {pathOrFilename}" +
-                                     $"\nReturning empty string and no data will be loaded.");
+                    Debug.LogWarning($"FileHandler: File does not exist at path or filename \"{pathOrFilename}\". This may be expected if the file has not been created yet.");
                     return string.Empty;
                 }
                 
@@ -156,7 +155,7 @@ namespace Buck.SaveAsync
                 // If the file is empty, return an empty string and log a warning.
                 if (string.IsNullOrEmpty(fileContent))
                 {
-                    Debug.LogWarning($"FileHandler: Attempted to load {pathOrFilename} but the file was empty.");
+                    Debug.LogWarning($"FileHandler: The file \"{pathOrFilename}\" was empty. This may be expected if the file has been erased.");
                     return string.Empty;
                 }
                 
@@ -164,12 +163,12 @@ namespace Buck.SaveAsync
             }
             catch (UnauthorizedAccessException ex)
             {
-                Debug.LogError($"FileHandler: Access denied to file {pathOrFilename}: {ex.Message}");
+                Debug.LogError($"FileHandler: Access denied to file \"{pathOrFilename}\": {ex.Message}");
                 return string.Empty;
             }
             catch (IOException ex)
             {
-                Debug.LogError($"FileHandler: IO error reading file {pathOrFilename}: {ex.Message}");
+                Debug.LogError($"FileHandler: IO error reading file \"{pathOrFilename}\": {ex.Message}");
                 return string.Empty;
             }
         }

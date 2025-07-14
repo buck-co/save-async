@@ -70,12 +70,28 @@ namespace Buck.SaveAsyncExample
 
         public void RestoreState(object state)
         {
-            var s = (MyCustomData)state;
-
-            m_playerName = s.playerName;
-            m_playerHealth = s.playerHealth;
-            m_position = s.position;
-            m_inventory = s.inventory;
+            // If the state is nominal, restore the cached data.
+            if (state is MyCustomData s)
+            {
+                m_playerName = s.playerName;
+                m_playerHealth = s.playerHealth;
+                m_position = s.position;
+                m_inventory = s.inventory;
+            }
+            // Otherwise, initialize default values.
+            else
+            {
+                Debug.Log("CacheDataExample: RestoreState called with null or invalid state. Initializing default values.");
+                m_playerName = "The Player Name";
+                m_playerHealth = 100;
+                m_position = new Vector3(1f, 2f, 3f);
+                m_inventory = new()
+                {
+                    {1, new Item() { m_name = "ItemOne",   m_quantity = 5 }},
+                    {2, new Item() { m_name = "ItemTwo",   m_quantity = 6 }},
+                    {3, new Item() { m_name = "ItemThree", m_quantity = 7 }}
+                };
+            }
         }
     }
 }

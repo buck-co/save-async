@@ -69,11 +69,21 @@ namespace Buck.SaveAsyncExample
 
         public void RestoreState(object state)
         {
-            var s = (MySaveData)state;
-            
-            m_myString = s.myString;
-            m_myInt = s.myInt;
-            m_myFloat = s.myFloat;
+            // If the state is nominal, restore the cached data.
+            if (state is MySaveData s)
+            {
+                m_myString = s.myString;
+                m_myInt = s.myInt;
+                m_myFloat = s.myFloat;
+            }
+            // Otherwise, initialize default values.
+            else
+            {
+                Debug.Log("CacheDataExample: RestoreState called with null or invalid state. Initializing default values.");
+                m_myString = "Default string";
+                m_myInt = 5;
+                m_myFloat = 2f;
+            }
         }
     }
 }

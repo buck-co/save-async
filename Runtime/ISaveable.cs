@@ -9,6 +9,7 @@ namespace Buck.SaveAsync
     {
         /// <summary>
         /// This is a unique string used to identify the object when saving and loading.
+        /// Often this can just be the name of the class if there is only one instance, like "EnemyManager" or "Player"
         /// If you choose to use a Guid, it is recommended that it is backed by a
         /// serialized byte array that does not change.
         /// </summary>

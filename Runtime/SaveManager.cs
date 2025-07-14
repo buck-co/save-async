@@ -52,12 +52,12 @@ namespace Buck.SaveAsync
         }
         
         static FileHandler m_fileHandler;
-        static Dictionary<string, ISaveable> m_saveables = new();
+        static Dictionary<string, ISaveable> m_saveables = new(); // Key is ISaveable.Key, Value is the ISaveable object.
         static List<SaveableObject> m_loadedSaveables = new();
         static Queue<FileOperation> m_fileOperationQueue = new();
         static HashSet<string> m_files = new();
         
-        static bool m_isInitialized;
+        static bool m_initialized;
         
         static readonly JsonSerializerSettings m_jsonSerializerSettings = new()
         {
@@ -78,15 +78,15 @@ namespace Buck.SaveAsync
 
         static void Initialize()
         {
-            if (m_isInitialized)
+            if (m_initialized)
                 return;
 
             // If there is a user-defined FileHandler, use it. Otherwise, create a new FileHandler.
-            m_fileHandler = Instance.m_customFileHandler == null
+            m_fileHandler = !Instance.m_customFileHandler
                           ? ScriptableObject.CreateInstance<FileHandler>()
                           : Instance.m_customFileHandler;
             
-            m_isInitialized = true;
+            m_initialized = true;
         }
 
         #region SaveAsync API
@@ -178,8 +178,15 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to delete.</param>
-        public static async Awaitable Delete(string[] filenames)
-            => await DoFileOperation(FileOperationType.Delete, filenames);
+        /// <param name="restoreDefaultSaveState">True by default. When set to true, <see cref="Load(string[])"/>
+        ///  will be called on the same files to restore them to their default states.</param>
+        public static async Awaitable Delete(string[] filenames, bool restoreDefaultSaveState = true)
+        {
+            await DoFileOperation(FileOperationType.Delete, filenames);
+            
+            if (restoreDefaultSaveState)
+                await Load(filenames); // Reload the files to restore default state
+        }
         
         /// <summary>
         /// Deletes the file at the given path or filename. The file will be removed from disk.
@@ -190,9 +197,11 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to delete.</param>
-        public static async Awaitable Delete(string filename)
-            => await Delete(new[] {filename});
-        
+        /// <param name="restoreDefaultSaveState">True by default. When set to true, <see cref="Load(string[])"/>
+        ///  will be called on the same files to restore them to their default states.</param>
+        public static async Awaitable Delete(string filename, bool restoreDefaultSaveState = true)
+            => await Delete(new[] {filename}, restoreDefaultSaveState);
+
         /// <summary>
         /// Erases the files at the given paths or filenames. Each file will still exist on disk, but it will be empty.
         /// Use <see cref="Delete(string[])"/> to remove the files from disk.
@@ -202,8 +211,15 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to erase.</param>
-        public static async Awaitable Erase(string[] filenames)
-            => await DoFileOperation(FileOperationType.Erase, filenames);
+        /// <param name="restoreDefaultSaveState">True by default. When set to true, <see cref="Load(string[])"/>
+        ///  will be called on the same files to restore them to their default states.</param>
+        public static async Awaitable Erase(string[] filenames, bool restoreDefaultSaveState = true)
+        {
+            await DoFileOperation(FileOperationType.Erase, filenames);
+            
+            if (restoreDefaultSaveState)
+                await Load(filenames); // Reload the files to restore default state
+        }
         
         /// <summary>
         /// Erases the file at the given path or filename. The file will still exist on disk, but it will be empty.
@@ -214,8 +230,10 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to erase.</param>
-        public static async Awaitable Erase(string filename)
-            => await Erase(new[] {filename});
+        /// <param name="restoreDefaultSaveState">True by default. When set to true, <see cref="Load(string[])"/>
+        ///  will be called on the same files to restore them to their default states.</param>
+        public static async Awaitable Erase(string filename, bool restoreDefaultSaveState = true)
+            => await Erase(new[] {filename}, restoreDefaultSaveState);
         
         /// <summary>
         /// Sets the given Guid byte array to a new Guid byte array if it is null, empty, or an empty Guid.
@@ -311,43 +329,63 @@ namespace Buck.SaveAsync
                 // Switch back to the main thread before accessing Unity objects and setting IsBusy to false
                 if (Instance.m_useBackgroundThread)
                     await Awaitable.MainThreadAsync();
-                
-                // If anything was populated in the loadedDataList, restore state
-                // This is done here because it's better to process the whole queue before switching back to the main thread.
-                if (m_loadedSaveables.Count > 0)
-                {
-                    // Restore state for each ISaveable
-                    foreach (SaveableObject wrappedData in m_loadedSaveables)
-                    {
-                        if (wrappedData.Key == null)
-                        {
-                            Debug.LogError("The key for an ISaveable is null. JSON data may be malformed. " +
-                                           "The data will not be restored. ", Instance.gameObject);
-                            continue;
-                        }
-                        
-                        // Try to get the ISaveable from the dictionary
-                        if (m_saveables.ContainsKey(wrappedData.Key) == false)
-                        {
-                            Debug.LogError("The ISaveable with the key " + wrappedData.Key + " was not found in the saveables dictionary. " +
-                                           "The data will not be restored. This could mean that the string Key for the matching object has " +
-                                           "changed since the save data was created.", Instance.gameObject);
-                            continue;
-                        }
-                        
-                        // Get the ISaveable from the dictionary
-                        var saveable = m_saveables[wrappedData.Key];
 
-                        // If the ISaveable is null, log an error and continue to the next iteration
-                        if (saveable == null)
+                // If this is a load operation...
+                if (operationType == FileOperationType.Load)
+                {
+                    // Track which ISaveables were restored with save data
+                    Dictionary<string, bool> restoredSaveables = new();
+                    foreach (var saveable in m_saveables)
+                        restoredSaveables.Add(saveable.Key, false);
+                    
+                    // If anything was populated in the loadedDataList, restore state
+                    // This is done here because it's better to process the whole queue before switching back to the main thread.
+                    if (m_loadedSaveables.Count > 0)
+                    {
+                        // Restore state for each ISaveable
+                        foreach (SaveableObject wrappedData in m_loadedSaveables)
                         {
-                            Debug.LogError("The ISaveable with the key " + wrappedData.Key + " is null. "
-                                           + "The data will not be restored.", Instance.gameObject);
-                            continue;
+                            if (wrappedData.Key == null)
+                            {
+                                Debug.LogError("The key for an ISaveable is null. JSON data may be malformed. " +
+                                               "The data will not be restored. ", Instance.gameObject);
+                                continue;
+                            }
+                            
+                            // Try to get the ISaveable from the dictionary
+                            if (m_saveables.ContainsKey(wrappedData.Key) == false)
+                            {
+                                Debug.LogError("The ISaveable with the key \"{wrappedData.Key}\" was not found in the saveables dictionary. " +
+                                               "The data will not be restored. This could mean that the string Key for the matching object has " +
+                                               "changed since the save data was created.", Instance.gameObject);
+                                continue;
+                            }
+                            
+                            // Get the ISaveable from the dictionary
+                            var saveable = m_saveables[wrappedData.Key];
+
+                            // If the ISaveable is null, log an error and continue to the next iteration
+                            if (saveable == null)
+                            {
+                                Debug.LogError($"The ISaveable with the key \"{wrappedData.Key}\" is null. The data will not be restored.", Instance.gameObject);
+                                continue;
+                            }
+                            
+                            // Restore the state of the ISaveable
+                            saveable.RestoreState(wrappedData.Data);
+                            restoredSaveables[wrappedData.Key] = true;
                         }
-                        
-                        // Restore the state of the ISaveable
-                        saveable.RestoreState(wrappedData.Data);
+                    }
+                    
+                    // Loop through all the registered ISaveables and log a warning if any call RestoreState with null data.
+                    foreach (var saveable in m_saveables)
+                    {
+                        if (!restoredSaveables[saveable.Key])
+                        {
+                            saveable.Value.RestoreState(null); // Restore to default state if not restored
+                            Debug.LogWarning($"The ISaveable with the key \"{saveable.Key}\" was not restored from save data. " +
+                                             "This could mean that the save data did not contain any data for this ISaveable.", Instance.gameObject);
+                        }
                     }
                 }
                 
