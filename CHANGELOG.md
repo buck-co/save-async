@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.8.1] - 2025-07-14
+
+- Fixed an issue where calling SaveManager.Load() multiple times with different filenames would result in ISaveables being restored to "null" by mistake.
+
 ## [0.8.0] - 2025-07-14
 
 - **Breaking Change**: RestoreState() will now be called on all registered ISaveables, regardless of whether they are found in save data. That means they need to handle a null state in their RestoreState() method, which should be used to set an ISaveable's default state.

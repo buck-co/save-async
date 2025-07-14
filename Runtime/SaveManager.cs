@@ -380,12 +380,19 @@ namespace Buck.SaveAsync
                     // Loop through all the registered ISaveables and log a warning if any call RestoreState with null data.
                     foreach (var saveable in m_saveables)
                     {
-                        if (!restoredSaveables[saveable.Key])
-                        {
-                            saveable.Value.RestoreState(null); // Restore to default state if not restored
-                            Debug.LogWarning($"The ISaveable with the key \"{saveable.Key}\" was not restored from save data. " +
-                                             "This could mean that the save data did not contain any data for this ISaveable.", Instance.gameObject);
-                        }
+                        // If the saveable was already restored, skip it
+                        if (restoredSaveables[saveable.Key])
+                            continue;
+                        
+                        // If the saveable's filename is not in the filenames array, skip it
+                        if (!Array.Exists(filenames, filename => filename == saveable.Value.Filename))
+                            continue;
+                        
+                        // If the saveable was not restored and its file exists in the current set of files being operated on,
+                        // then call RestoreState with null to restore it to its default state.
+                        saveable.Value.RestoreState(null);
+                        Debug.LogWarning($"The ISaveable with the key \"{saveable.Key}\" was not restored from save data. " +
+                                         "This could mean that the save data did not contain any data for this ISaveable.", Instance.gameObject);
                     }
                 }
                 
