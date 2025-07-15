@@ -1,8 +1,8 @@
 # Changelog
 
-## [0.8.1] - 2025-07-14
+## [0.8.1] - 2025-07-15
 
-- Fixed an issue where calling SaveManager.Load() multiple times with different filenames would result in ISaveables being restored to "null" by mistake.
+- It's now possible to call Load() without loading actual data. When the bool ignoreSaveData is true, save files will be ignored and RestoreState() will be passed a null value. This can be useful when working in the Unity Editor or if you want RestoreState() to use default values.
 
 ## [0.8.0] - 2025-07-14
 
