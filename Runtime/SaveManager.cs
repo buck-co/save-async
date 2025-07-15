@@ -36,7 +36,8 @@ namespace Buck.SaveAsync
             Save,
             Load,
             Delete,
-            Erase
+            Erase,
+            LoadAndIgnoreSaveData
         }
         
         struct FileOperation
@@ -146,7 +147,7 @@ namespace Buck.SaveAsync
         /// <param name="filename">The path or filename to save.</param>
         public static async Awaitable Save(string filename)
             => await Save(new[] {filename});
-        
+
         /// <summary>
         /// Loads the files at the given paths or filenames.
         /// <code>
@@ -155,8 +156,17 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to load.</param>
-        public static async Awaitable Load(string[] filenames)
-            => await DoFileOperation(FileOperationType.Load, filenames);
+        /// <param name="ignoreSaveData">If true, save files will be ignored and RestoreState() will be passed a null value.
+        ///  This can be useful when working in the Unity Editor or if you want RestoreState() to use default values.</param>
+        public static async Awaitable Load(string[] filenames, bool ignoreSaveData = false)
+        {
+            // If true, we will load the default state of the files
+            // Otherwise, load the files normally
+            if (ignoreSaveData)
+                await DoFileOperation(FileOperationType.LoadAndIgnoreSaveData, filenames);
+            else            
+                await DoFileOperation(FileOperationType.Load, filenames);
+        }
         
         /// <summary>
         /// Loads the file at the given path or filename.
@@ -166,8 +176,10 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to load.</param>
-        public static async Awaitable Load(string filename)
-            => await Load(new[] {filename});
+        /// /// <param name="ignoreSaveData">If true, save files will be ignored and RestoreState() will be passed a null value.
+        ///  This can be useful when working in the Unity Editor or if you want RestoreState() to use default values.</param>
+        public static async Awaitable Load(string filename, bool ignoreSaveData = false)
+            => await Load(new[] {filename}, ignoreSaveData);
 
         /// <summary>
         /// Deletes the files at the given paths or filenames. Each file will be removed from disk.
@@ -185,7 +197,7 @@ namespace Buck.SaveAsync
             await DoFileOperation(FileOperationType.Delete, filenames);
             
             if (restoreDefaultSaveState)
-                await Load(filenames); // Reload the files to restore default state
+                await Load(filenames, true); // Reload the files to restore default state
         }
         
         /// <summary>
@@ -321,6 +333,8 @@ namespace Buck.SaveAsync
                         case FileOperationType.Erase:
                             await DeleteFileOperationAsync(fileOperation.Filenames, true);
                             break;
+                        case FileOperationType.LoadAndIgnoreSaveData: // Don't do any file I/O, just load the saveables
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -331,16 +345,16 @@ namespace Buck.SaveAsync
                     await Awaitable.MainThreadAsync();
 
                 // If this is a load operation...
-                if (operationType == FileOperationType.Load)
+                if (operationType is FileOperationType.Load or FileOperationType.LoadAndIgnoreSaveData)
                 {
                     // Track which ISaveables were restored with save data
                     Dictionary<string, bool> restoredSaveables = new();
                     foreach (var saveable in m_saveables)
                         restoredSaveables.Add(saveable.Key, false);
                     
-                    // If anything was populated in the loadedDataList, restore state
+                    // If anything was populated in the loadedDataList and this is a Load operation, restore state
                     // This is done here because it's better to process the whole queue before switching back to the main thread.
-                    if (m_loadedSaveables.Count > 0)
+                    if (m_loadedSaveables.Count > 0 && operationType is FileOperationType.Load)
                     {
                         // Restore state for each ISaveable
                         foreach (SaveableObject wrappedData in m_loadedSaveables)
@@ -380,13 +394,29 @@ namespace Buck.SaveAsync
                     // Loop through all the registered ISaveables and log a warning if any call RestoreState with null data.
                     foreach (var saveable in m_saveables)
                     {
-                        if (!restoredSaveables[saveable.Key])
+                        // If the saveable was already restored, skip it
+                        if (restoredSaveables[saveable.Key])
+                            continue;
+                        
+                        // If the saveable's filename is not in the filenames array, skip it
+                        if (!Array.Exists(filenames, filename => filename == saveable.Value.Filename))
+                            continue;
+                        
+                        // If the saveable was not restored and its file exists in the current set of files being operated on,
+                        // then call RestoreState with null to restore it to its default state.
+                        saveable.Value.RestoreState(null);
+
+                        // If this is a Load operation, log a message indicating that the saveable was not restored from save data.
+                        if (operationType is FileOperationType.Load)
                         {
-                            saveable.Value.RestoreState(null); // Restore to default state if not restored
                             Debug.LogWarning($"The ISaveable with the key \"{saveable.Key}\" was not restored from save data. " +
                                              "This could mean that the save data did not contain any data for this ISaveable.", Instance.gameObject);
                         }
                     }
+                    
+                    // If this is a LoadAndIgnoreSaveData operation, log a message indicating that saveables were loaded but not populated with save data.
+                    if (operationType is FileOperationType.LoadAndIgnoreSaveData)
+                        Debug.Log($"Saveables were loaded but not populated with save data because Load() was called with ignoreSaveData set to true.", Instance.gameObject);
                 }
                 
                 // Clear the list before the next iteration
