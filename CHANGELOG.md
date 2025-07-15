@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.8.1] - 2025-07-15
+
+- It's now possible to call Load() without loading actual data. When the bool ignoreSaveData is true, save files will be ignored and RestoreState() will be passed a null value. This can be useful when working in the Unity Editor or if you want RestoreState() to use default values.
+
 ## [0.8.0] - 2025-07-14
 
 - **Breaking Change**: RestoreState() will now be called on all registered ISaveables, regardless of whether they are found in save data. That means they need to handle a null state in their RestoreState() method, which should be used to set an ISaveable's default state.
