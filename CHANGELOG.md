@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.8.3] - 2025-07-30
+- Added .meta files back for GitHub files since their absence was causing errors in Unity due to package folders being immutable.
+
 ## [0.8.2] - 2025-07-15
 
 - It's now possible to call Load() without loading actual data. When the bool ignoreSaveData is true, save files will be ignored and RestoreState() will be passed a null value. This can be useful when working in the Unity Editor or if you want RestoreState() to use default values.
