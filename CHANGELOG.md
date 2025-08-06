@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.0] - 2025-08-06
+- **Breaking Change**: Added support for save slots! The SaveManager now requires a save slot parameter for all methods that interact with save data. This allows for multiple save files to be managed simultaneously, such as for different runs or user profiles.
+- **Breaking Change**: LoadDefaults() is a new method that replaces the previous Load() method signature that would allow for a boolean to ignore save data.
+- Erase() and Delete() methods no longer have a restoreDefaultSaveState parameter. Instead, it is recommended to use LoadDefaults() to restore the default state of ISaveables after calling Erase() or Delete().
+- Updated license dates in all files to reflect the current year.
+
 ## [0.8.3] - 2025-07-30
 - Added .meta files back for GitHub files since their absence was causing errors in Unity due to package folders being immutable.
 

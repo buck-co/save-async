@@ -1,4 +1,4 @@
-// MIT License - Copyright (c) 2024 BUCK Design LLC - https://github.com/buck-co
+// MIT License - Copyright (c) 2025 BUCK Design LLC - https://github.com/buck-co
 
 using System;
 using UnityEngine;
@@ -63,10 +63,18 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file that will be combined with the persistent data path.</param>
-        protected string GetPartialPath(string pathOrFilename)
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        protected string GetPartialPath(string pathOrFilename, int saveSlotIndex = -1)
         {
             ValidatePath(pathOrFilename);
-            return $"{pathOrFilename}{FilenameSuffix}{FileExtension}";
+            
+            string path = $"{pathOrFilename}{FilenameSuffix}{FileExtension}";
+            
+            if (saveSlotIndex > -1)
+                return Path.Combine($"slot{saveSlotIndex}", path);
+
+            return path;
         }
         
         /// <summary>
@@ -77,8 +85,10 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file that will be combined with the persistent data path.</param>
-        protected virtual string GetFullPath(string pathOrFilename)
-            => Path.Combine(m_persistentDataPath, GetPartialPath(pathOrFilename));
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        protected virtual string GetFullPath(string pathOrFilename, int saveSlotIndex = -1)
+            => Path.Combine(m_persistentDataPath, GetPartialPath(pathOrFilename, saveSlotIndex));
 
         /// <summary>
         /// Returns true if a file exists at the given path or filename.
@@ -88,9 +98,11 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to check.</param>
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
         /// <returns>True if the file exists; otherwise, false.</returns>
-        public virtual bool Exists(string pathOrFilename)
-            => File.Exists(GetFullPath(pathOrFilename));
+        public virtual bool Exists(string pathOrFilename, int saveSlotIndex = -1)
+            => File.Exists(GetFullPath(pathOrFilename, saveSlotIndex));
 
         /// <summary>
         /// Writes the given content to a file at the given path or filename.
@@ -102,18 +114,18 @@ namespace Buck.SaveAsync
         /// <param name="pathOrFilename">The path or filename of the file to write.</param>
         /// <param name="content">The string to write to the file.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public virtual async Task WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken)
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public virtual async Task WriteFile(string pathOrFilename, string content, CancellationToken cancellationToken, int saveSlotIndex = -1)
         {
-            string fullPath = GetFullPath(pathOrFilename);
+            string fullPath = GetFullPath(pathOrFilename, saveSlotIndex);
     
             // Get the directory path from the full file path
             string directoryPath = Path.GetDirectoryName(fullPath);
     
             // Create the directory structure if it doesn't exist
             if (!string.IsNullOrEmpty(directoryPath))
-            {
                 Directory.CreateDirectory(directoryPath);
-            }
     
             await File.WriteAllTextAsync(fullPath, content, cancellationToken).ConfigureAwait(false);
         }
@@ -127,8 +139,10 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to write.</param>
         /// <param name="content">The string to write to the file.</param>
-        public virtual async Task WriteFile(string pathOrFilename, string content)
-            => await WriteFile(pathOrFilename, content, CancellationToken.None);
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public virtual async Task WriteFile(string pathOrFilename, string content, int saveSlotIndex = -1)
+            => await WriteFile(pathOrFilename, content, CancellationToken.None, saveSlotIndex);
 
         /// <summary>
         /// Returns the contents of a file at the given path or filename.
@@ -139,23 +153,31 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to read.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public virtual async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken)
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public virtual async Task<string> ReadFile(string pathOrFilename, CancellationToken cancellationToken, int saveSlotIndex = -1)
         {
             try
             {
+                string fullPath = GetFullPath(pathOrFilename, saveSlotIndex);
+                
                 // If the file does not exist, return an empty string and log a warning.
-                if (!Exists(pathOrFilename))
+                if (!Exists(pathOrFilename, saveSlotIndex))
                 {
-                    Debug.LogWarning($"FileHandler: File does not exist at path or filename \"{pathOrFilename}\". This may be expected if the file has not been created yet.");
+                    Debug.LogWarning($"FileHandler: File does not exist at path \"{fullPath}\". This may be expected if the file has not been created yet.");
                     return string.Empty;
                 }
                 
-                string fileContent = await File.ReadAllTextAsync(GetFullPath(pathOrFilename), cancellationToken).ConfigureAwait(false);
+                string fileContent = await File.ReadAllTextAsync(GetFullPath(pathOrFilename, saveSlotIndex), cancellationToken).ConfigureAwait(false);
             
                 // If the file is empty, return an empty string and log a warning.
                 if (string.IsNullOrEmpty(fileContent))
                 {
-                    Debug.LogWarning($"FileHandler: The file \"{pathOrFilename}\" was empty. This may be expected if the file has been erased.");
+                    if (saveSlotIndex > -1)
+                        Debug.LogWarning($"FileHandler: The file \"{pathOrFilename}\" in slot index {saveSlotIndex} was empty. This may be expected if the file has been erased.");
+                    else
+                        Debug.LogWarning($"FileHandler: The file \"{pathOrFilename}\" was empty. This may be expected if the file has been erased.");
+                    
                     return string.Empty;
                 }
                 
@@ -181,8 +203,10 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to read.</param>
-        public virtual async Task<string> ReadFile(string pathOrFilename)
-            => await ReadFile(pathOrFilename, CancellationToken.None);
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public virtual async Task<string> ReadFile(string pathOrFilename, int saveSlotIndex = -1)
+            => await ReadFile(pathOrFilename, CancellationToken.None, saveSlotIndex);
         
         /// <summary>
         /// Erases a file at the given path or filename. The file will still exist on disk, but it will be empty.
@@ -194,8 +218,10 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to erase.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public virtual async Task Erase(string pathOrFilename, CancellationToken cancellationToken)
-            => await WriteFile(pathOrFilename, string.Empty, cancellationToken);
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public virtual async Task Erase(string pathOrFilename, CancellationToken cancellationToken, int saveSlotIndex = -1)
+            => await WriteFile(pathOrFilename, string.Empty, cancellationToken, saveSlotIndex);
         
         /// <summary>
         /// Erases a file at the given path or filename. The file will still exist on disk, but it will be empty.
@@ -206,8 +232,10 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to erase.</param>
-        public virtual async Task Erase(string pathOrFilename)
-            => await Erase(pathOrFilename, CancellationToken.None);
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public virtual async Task Erase(string pathOrFilename, int saveSlotIndex = -1)
+            => await Erase(pathOrFilename, CancellationToken.None, saveSlotIndex);
 
         /// <summary>
         /// Deletes a file at the given path or filename. This will remove the file from disk.
@@ -219,9 +247,11 @@ namespace Buck.SaveAsync
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to delete.</param>
         /// <param name="cancellationToken">The cancellation token should be the same one from the calling MonoBehaviour.</param>
-        public virtual async Task Delete(string pathOrFilename, CancellationToken cancellationToken)
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public virtual async Task Delete(string pathOrFilename, CancellationToken cancellationToken, int saveSlotIndex = -1)
         {
-            string fullPath = GetFullPath(pathOrFilename);
+            string fullPath = GetFullPath(pathOrFilename, saveSlotIndex);
             if (File.Exists(fullPath))
                 await Task.Run(() => File.Delete(fullPath), cancellationToken).ConfigureAwait(false);
         }
@@ -235,7 +265,9 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="pathOrFilename">The path or filename of the file to delete.</param>
-        public virtual async Task Delete(string pathOrFilename)
-            => await Delete(pathOrFilename, CancellationToken.None);
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public virtual async Task Delete(string pathOrFilename, int saveSlotIndex = -1)
+            => await Delete(pathOrFilename, CancellationToken.None, saveSlotIndex);
     }
 }

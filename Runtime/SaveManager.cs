@@ -1,9 +1,7 @@
-// MIT License - Copyright (c) 2024 BUCK Design LLC - https://github.com/buck-co
+// MIT License - Copyright (c) 2025 BUCK Design LLC - https://github.com/buck-co
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json;
 
@@ -37,7 +35,7 @@ namespace Buck.SaveAsync
             Load,
             Delete,
             Erase,
-            LoadAndIgnoreSaveData
+            LoadDefaults
         }
         
         struct FileOperation
@@ -93,7 +91,7 @@ namespace Buck.SaveAsync
         #region SaveAsync API
 
         /// <summary>
-        /// Boolean indicating whether or not a file operation is in progress.
+        /// Boolean indicating whether a file operation is in progress.
         /// </summary>
         public static bool IsBusy { get; private set; }
 
@@ -119,11 +117,13 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to check for existence.</param>
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
         /// <returns>True if the file exists; otherwise, false.</returns>
-        public static bool Exists(string filename)
+        public static bool Exists(string filename, int saveSlotIndex = -1)
         {
             Initialize();
-            return m_fileHandler.Exists(filename);
+            return m_fileHandler.Exists(filename, saveSlotIndex);
         }
 
         /// <summary>
@@ -134,8 +134,10 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to save.</param>
-        public static async Awaitable Save(string[] filenames)
-            => await DoFileOperation(FileOperationType.Save, filenames);
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public static async Awaitable Save(string[] filenames, int saveSlotIndex = -1)
+            => await DoFileOperation(FileOperationType.Save, filenames, saveSlotIndex);
         
         /// <summary>
         /// Saves the file at the given path or filename.
@@ -145,9 +147,11 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to save.</param>
-        public static async Awaitable Save(string filename)
-            => await Save(new[] {filename});
-
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public static async Awaitable Save(string filename, int saveSlotIndex = -1)
+            => await Save(new[] {filename}, saveSlotIndex);
+        
         /// <summary>
         /// Loads the files at the given paths or filenames.
         /// <code>
@@ -156,18 +160,11 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to load.</param>
-        /// <param name="ignoreSaveData">If true, save files will be ignored and RestoreState() will be passed a null value.
-        ///  This can be useful when working in the Unity Editor or if you want RestoreState() to use default values.</param>
-        public static async Awaitable Load(string[] filenames, bool ignoreSaveData = false)
-        {
-            // If true, we will load the default state of the files
-            // Otherwise, load the files normally
-            if (ignoreSaveData)
-                await DoFileOperation(FileOperationType.LoadAndIgnoreSaveData, filenames);
-            else            
-                await DoFileOperation(FileOperationType.Load, filenames);
-        }
-        
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public static async Awaitable Load(string[] filenames, int saveSlotIndex = -1)
+            => await DoFileOperation(FileOperationType.Load, filenames, saveSlotIndex);
+
         /// <summary>
         /// Loads the file at the given path or filename.
         /// <code>
@@ -176,10 +173,40 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to load.</param>
-        /// /// <param name="ignoreSaveData">If true, save files will be ignored and RestoreState() will be passed a null value.
-        ///  This can be useful when working in the Unity Editor or if you want RestoreState() to use default values.</param>
-        public static async Awaitable Load(string filename, bool ignoreSaveData = false)
-            => await Load(new[] {filename}, ignoreSaveData);
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public static async Awaitable Load(string filename, int saveSlotIndex = -1)
+            => await Load(new[] {filename}, saveSlotIndex);
+        
+        /// <summary>
+        /// Triggers loading without file I/O. Any saved files will be ignored and RestoreState() will be passed a null value.
+        /// This can be useful if you want RestoreState() to use default values, such as when working in the Unity Editor
+        /// where you may want to test default states without loading save data.
+        /// Save slots are not needed for this operation, since no file I/O is performed.
+        /// <code>
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
+        /// </code>
+        /// </summary>
+        /// <param name="filenames">The array of paths or filenames to load. These will be used to trigger their registered
+        /// ISaveables, but any data on disk will be ignored.</param>
+        public static async Awaitable LoadDefaults(string[] filenames)
+            => await DoFileOperation(FileOperationType.LoadDefaults, filenames, -1);
+        
+        /// <summary>
+        /// Triggers loading without file I/O. Any saved files will be ignored and RestoreState() will be passed a null value.
+        /// This can be useful if you want RestoreState() to use default values, such as when working in the Unity Editor
+        /// where you may want to test default states without loading save data.
+        /// Save slots are not needed for this operation, since no file I/O is performed.
+        /// <code>
+        /// File example: "MyFile"
+        /// Path example: "MyFolder/MyFile"
+        /// </code>
+        /// </summary>
+        /// <param name="filename">The path or filename to load. These will be used to trigger their registered
+        /// ISaveables, but any data on disk will be ignored.</param>
+        public static async Awaitable LoadDefaults(string filename)
+            => await LoadDefaults(new[] {filename});
 
         /// <summary>
         /// Deletes the files at the given paths or filenames. Each file will be removed from disk.
@@ -190,15 +217,10 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to delete.</param>
-        /// <param name="restoreDefaultSaveState">True by default. When set to true, <see cref="Load(string[])"/>
-        ///  will be called on the same files to restore them to their default states.</param>
-        public static async Awaitable Delete(string[] filenames, bool restoreDefaultSaveState = true)
-        {
-            await DoFileOperation(FileOperationType.Delete, filenames);
-            
-            if (restoreDefaultSaveState)
-                await Load(filenames, true); // Reload the files to restore default state
-        }
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public static async Awaitable Delete(string[] filenames, int saveSlotIndex = -1)
+            => await DoFileOperation(FileOperationType.Delete, filenames, saveSlotIndex);
         
         /// <summary>
         /// Deletes the file at the given path or filename. The file will be removed from disk.
@@ -209,10 +231,10 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to delete.</param>
-        /// <param name="restoreDefaultSaveState">True by default. When set to true, <see cref="Load(string[])"/>
-        ///  will be called on the same files to restore them to their default states.</param>
-        public static async Awaitable Delete(string filename, bool restoreDefaultSaveState = true)
-            => await Delete(new[] {filename}, restoreDefaultSaveState);
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public static async Awaitable Delete(string filename, int saveSlotIndex = -1)
+            => await Delete(new[] {filename}, saveSlotIndex);
 
         /// <summary>
         /// Erases the files at the given paths or filenames. Each file will still exist on disk, but it will be empty.
@@ -223,14 +245,11 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filenames">The array of paths or filenames to erase.</param>
-        /// <param name="restoreDefaultSaveState">True by default. When set to true, <see cref="Load(string[])"/>
-        ///  will be called on the same files to restore them to their default states.</param>
-        public static async Awaitable Erase(string[] filenames, bool restoreDefaultSaveState = true)
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public static async Awaitable Erase(string[] filenames, int saveSlotIndex = -1)
         {
-            await DoFileOperation(FileOperationType.Erase, filenames);
-            
-            if (restoreDefaultSaveState)
-                await Load(filenames); // Reload the files to restore default state
+            await DoFileOperation(FileOperationType.Erase, filenames, saveSlotIndex);
         }
         
         /// <summary>
@@ -242,10 +261,10 @@ namespace Buck.SaveAsync
         /// </code>
         /// </summary>
         /// <param name="filename">The path or filename to erase.</param>
-        /// <param name="restoreDefaultSaveState">True by default. When set to true, <see cref="Load(string[])"/>
-        ///  will be called on the same files to restore them to their default states.</param>
-        public static async Awaitable Erase(string filename, bool restoreDefaultSaveState = true)
-            => await Erase(new[] {filename}, restoreDefaultSaveState);
+        /// <param name="saveSlotIndex">The save slot index to use. Passing in anything below 0 will not
+        /// use a slot, which can be good for things like settings files or for projects that don't use save slots.</param>
+        public static async Awaitable Erase(string filename, int saveSlotIndex = -1)
+            => await Erase(new[] {filename}, saveSlotIndex);
         
         /// <summary>
         /// Sets the given Guid byte array to a new Guid byte array if it is null, empty, or an empty Guid.
@@ -288,7 +307,7 @@ namespace Buck.SaveAsync
         
         #endregion
         
-        static async Awaitable DoFileOperation(FileOperationType operationType, string[] filenames)
+        static async Awaitable DoFileOperation(FileOperationType operationType, string[] filenames, int saveSlotIndex)
         {
             Initialize();
             
@@ -322,18 +341,18 @@ namespace Buck.SaveAsync
                     switch (fileOperation.Type)
                     {
                         case FileOperationType.Save:
-                            await SaveFileOperationAsync(fileOperation.Filenames);
+                            await SaveFileOperationAsync(fileOperation.Filenames, saveSlotIndex);
                             break;
                         case FileOperationType.Load:
-                            await LoadFileOperationAsync(fileOperation.Filenames);
+                            await LoadFileOperationAsync(fileOperation.Filenames, saveSlotIndex);
                             break;
                         case FileOperationType.Delete:
-                            await DeleteFileOperationAsync(fileOperation.Filenames);
+                            await DeleteFileOperationAsync(fileOperation.Filenames, saveSlotIndex);
                             break;
                         case FileOperationType.Erase:
-                            await DeleteFileOperationAsync(fileOperation.Filenames, true);
+                            await DeleteFileOperationAsync(fileOperation.Filenames, saveSlotIndex, true);
                             break;
-                        case FileOperationType.LoadAndIgnoreSaveData: // Don't do any file I/O, just load the saveables
+                        case FileOperationType.LoadDefaults: // Don't do any file I/O, just load the saveables
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -345,7 +364,7 @@ namespace Buck.SaveAsync
                     await Awaitable.MainThreadAsync();
 
                 // If this is a load operation...
-                if (operationType is FileOperationType.Load or FileOperationType.LoadAndIgnoreSaveData)
+                if (operationType is FileOperationType.Load or FileOperationType.LoadDefaults)
                 {
                     // Track which ISaveables were restored with save data
                     Dictionary<string, bool> restoredSaveables = new();
@@ -415,7 +434,7 @@ namespace Buck.SaveAsync
                     }
                     
                     // If this is a LoadAndIgnoreSaveData operation, log a message indicating that saveables were loaded but not populated with save data.
-                    if (operationType is FileOperationType.LoadAndIgnoreSaveData)
+                    if (operationType is FileOperationType.LoadDefaults)
                         Debug.Log($"Saveables were loaded but not populated with save data because Load() was called with ignoreSaveData set to true.", Instance.gameObject);
                 }
                 
@@ -429,30 +448,30 @@ namespace Buck.SaveAsync
             }
         }
 
-        static async Awaitable SaveFileOperationAsync(string[] filenames)
+        static async Awaitable SaveFileOperationAsync(string[] filenames, int saveSlotIndex)
         {
             // Get the ISaveables that correspond to the files, convert them to JSON, and save them
             foreach (string filename in filenames)
             {
                 List<ISaveable> saveablesToSave = new();
                         
-                // Gather all of the saveables that correspond to the file
+                // Gather all the saveables that correspond to the file
                 foreach (ISaveable saveable in m_saveables.Values)
                     if (saveable.Filename == filename)
                         saveablesToSave.Add(saveable);
                         
                 string json = SaveablesToJson(saveablesToSave);
                 json = Encryption.Encrypt(json, Instance.m_encryptionPassword, Instance.m_encryptionType);
-                await m_fileHandler.WriteFile(filename, json, Instance.destroyCancellationToken);
+                await m_fileHandler.WriteFile(filename, json, Instance.destroyCancellationToken, saveSlotIndex);
             }
         }
 
-        static async Awaitable LoadFileOperationAsync(string[] filenames)
+        static async Awaitable LoadFileOperationAsync(string[] filenames, int saveSlotIndex)
         {
             // Load the files
             foreach (string filename in filenames)
             {
-                string fileContent = await m_fileHandler.ReadFile(filename, Instance.destroyCancellationToken);
+                string fileContent = await m_fileHandler.ReadFile(filename, Instance.destroyCancellationToken, saveSlotIndex);
                         
                 // If the file is empty, skip it
                 if (string.IsNullOrEmpty(fileContent))
@@ -478,14 +497,14 @@ namespace Buck.SaveAsync
             }
         }
         
-        static async Awaitable DeleteFileOperationAsync(string[] filenames, bool eraseAndKeepFile = false)
+        static async Awaitable DeleteFileOperationAsync(string[] filenames, int saveSlotIndex, bool eraseAndKeepFile = false)
         {
             // Delete the files from disk
             foreach (string filename in filenames)
                 if (eraseAndKeepFile)
-                    await m_fileHandler.Erase(filename, Instance.destroyCancellationToken);
+                    await m_fileHandler.Erase(filename, Instance.destroyCancellationToken, saveSlotIndex);
                 else
-                    await m_fileHandler.Delete(filename, Instance.destroyCancellationToken);
+                    await m_fileHandler.Delete(filename, Instance.destroyCancellationToken, saveSlotIndex);
         }
         
         static string SaveablesToJson(List<ISaveable> saveables)

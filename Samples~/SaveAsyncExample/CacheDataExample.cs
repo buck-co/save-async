@@ -1,4 +1,4 @@
-// MIT License - Copyright (c) 2024 BUCK Design LLC - https://github.com/buck-co
+// MIT License - Copyright (c) 2025 BUCK Design LLC - https://github.com/buck-co
 
 /*
  * This example implementation of the ISaveable interface shows how data can be cached manually.
