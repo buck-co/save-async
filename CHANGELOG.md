@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.0] - 2025-08-06
+Have you ever had a great idea, only to have a much (much) simpler version of that idea immediately after making a new release of your open source project?
+
+This reverts several of the changes made in the release 0.9.0, simplifying the SaveManager API and achieving save slots with a simpler approach.
+- Previous changes to SaveManager methods - Save(), Load(), Erase(), and Delete() - that required a save slot parameter have been reverted. The FileHandler will now use the SaveManager.SaveSlotIndex in the GetPartialPath() method and use a save slot if the value is greater than -1.
+- SaveManager now stores a static int representing the current save slot, called SaveManager.SaveSlotIndex. Setting this to a value will use the save slot on that index, while -1 will ignore save slots. 
+- Registering a Saveable that has already been registered will now only emit a warning rather than an error.
+
 ## [0.9.0] - 2025-08-06
 - **Breaking Change**: Added support for save slots! The SaveManager now requires a save slot parameter for all methods that interact with save data. This allows for multiple save files to be managed simultaneously, such as for different runs or user profiles.
 - **Breaking Change**: LoadDefaults() is a new method that replaces the previous Load() method signature that would allow for a boolean to ignore save data.
