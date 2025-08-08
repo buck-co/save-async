@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.10.1] - 2025-08-08
+- Background threads are now disabled by default. Exceptions are not always logged properly when using background threads, causing SaveManager methods to sometimes fail silently if bad data gets passed in (such as a `NullReferenceException` inside of an ISaveable.CaptureState() method). While background threads do increase performance, this should be considered an experimental feature until it's possible to properly catch exceptions while on a background thread.
+- Added try/catch blocks around SaveManager methods to ensure exceptions are logged for async methods.
+- Added more logging to SaveManager methods for better traceability.
+- Added the prefix `[Save Async]` to all log messages for easier identification in the console.
+
 ## [0.10.0] - 2025-08-06
 Have you ever had a great idea, only to have a much (much) simpler version of that idea immediately after making a new release of your open source project?
 

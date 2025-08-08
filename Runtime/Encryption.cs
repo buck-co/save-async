@@ -41,7 +41,7 @@ namespace Buck.SaveAsync
         static string EncryptDecryptXOR(string content, string password)
         {
             if (string.IsNullOrEmpty(password))
-                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+                throw new ArgumentException("[Save Async] Encryption.EncryptDecryptXOR() - Password cannot be null or empty.", nameof(password));
         
             char[] result = new char[content.Length];
             for (int i = 0; i < content.Length; i++)

@@ -24,7 +24,7 @@ namespace Buck.SaveAsync
             {
                 if (m_ShuttingDown)
                 {
-                    Debug.LogWarning("[Singleton] Instance '" + typeof(T) +
+                    Debug.LogWarning("[SaveAsync] Singleton.Instance '" + typeof(T) +
                         "' already destroyed. Returning null.");
                     return null;
                 }

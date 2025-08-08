@@ -42,15 +42,15 @@ namespace Buck.SaveAsync
         protected virtual void ValidatePath(string pathOrFilename)
         {
             if (string.IsNullOrWhiteSpace(pathOrFilename))
-                throw new ArgumentException("FileHandler: Path or filename cannot be null, empty, or whitespace.", nameof(pathOrFilename));
+                throw new ArgumentException("[Save Async] FileHandler.ValidatePath() - Path or filename cannot be null, empty, or whitespace.", nameof(pathOrFilename));
 
             // Prevent directory traversal
             if (pathOrFilename.Contains("..") || Path.IsPathRooted(pathOrFilename))
-                throw new ArgumentException("FileHandler: Path contains invalid characters or is absolute.", nameof(pathOrFilename));
+                throw new ArgumentException("[Save Async] FileHandler.ValidatePath() - Path contains invalid characters or is absolute.", nameof(pathOrFilename));
 
             // Check for invalid path characters instead of filename characters
             if (pathOrFilename.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
-                throw new ArgumentException("FileHandler: Path contains invalid characters.", nameof(pathOrFilename));
+                throw new ArgumentException("[Save Async] FileHandler.ValidatePath() - Path contains invalid characters.", nameof(pathOrFilename));
         }
         
         /// <summary>
@@ -152,7 +152,7 @@ namespace Buck.SaveAsync
                 // If the file does not exist, return an empty string and log a warning.
                 if (!Exists(pathOrFilename))
                 {
-                    Debug.LogWarning($"FileHandler: File does not exist at path \"{fullPath}\". This may be expected if the file has not been created yet.");
+                    Debug.LogWarning($"[Save Async] FileHandler.ReadFile() - File does not exist at path \"{fullPath}\". This may be expected if the file has not been created yet.");
                     return string.Empty;
                 }
                 
@@ -162,9 +162,9 @@ namespace Buck.SaveAsync
                 if (string.IsNullOrEmpty(fileContent))
                 {
                     if (SaveManager.SaveSlotIndex > -1)
-                        Debug.LogWarning($"FileHandler: The file \"{pathOrFilename}\" in slot index {SaveManager.SaveSlotIndex} was empty. This may be expected if the file has been erased.");
+                        Debug.LogWarning($"[Save Async] FileHandler.ReadFile() - The file \"{pathOrFilename}\" in slot index {SaveManager.SaveSlotIndex} was empty. This may be expected if the file has been erased.");
                     else
-                        Debug.LogWarning($"FileHandler: The file \"{pathOrFilename}\" was empty. This may be expected if the file has been erased.");
+                        Debug.LogWarning($"[Save Async] FileHandler.ReadFile() - The file \"{pathOrFilename}\" was empty. This may be expected if the file has been erased.");
                     
                     return string.Empty;
                 }
@@ -173,12 +173,12 @@ namespace Buck.SaveAsync
             }
             catch (UnauthorizedAccessException ex)
             {
-                Debug.LogError($"FileHandler: Access denied to file \"{pathOrFilename}\": {ex.Message}");
+                Debug.LogError($"[Save Async] FileHandler.ReadFile() - Access denied to file \"{pathOrFilename}\": {ex.Message}");
                 return string.Empty;
             }
             catch (IOException ex)
             {
-                Debug.LogError($"FileHandler: IO error reading file \"{pathOrFilename}\": {ex.Message}");
+                Debug.LogError($"[Save Async] FileHandler.ReadFile() - IO error reading file \"{pathOrFilename}\": {ex.Message}");
                 return string.Empty;
             }
         }
