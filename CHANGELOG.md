@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.11.0] – 2025-09-22
+
+### Breaking Change
+Moved from `ISaveable` to `ISaveable<TState>` to provide compile-time type safety, safer JSON deserialization (no type names), and clearer save/restore contracts. All saveables must now define a serializable `TState` and implement `CaptureState(): TState` and `RestoreState(TState state)`.
+
+### Serialization & Safety
+
+- JSON now deserializes directly to each saveable’s `TState` (no type names emitted), reducing polymorphic-deserialization risk.
+- Existing save files that match the new `TState` shape should continue to load; files that relied on polymorphic `object` states will need a one-time migration.
+
+### Async/Awaitable & Concurrency
+
+- Replaced single-iteration “while not cancelled” wrappers with clear guard clauses.
+- Fixed a rare operation-queue race by making enqueue/start atomic behind a lock; `IsBusy` is reset in a `finally` block.
+- Broader cancellation: operations link `destroyCancellationToken` with `Application.exitCancellationToken`.
+- Exception surfacing: errors are logged and rethrown so callers can observe faults when awaiting.
+- Logging helpers include a Unity context only when on the main thread; background-thread logs remain safe.
+
+### Miscellaneous
+
+- `FileHandler` keeps the public API and formatting; small internal cleanups (consistent use of computed `fullPath`, clearer errors on delete).
+- Updated all Samples to the `ISaveable<TState>` pattern.
+
+### Migration notes
+
+1. Replace ISaveable with `ISaveable<TState>` and define a serializable `TState` (struct or class).
+2. Update methods to `TState CaptureState()` and `void RestoreState(TState state)`.
+
+
 ## [0.10.1] - 2025-08-08
 - Background threads are now disabled by default. Exceptions are not always logged properly when using background threads, causing SaveManager methods to sometimes fail silently if bad data gets passed in (such as a `NullReferenceException` inside of an ISaveable.CaptureState() method). While background threads do increase performance, this should be considered an experimental feature until it's possible to properly catch exceptions while on a background thread.
 - Added try/catch blocks around SaveManager methods to ensure exceptions are logged for async methods.

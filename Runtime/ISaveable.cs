@@ -3,9 +3,11 @@
 namespace Buck.SaveAsync
 {
     /// <summary>
-    /// Allows an object to be saved and loaded via the SaveManager class.
+    /// Allows an object to be saved and loaded via the SaveManager class using a strongly-typed state.
+    /// Implementations should define a serializable struct or class for TState.
     /// </summary>
-    public interface ISaveable
+    /// <typeparam name="TState">A serializable type representing this object's save data.</typeparam>
+    public interface ISaveable<TState>
     {
         /// <summary>
         /// This is a unique string used to identify the object when saving and loading.
@@ -13,27 +15,27 @@ namespace Buck.SaveAsync
         /// If you choose to use a Guid, it is recommended that it is backed by a
         /// serialized byte array that does not change.
         /// </summary>
-        public string Key { get; }
-        
+        string Key { get; }
+
         /// <summary>
         /// This is the file name where this object's data will be saved.
         /// It is recommended to use a static class to store file paths as strings to avoid typos.
         /// </summary>
-        public string Filename { get; }
-        
+        string Filename { get; }
+
         /// <summary>
         /// This is used by the SaveManager class to capture the state of a saveable object.
         /// Typically this is a struct defined by the ISaveable implementing class.
         /// The contents of the struct could be created at the time of saving, or cached in a variable.
         /// </summary>
-        object CaptureState();
-        
+        TState CaptureState();
+
         /// <summary>
         /// This is used by the SaveManager class to restore the state of a saveable object.
-        /// This will be called any time the game is loaded, so you need to handle cases where the "state" parameter is a null object.
+        /// This will be called any time the game is loaded, so you need to handle cases where the "state" parameter is null.
         /// In cases where the state is null, you should initialize the object to a default state.
         /// You may also consider using this method to initialize any fields that are not saved (i.e. "resetting the object").
         /// </summary>
-        void RestoreState(object state);
+        void RestoreState(TState state);
     }
 }

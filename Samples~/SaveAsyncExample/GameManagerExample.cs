@@ -24,7 +24,7 @@ namespace Buck.SaveAsyncExample
 
         public async void SaveGameData()
         {
-            if (m_runBenchmarks)
+            if (m_runBenchmarks && m_benchmarks)
                 await m_benchmarks.SaveGameData(m_filenames);
             else
                 await SaveManager.Save(m_filenames);
@@ -32,7 +32,7 @@ namespace Buck.SaveAsyncExample
         
         public async void LoadGameData()
         {
-            if (m_runBenchmarks)
+            if (m_runBenchmarks && m_benchmarks)
                 await m_benchmarks.LoadGameData(m_filenames);
             else
                 await SaveManager.Load(m_filenames);
@@ -40,7 +40,7 @@ namespace Buck.SaveAsyncExample
         
         public async void EraseGameData()
         {
-            if (m_runBenchmarks)
+            if (m_runBenchmarks && m_benchmarks)
                 await m_benchmarks.EraseGameData(m_filenames);
             else
                 await SaveManager.Erase(m_filenames);
@@ -48,7 +48,7 @@ namespace Buck.SaveAsyncExample
         
         public async void DeleteGameData()
         {
-            if (m_runBenchmarks)
+            if (m_runBenchmarks && m_benchmarks)
                 await m_benchmarks.DeleteGameData(m_filenames);
             else
                 await SaveManager.Delete(m_filenames);

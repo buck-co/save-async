@@ -38,57 +38,53 @@ namespace Buck.SaveAsyncExample
             foreach (var t in m_debugOutput)
                 m_stringBuilder.AppendLine(t);
             
-            m_debugText.text = m_stringBuilder.ToString();
+            if (m_debugText)
+                m_debugText.text = m_stringBuilder.ToString();
         }
 
         async Awaitable RunBenchmark(BenchmarkType benchmarkType, string[] filenames)
         {
-            while (!destroyCancellationToken.IsCancellationRequested)
-            {
-                // Create a new GUID to track which save test is which
-                Guid guid = Guid.NewGuid();
-                string shortGuid = guid.ToString().Substring(0, 4);
-
-                Stopwatch stopwatch = new();
-                stopwatch.Start();
-                AddDebugOutput("Starting " + benchmarkType + "() " + shortGuid + " ...");
-
-                try
-                {
-                    switch (benchmarkType)
-                    {
-                        case BenchmarkType.SaveGameData:
-                            await SaveManager.Save(filenames);
-                            break;
-                        case BenchmarkType.LoadGameData:
-                            await SaveManager.Load(filenames);
-                            break;
-                        case BenchmarkType.EraseGameData:
-                            await SaveManager.Erase(filenames);
-                            break;
-                        case BenchmarkType.DeleteGameData:
-                            await SaveManager.Delete(filenames);
-                            break;
-                    }
-                    
-                    // Switch back to the main thread while waiting
-                    Awaitable.MainThreadAsync();
-                    
-                    while (SaveManager.IsBusy)
-                        await Awaitable.NextFrameAsync();
-                    
-                    AddDebugOutput(benchmarkType + "() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds +
-                                   "ms");
-                }
-                catch (Exception e)
-                {
-                    Awaitable.MainThreadAsync();
-                    
-                    AddDebugOutput("<color=\"red\">" + benchmarkType + "() " + shortGuid + " failed: " + e.Message +
-                                   "</color>");
-                }
-
+            if (destroyCancellationToken.IsCancellationRequested)
                 return;
+
+            Guid guid = Guid.NewGuid();
+            string shortGuid = guid.ToString().Substring(0, 4);
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            AddDebugOutput("Starting " + benchmarkType + "() " + shortGuid + " ...");
+
+            try
+            {
+                switch (benchmarkType)
+                {
+                    case BenchmarkType.SaveGameData:
+                        await SaveManager.Save(filenames);
+                        break;
+                    case BenchmarkType.LoadGameData:
+                        await SaveManager.Load(filenames);
+                        break;
+                    case BenchmarkType.EraseGameData:
+                        await SaveManager.Erase(filenames);
+                        break;
+                    case BenchmarkType.DeleteGameData:
+                        await SaveManager.Delete(filenames);
+                        break;
+                }
+
+                // Switch back to the main thread while waiting
+                await Awaitable.MainThreadAsync();
+
+                while (SaveManager.IsBusy)
+                    await Awaitable.NextFrameAsync();
+
+                stopwatch.Stop();
+                AddDebugOutput(benchmarkType + "() " + shortGuid + " completed in " + stopwatch.ElapsedMilliseconds + "ms");
+            }
+            catch (Exception e)
+            {
+                await Awaitable.MainThreadAsync();
+                AddDebugOutput("<color=\"red\">" + benchmarkType + "() " + shortGuid + " failed: " + e.Message + "</color>");
             }
         }
 

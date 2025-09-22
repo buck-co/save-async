@@ -13,12 +13,19 @@ using UnityEngine;
 
 namespace Buck.SaveAsyncExample
 {
-    public class GameDataExample : MonoBehaviour, ISaveable
+    public class GameDataExample : MonoBehaviour, ISaveable<GameDataExample.MyCustomData>
     {
         // ISaveable needs a unique string "Key" which is used to identify the object in the save data.
         // For an example that uses a Guid, see CacheDataExample.cs.
         public string Key => "GameDataExample";
         public string Filename => Files.GameData;
+
+        [Serializable]
+        public struct Item
+        {
+            public string m_name;
+            public int m_quantity;
+        }
 
         // Your game data should go in a serializable struct
         [Serializable]
@@ -33,12 +40,6 @@ namespace Buck.SaveAsyncExample
         [SerializeField] string m_playerName = "The Player Name";
         [SerializeField] int m_playerHealth = 100;
         [SerializeField] Vector3 m_position = new Vector3(1f, 2f, 3f);
-
-        public struct Item
-        {
-            public string m_name;
-            public int m_quantity;
-        }
         
         Dictionary<int, Item> m_inventory = new()
         {
@@ -56,8 +57,7 @@ namespace Buck.SaveAsyncExample
         // Every ISaveable must implement the CaptureState and RestoreState method
         // CaptureState is called when the game is saved with SaveManager.Save()
         // RestoreState is called when the game is loaded with SaveManager.Load()
-        
-        public object CaptureState()
+        public MyCustomData CaptureState()
         {
             return new MyCustomData
             {
@@ -68,23 +68,19 @@ namespace Buck.SaveAsyncExample
             };
         }
 
-        public void RestoreState(object state)
+        public void RestoreState(MyCustomData state)
         {
-            // If the state is nominal, restore the cached data.
-            if (state is MyCustomData s)
+            // When no save exists, SaveManager passes default(MyCustomData).
+            m_playerName = string.IsNullOrEmpty(state.playerName) ? "The Player Name" : state.playerName;
+            m_playerHealth = state.playerHealth == 0 ? 100 : state.playerHealth;
+            m_position = state.position == default ? new Vector3(1f, 2f, 3f) : state.position;
+
+            if (state.inventory != null && state.inventory.Count > 0)
             {
-                m_playerName = s.playerName;
-                m_playerHealth = s.playerHealth;
-                m_position = s.position;
-                m_inventory = s.inventory;
+                m_inventory = state.inventory;
             }
-            // Otherwise, initialize default values.
             else
             {
-                Debug.Log("CacheDataExample: RestoreState called with null or invalid state. Initializing default values.");
-                m_playerName = "The Player Name";
-                m_playerHealth = 100;
-                m_position = new Vector3(1f, 2f, 3f);
                 m_inventory = new()
                 {
                     {1, new Item() { m_name = "ItemOne",   m_quantity = 5 }},
