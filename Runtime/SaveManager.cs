@@ -476,8 +476,9 @@ namespace Buck.SaveAsync
                     }
                 }
 
-                if (ctx.UseBackgroundThread)
-                    await Awaitable.MainThreadAsync();
+                // Always hop back to the main thread before touching Unity objects
+                // and before returning to the caller so their continuation resumes on main.
+                await Awaitable.MainThreadAsync();
 
                 if (processedLoad || processedLoadDefaults)
                     RestorePass(affectedFilenames, processedLoad, processedLoadDefaults);
