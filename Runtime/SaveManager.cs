@@ -123,8 +123,6 @@ namespace Buck.SaveAsync
             TypeNameHandling = TypeNameHandling.Auto
         };
 
-        //static readonly JsonSerializer s_serializerNoTypes = JsonSerializer.Create(s_jsonNoTypes);
-
         static bool IsMainThread => Environment.CurrentManagedThreadId == s_MainThreadId;
 
         void Awake()
@@ -535,7 +533,7 @@ namespace Buck.SaveAsync
 
                     try
                     {
-                        object state = loaded.Data?.ToObject(boxed.StateType, s_serializerNoTypes);
+                        object state = loaded.Data?.ToObject(boxed.StateType, JsonSerializer.CreateDefault(s_jsonNoTypes));
                         boxed.RestoreStateBoxed(state);
                         restoredSaveables[loaded.Key] = true;
                     }
@@ -685,7 +683,7 @@ namespace Buck.SaveAsync
                     Debug.LogError($"[Save Async] SaveManager.SaveablesToJson() - Failed to capture state for ISaveable with key \"{s.Key}\": {e.Message}\n{e.StackTrace}");
                 }
 
-                var token = JToken.FromObject(data, s_serializerNoTypes);
+                var token = JToken.FromObject(data, JsonSerializer.CreateDefault(s_jsonNoTypes));
 
                 var obj = new JObject
                 {
