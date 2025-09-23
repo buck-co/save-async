@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.12.0] – 2025-09-22
+
+### Breaking Change: Versioning
+
+Added versioning via `ISaveable<TState>.FileVersion`. On load, if the on-disk value doesn’t match the registered saveable’s FileVersion, that saveable is skipped and restored to defaults (others in the same file still load).
+In the future, this version number _might_ be used for data migrations (still considering this), but that functionality is not currently implemented.
+
+### Fixes
+- Fixed a regression where JSON Converters for Unity was not being utilized. 
+
+### Migration notes
+
+- Just add int FileVersion { get; } to every ISaveable<TState>.
+
 ## [0.11.0] – 2025-09-22
 
 ### Breaking Change
