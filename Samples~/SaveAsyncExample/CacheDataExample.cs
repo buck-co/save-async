@@ -26,7 +26,7 @@ namespace Buck.SaveAsyncExample
 
         public string Filename => Files.SomeFile;
         
-        public int FileVersion => 1;
+        public int Version => 1;
 
         [Serializable]
         public struct MySaveData

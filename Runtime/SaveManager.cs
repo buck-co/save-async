@@ -68,7 +68,7 @@ namespace Buck.SaveAsync
             string Key { get; }
             string Filename { get; }
             Type StateType { get; }
-            int FileVersion { get; }
+            int Version { get; }
             object CaptureStateBoxed();
             void RestoreStateBoxed(object state);
         }
@@ -82,7 +82,7 @@ namespace Buck.SaveAsync
             public string Key => m_inner.Key;
             public string Filename => m_inner.Filename;
             public Type StateType => typeof(TState);
-            public int FileVersion => m_inner.FileVersion;
+            public int Version => m_inner.Version;
 
             public object CaptureStateBoxed() => m_inner.CaptureState();
 
@@ -101,7 +101,7 @@ namespace Buck.SaveAsync
         sealed class LoadedSaveable
         {
             public string Key;
-            public int EntryFileVersion;
+            public int EntryVersion;
             public JToken Data;
         }
 
@@ -520,12 +520,12 @@ namespace Buck.SaveAsync
                         continue;
                     }
 
-                    // Version check: if the on-disk entry's FileVersion doesn't match the registered saveable's FileVersion,
+                    // Version check: if the on-disk entry's Version doesn't match the registered saveable's Version,
                     // skip old data and explicitly restore defaults for this saveable.
-                    if (loaded.EntryFileVersion != boxed.FileVersion)
+                    if (loaded.EntryVersion != boxed.Version)
                     {
                         Debug.LogWarning($"[Save Async] SaveManager.DoFileOperation() - Version mismatch for key \"{loaded.Key}\". " +
-                                         $"Save data has FileVersion {loaded.EntryFileVersion}; runtime expects {boxed.FileVersion}. Defaults will be used.");
+                                         $"Save data has Version {loaded.EntryVersion}; runtime expects {boxed.Version}. Defaults will be used.");
                         boxed.RestoreStateBoxed(null);
                         restoredSaveables[loaded.Key] = true;
                         continue;
@@ -618,12 +618,12 @@ namespace Buck.SaveAsync
                         foreach (var item in array)
                         {
                             var key = item["Key"]?.ToString();
-                            int entryFileVersion = item["FileVersion"]?.Value<int?>() ?? 0; // legacy entries will be 0
+                            int entryVersion = item["Version"]?.Value<int?>() ?? 0; // legacy entries will be 0
                             var data = item["Data"];
                             m_loadedSaveables.Add(new LoadedSaveable
                             {
                                 Key = key,
-                                EntryFileVersion = entryFileVersion,
+                                EntryVersion = entryVersion,
                                 Data = data
                             });
                         }
@@ -688,7 +688,7 @@ namespace Buck.SaveAsync
                 var obj = new JObject
                 {
                     ["Key"] = s.Key,
-                    ["FileVersion"] = s.FileVersion,
+                    ["Version"] = s.Version,
                     ["Data"] = token
                 };
 

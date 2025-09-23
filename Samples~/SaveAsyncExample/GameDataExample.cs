@@ -20,7 +20,7 @@ namespace Buck.SaveAsyncExample
         public string Key => "GameDataExample";
         public string Filename => Files.GameData;
         
-        public int FileVersion => 1;
+        public int Version => 1;
 
         [Serializable]
         public struct Item

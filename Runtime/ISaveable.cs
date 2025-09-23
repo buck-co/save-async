@@ -29,7 +29,7 @@ namespace Buck.SaveAsync
         /// Note: For now, this will invalidate all existing save data for this ISaveable.
         /// In the future, we may add support for data migration.
         /// </summary>
-        int FileVersion { get; }
+        int Version { get; }
 
         /// <summary>
         /// This is used by the SaveManager class to capture the state of a saveable object.
