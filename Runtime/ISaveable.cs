@@ -22,6 +22,14 @@ namespace Buck.SaveAsync
         /// It is recommended to use a static class to store file paths as strings to avoid typos.
         /// </summary>
         string Filename { get; }
+        
+        /// <summary>
+        /// This is the current version of this ISaveable's data structure.
+        /// If you change the TState structure, increment this version number.
+        /// Note: For now, this will invalidate all existing save data for this ISaveable.
+        /// In the future, we may add support for data migration.
+        /// </summary>
+        int FileVersion { get; }
 
         /// <summary>
         /// This is used by the SaveManager class to capture the state of a saveable object.

@@ -68,6 +68,7 @@ namespace Buck.SaveAsync
             string Key { get; }
             string Filename { get; }
             Type StateType { get; }
+            int FileVersion { get; }
             object CaptureStateBoxed();
             void RestoreStateBoxed(object state);
         }
@@ -81,6 +82,7 @@ namespace Buck.SaveAsync
             public string Key => m_inner.Key;
             public string Filename => m_inner.Filename;
             public Type StateType => typeof(TState);
+            public int FileVersion => m_inner.FileVersion;
 
             public object CaptureStateBoxed() => m_inner.CaptureState();
 
@@ -99,6 +101,7 @@ namespace Buck.SaveAsync
         sealed class LoadedSaveable
         {
             public string Key;
+            public int EntryFileVersion;
             public JToken Data;
         }
 
@@ -117,10 +120,10 @@ namespace Buck.SaveAsync
         {
             Formatting = Formatting.Indented,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            TypeNameHandling = TypeNameHandling.None
+            TypeNameHandling = TypeNameHandling.Auto
         };
 
-        static readonly JsonSerializer s_serializerNoTypes = JsonSerializer.Create(s_jsonNoTypes);
+        //static readonly JsonSerializer s_serializerNoTypes = JsonSerializer.Create(s_jsonNoTypes);
 
         static bool IsMainThread => Environment.CurrentManagedThreadId == s_MainThreadId;
 
@@ -519,6 +522,17 @@ namespace Buck.SaveAsync
                         continue;
                     }
 
+                    // Version check: if the on-disk entry's FileVersion doesn't match the registered saveable's FileVersion,
+                    // skip old data and explicitly restore defaults for this saveable.
+                    if (loaded.EntryFileVersion != boxed.FileVersion)
+                    {
+                        Debug.LogWarning($"[Save Async] SaveManager.DoFileOperation() - Version mismatch for key \"{loaded.Key}\". " +
+                                         $"Save data has FileVersion {loaded.EntryFileVersion}; runtime expects {boxed.FileVersion}. Defaults will be used.");
+                        boxed.RestoreStateBoxed(null);
+                        restoredSaveables[loaded.Key] = true;
+                        continue;
+                    }
+
                     try
                     {
                         object state = loaded.Data?.ToObject(boxed.StateType, s_serializerNoTypes);
@@ -606,8 +620,14 @@ namespace Buck.SaveAsync
                         foreach (var item in array)
                         {
                             var key = item["Key"]?.ToString();
+                            int entryFileVersion = item["FileVersion"]?.Value<int?>() ?? 0; // legacy entries will be 0
                             var data = item["Data"];
-                            m_loadedSaveables.Add(new LoadedSaveable { Key = key, Data = data });
+                            m_loadedSaveables.Add(new LoadedSaveable
+                            {
+                                Key = key,
+                                EntryFileVersion = entryFileVersion,
+                                Data = data
+                            });
                         }
                     }
                     catch (Exception ex)
@@ -670,6 +690,7 @@ namespace Buck.SaveAsync
                 var obj = new JObject
                 {
                     ["Key"] = s.Key,
+                    ["FileVersion"] = s.FileVersion,
                     ["Data"] = token
                 };
 

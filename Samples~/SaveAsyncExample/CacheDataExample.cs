@@ -25,6 +25,8 @@ namespace Buck.SaveAsyncExample
         void OnValidate() => SaveManager.GetSerializableGuid(ref m_guidBytes);
 
         public string Filename => Files.SomeFile;
+        
+        public int FileVersion => 1;
 
         [Serializable]
         public struct MySaveData
