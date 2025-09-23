@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.13.0] – 2025-09-22
+
+### Breaking Change
+
+Whoa, 3 breaking changes in one day! `ISaveable<TState>.FileVersion` is now `ISaveable<TState>.Version` since that more accurately reflects that it is the "ISaveable" version and not the version of a file where the ISaveable is going - subtle but important difference.
+
+Author's note: While this package has been used in production on shipped titles, changes and updates should still be considered volatile (in case that wasn't obvious from the 3 updates today).
+
+### Fixes
+- Fixed an issue where DoFileOperation would leave subsequent method calls on worker threads. This would cause loading to fail silently in some cases.
+
 ## [0.12.0] – 2025-09-22
 
 ### Breaking Change: Versioning
@@ -8,11 +19,11 @@ Added versioning via `ISaveable<TState>.FileVersion`. On load, if the on-disk va
 In the future, this version number _might_ be used for data migrations (still considering this), but that functionality is not currently implemented.
 
 ### Fixes
-- Fixed a regression where JSON Converters for Unity was not being utilized. 
+- Fixed a regression where JSON Converters for Unity was not being utilized.
 
 ### Migration notes
 
-- Just add int FileVersion { get; } to every ISaveable<TState>.
+- Just add int FileVersion { get; } to every `ISaveable<TState>`.
 
 ## [0.11.0] – 2025-09-22
 
