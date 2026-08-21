@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.14.2] – 2026-08-21
+
+- Fixed `SaveManager.DoFileOperation()` releasing `IsBusy` from calls that never claimed it. A call that returned early because another operation was already in progress still ran the `finally` block and set `IsBusy = false`, so a third overlapping call would start a second, concurrent drain loop (overlapping file I/O, `m_loadedSaveables` cleared mid-restore, collection-modified exceptions during `RestorePass`). `IsBusy` is now released only by the operation that claimed it.
+
 ## [0.14.1] – 2026-03-03
 
 - FileHandler.GetPartialPath is now marked virtual and SaveManager.ResolveScopeFor is now public so that both methods can be more easily utilized by custom FileHandler classes.
