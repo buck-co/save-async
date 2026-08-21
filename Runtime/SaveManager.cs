@@ -408,96 +408,102 @@ namespace Buck.SaveAsync
 
         static async Awaitable DoFileOperation(FileOperationType requestedType, string[] requestedFilenames, OperationContext ctx)
         {
+			bool blockingQueue = false;
             try
-            {
-                if (m_saveables.Count == 0)
-                {
-                    Debug.LogError("[Save Async] SaveManager.DoFileOperation() - No saveables have been registered. " +
-                             "Register ISaveable<TState> before using save, load, erase, or delete methods.");
-                    return;
-                }
+			{
+				if (m_saveables.Count == 0)
+				{
+					Debug.LogError("[Save Async] SaveManager.DoFileOperation() - No saveables have been registered. " +
+							 "Register ISaveable<TState> before using save, load, erase, or delete methods.");
+					return;
+				}
 
-                lock (s_QueueLock)
-                {
-                    m_fileOperationQueue.Enqueue(new FileOperation(requestedType, requestedFilenames));
-                    if (IsBusy)
-                        return;
 
-                    IsBusy = true;
-                }
+				lock (s_QueueLock)
+				{
+					m_fileOperationQueue.Enqueue(new FileOperation(requestedType, requestedFilenames));
+					if (IsBusy)
+						return;
 
-                if (ctx.UseBackgroundThread)
-                    await Awaitable.BackgroundThreadAsync();
+					blockingQueue = true;//Flag on so that when we reach finish{} block we know to release IsBusy
+					IsBusy = true;
+				}
 
-                bool processedLoad = false;
-                bool processedLoadDefaults = false;
-                var affectedFilenames = new HashSet<string>();
+				if (ctx.UseBackgroundThread)
+					await Awaitable.BackgroundThreadAsync();
 
-                while (true)
-                {
-                    FileOperation fileOperation;
+				bool processedLoad = false;
+				bool processedLoadDefaults = false;
+				var affectedFilenames = new HashSet<string>();
 
-                    lock (s_QueueLock)
-                    {
-                        if (m_fileOperationQueue.Count == 0)
-                            break;
+				while (true)
+				{
+					FileOperation fileOperation;
 
-                        fileOperation = m_fileOperationQueue.Dequeue();
-                    }
+					lock (s_QueueLock)
+					{
+						if (m_fileOperationQueue.Count == 0)
+							break;
 
-                    switch (fileOperation.Type)
-                    {
-                        case FileOperationType.Save:
-                            await SaveFileOperationAsync(fileOperation.Filenames, ctx);
-                            break;
+						fileOperation = m_fileOperationQueue.Dequeue();
+					}
 
-                        case FileOperationType.Load:
-                            await LoadFileOperationAsync(fileOperation.Filenames, ctx);
-                            processedLoad = true;
-                            foreach (var f in fileOperation.Filenames)
-                                affectedFilenames.Add(f);
-                            break;
+					switch (fileOperation.Type)
+					{
+						case FileOperationType.Save:
+							await SaveFileOperationAsync(fileOperation.Filenames, ctx);
+							break;
 
-                        case FileOperationType.Delete:
-                            await DeleteFileOperationAsync(fileOperation.Filenames, eraseAndKeepFile: false, ctx);
-                            break;
+						case FileOperationType.Load:
+							await LoadFileOperationAsync(fileOperation.Filenames, ctx);
+							processedLoad = true;
+							foreach (var f in fileOperation.Filenames)
+								affectedFilenames.Add(f);
+							break;
 
-                        case FileOperationType.Erase:
-                            await DeleteFileOperationAsync(fileOperation.Filenames, eraseAndKeepFile: true, ctx);
-                            break;
+						case FileOperationType.Delete:
+							await DeleteFileOperationAsync(fileOperation.Filenames, eraseAndKeepFile: false, ctx);
+							break;
 
-                        case FileOperationType.LoadDefaults:
-                            processedLoadDefaults = true;
-                            foreach (var f in fileOperation.Filenames)
-                                affectedFilenames.Add(f);
-                            break;
+						case FileOperationType.Erase:
+							await DeleteFileOperationAsync(fileOperation.Filenames, eraseAndKeepFile: true, ctx);
+							break;
 
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                }
+						case FileOperationType.LoadDefaults:
+							processedLoadDefaults = true;
+							foreach (var f in fileOperation.Filenames)
+								affectedFilenames.Add(f);
+							break;
 
-                // Always hop back to the main thread before touching Unity objects
-                // and before returning to the caller so their continuation resumes on main.
-                await Awaitable.MainThreadAsync();
+						default:
+							throw new ArgumentOutOfRangeException();
+					}
+				}
 
-                if (processedLoad || processedLoadDefaults)
-                    RestorePass(affectedFilenames, processedLoad, processedLoadDefaults);
+				// Always hop back to the main thread before touching Unity objects
+				// and before returning to the caller so their continuation resumes on main.
+				await Awaitable.MainThreadAsync();
 
-                m_loadedSaveables.Clear();
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[Save Async] SaveManager.DoFileOperation() - Exception: {e.Message}\n{e.StackTrace}");
-                throw;
-            }
-            finally
-            {
-                lock (s_QueueLock)
-                {
-                    IsBusy = false;
-                }
-            }
+				if (processedLoad || processedLoadDefaults)
+					RestorePass(affectedFilenames, processedLoad, processedLoadDefaults);
+
+				m_loadedSaveables.Clear();
+			}
+			catch (Exception e)
+			{
+				Debug.LogError($"[Save Async] SaveManager.DoFileOperation() - Exception: {e.Message}\n{e.StackTrace}");
+				throw;
+			}
+			finally
+			{
+				if (blockingQueue)//Only release IsBusy if we were the operation holding it (other blocked operations that were blocked in turn will not)
+				{
+					lock (s_QueueLock)
+					{
+						IsBusy = false;
+					}
+				}
+			}
         }
 
         static void RestorePass(HashSet<string> affectedFilenames, bool didLoad, bool didDefaults)
