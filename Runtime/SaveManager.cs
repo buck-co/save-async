@@ -408,6 +408,10 @@ namespace Buck.SaveAsync
 
         static async Awaitable DoFileOperation(FileOperationType requestedType, string[] requestedFilenames, OperationContext ctx)
         {
+            // True only for the call that claimed IsBusy (the one draining the queue).
+            // A "return" inside the try block still runs the finally block, so calls that were
+            // blocked by IsBusy (or exited early for any other reason) must not release it.
+            bool ownsBusy = false;
             try
             {
                 if (m_saveables.Count == 0)
@@ -424,6 +428,7 @@ namespace Buck.SaveAsync
                         return;
 
                     IsBusy = true;
+                    ownsBusy = true;
                 }
 
                 if (ctx.UseBackgroundThread)
@@ -493,9 +498,13 @@ namespace Buck.SaveAsync
             }
             finally
             {
-                lock (s_QueueLock)
+                // Only the operation that claimed IsBusy may release it.
+                if (ownsBusy)
                 {
-                    IsBusy = false;
+                    lock (s_QueueLock)
+                    {
+                        IsBusy = false;
+                    }
                 }
             }
         }
