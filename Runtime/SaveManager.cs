@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -47,11 +48,15 @@ namespace Buck.SaveAsync
         {
             public FileOperationType Type;
             public string[] Filenames;
+            public int SlotIndex;
+            public AwaitableCompletionSource Completion;
 
-            public FileOperation(FileOperationType operationType, string[] filenames)
+            public FileOperation(FileOperationType operationType, string[] filenames, int slotIndex, AwaitableCompletionSource completion)
             {
                 Type = operationType;
                 Filenames = filenames;
+                SlotIndex = slotIndex;
+                Completion = completion;
             }
         }
 
@@ -151,11 +156,25 @@ namespace Buck.SaveAsync
         /// </summary>
         public static bool IsBusy { get; private set; }
 
+        static int s_saveSlotIndex = -1;
+
+        // While the queue is executing a request, this carries the slot index that was current when
+        // that request was enqueued. AsyncLocal so it is visible only to code running inside that
+        // operation's own async flow (e.g. FileHandlers resolving paths), never to game code running
+        // concurrently on other flows.
+        static readonly AsyncLocal<int?> s_slotIndexOverride = new();
+
         /// <summary>
         /// Stores the current save slot index, which can be used to determine which save slot to use for saving and loading files.
         /// A value of -1 indicates that no save slot is being used, which can be useful for settings files or other data that does not require a save slot.
+        /// File operations capture this value at the time they are requested and execute with it,
+        /// so changing the slot while an operation is still queued does not redirect that operation.
         /// </summary>
-        public static int SaveSlotIndex { get; set; } = -1;
+        public static int SaveSlotIndex
+        {
+            get => s_slotIndexOverride.Value ?? s_saveSlotIndex;
+            set => s_saveSlotIndex = value;
+        }
 
         /// <summary>
         /// Registers an ISaveable and its file for saving and loading.
@@ -394,118 +413,221 @@ namespace Buck.SaveAsync
 
         #endregion
 
+        static CancellationTokenSource s_linkedLifetimeCts;
+        static SaveManager s_linkedLifetimeOwner;
+
         static OperationContext CreateContext()
         {
-            var linked = CancellationTokenSource.CreateLinkedTokenSource(Instance.destroyCancellationToken, Application.exitCancellationToken).Token;
+            // Instance can be null (e.g. in the editor after exiting play mode, once the singleton
+            // has been destroyed). Fall back to application-lifetime cancellation and defaults
+            // instead of throwing.
+            var instance = Instance;
+
+            CancellationToken token;
+            if (instance == null)
+            {
+                token = Application.exitCancellationToken;
+            }
+            else
+            {
+                // Cache one linked source per SaveManager instance instead of creating (and never
+                // disposing) a new linked CancellationTokenSource for every call, which slowly
+                // accumulates registrations on the application-lifetime token.
+                if (s_linkedLifetimeOwner != instance || s_linkedLifetimeCts == null)
+                {
+                    s_linkedLifetimeCts?.Dispose();
+                    s_linkedLifetimeCts = CancellationTokenSource.CreateLinkedTokenSource(instance.destroyCancellationToken, Application.exitCancellationToken);
+                    s_linkedLifetimeOwner = instance;
+                }
+                token = s_linkedLifetimeCts.Token;
+            }
+
             return new OperationContext
             {
-                UseBackgroundThread = Instance && Instance.m_useBackgroundThread,
-                EncryptionType = Instance ? Instance.m_encryptionType : EncryptionType.None,
-                EncryptionPassword = Instance ? Instance.m_encryptionPassword : string.Empty,
-                CancellationToken = linked
+                UseBackgroundThread = instance != null && instance.m_useBackgroundThread,
+                EncryptionType = instance != null ? instance.m_encryptionType : EncryptionType.None,
+                EncryptionPassword = instance != null ? instance.m_encryptionPassword : string.Empty,
+                CancellationToken = token
             };
         }
 
         static async Awaitable DoFileOperation(FileOperationType requestedType, string[] requestedFilenames, OperationContext ctx)
         {
-            // True only for the call that claimed IsBusy (the one draining the queue).
-            // A "return" inside the try block still runs the finally block, so calls that were
-            // blocked by IsBusy (or exited early for any other reason) must not release it.
-            bool ownsBusy = false;
-            try
+            if (m_saveables.Count == 0)
             {
-                if (m_saveables.Count == 0)
-                {
-                    Debug.LogError("[Save Async] SaveManager.DoFileOperation() - No saveables have been registered. " +
-                             "Register ISaveable<TState> before using save, load, erase, or delete methods.");
-                    return;
-                }
+                Debug.LogError("[Save Async] SaveManager.DoFileOperation() - No saveables have been registered. " +
+                         "Register ISaveable<TState> before using save, load, erase, or delete methods.");
+                return;
+            }
 
-                lock (s_QueueLock)
-                {
-                    m_fileOperationQueue.Enqueue(new FileOperation(requestedType, requestedFilenames));
-                    if (IsBusy)
-                        return;
+            // Every request gets a completion source so that awaiting a public API call always
+            // means "this request has been executed" (including the restore pass for loads) - even
+            // when another operation was already in progress and this request was only queued.
+            var completion = new AwaitableCompletionSource();
+            bool ownsBusy = false;
 
+            lock (s_QueueLock)
+            {
+                // Capture the game-facing slot value (the backing field, not the property, which
+                // could observe another operation's in-flight override).
+                m_fileOperationQueue.Enqueue(new FileOperation(requestedType, requestedFilenames, s_saveSlotIndex, completion));
+
+                if (!IsBusy)
+                {
                     IsBusy = true;
                     ownsBusy = true;
                 }
+            }
 
-                if (ctx.UseBackgroundThread)
-                    await Awaitable.BackgroundThreadAsync();
+            if (!ownsBusy)
+            {
+                // Another operation owns the queue and will execute this request. Await actual
+                // completion; if the drain fails, the exception is observed here as well.
+                await completion.Awaitable;
+                return;
+            }
 
-                bool processedLoad = false;
-                bool processedLoadDefaults = false;
-                var affectedFilenames = new HashSet<string>();
+            await DrainQueueAsync(ctx);
+        }
 
+        /// <summary>
+        /// Runs as the single operation that owns <see cref="IsBusy"/>: repeatedly drains the queue,
+        /// runs the restore pass for each batch, and completes each request. IsBusy is released
+        /// atomically with the check that the queue is empty, so a request enqueued at any point is
+        /// either executed by this drain or finds IsBusy false and starts its own drain. Requests
+        /// are completed on the main thread, after their batch's restore pass has run.
+        /// </summary>
+        static async Awaitable DrainQueueAsync(OperationContext ctx)
+        {
+            var batch = new List<FileOperation>();
+
+            try
+            {
                 while (true)
                 {
-                    FileOperation fileOperation;
+                    if (ctx.UseBackgroundThread)
+                        await Awaitable.BackgroundThreadAsync();
 
+                    bool processedLoad = false;
+                    bool processedLoadDefaults = false;
+                    var affectedFilenames = new HashSet<string>();
+                    batch.Clear();
+
+                    while (true)
+                    {
+                        FileOperation fileOperation;
+
+                        lock (s_QueueLock)
+                        {
+                            if (m_fileOperationQueue.Count == 0)
+                                break;
+
+                            fileOperation = m_fileOperationQueue.Dequeue();
+                        }
+
+                        batch.Add(fileOperation);
+
+                        var result = await ExecuteOperationAsync(fileOperation, ctx, affectedFilenames);
+                        processedLoad |= result.processedLoad;
+                        processedLoadDefaults |= result.processedLoadDefaults;
+                    }
+
+                    // Always hop back to the main thread before touching Unity objects
+                    // and before completing requests so caller continuations resume on main.
+                    await Awaitable.MainThreadAsync();
+
+                    if (processedLoad || processedLoadDefaults)
+                        RestorePass(affectedFilenames, processedLoad, processedLoadDefaults);
+
+                    m_loadedSaveables.Clear();
+
+                    // A request is only complete once its batch's restore pass has run.
+                    foreach (var op in batch)
+                        op.Completion?.TrySetResult();
+                    batch.Clear();
+
+                    // Release IsBusy only when the queue is verifiably empty, atomically with the
+                    // check. Requests enqueued during the restore pass or the completions above are
+                    // picked up by the next iteration; requests enqueued after the release below
+                    // find IsBusy false and start their own drain. Nothing can be stranded.
                     lock (s_QueueLock)
                     {
                         if (m_fileOperationQueue.Count == 0)
-                            break;
-
-                        fileOperation = m_fileOperationQueue.Dequeue();
-                    }
-
-                    switch (fileOperation.Type)
-                    {
-                        case FileOperationType.Save:
-                            await SaveFileOperationAsync(fileOperation.Filenames, ctx);
-                            break;
-
-                        case FileOperationType.Load:
-                            await LoadFileOperationAsync(fileOperation.Filenames, ctx);
-                            processedLoad = true;
-                            foreach (var f in fileOperation.Filenames)
-                                affectedFilenames.Add(f);
-                            break;
-
-                        case FileOperationType.Delete:
-                            await DeleteFileOperationAsync(fileOperation.Filenames, eraseAndKeepFile: false, ctx);
-                            break;
-
-                        case FileOperationType.Erase:
-                            await DeleteFileOperationAsync(fileOperation.Filenames, eraseAndKeepFile: true, ctx);
-                            break;
-
-                        case FileOperationType.LoadDefaults:
-                            processedLoadDefaults = true;
-                            foreach (var f in fileOperation.Filenames)
-                                affectedFilenames.Add(f);
-                            break;
-
-                        default:
-                            throw new ArgumentOutOfRangeException();
+                        {
+                            IsBusy = false;
+                            return;
+                        }
                     }
                 }
-
-                // Always hop back to the main thread before touching Unity objects
-                // and before returning to the caller so their continuation resumes on main.
-                await Awaitable.MainThreadAsync();
-
-                if (processedLoad || processedLoadDefaults)
-                    RestorePass(affectedFilenames, processedLoad, processedLoadDefaults);
-
-                m_loadedSaveables.Clear();
             }
             catch (Exception e)
             {
                 Debug.LogError($"[Save Async] SaveManager.DoFileOperation() - Exception: {e.Message}\n{e.StackTrace}");
+
+                // Fail every request this drain can no longer serve - the in-flight batch and
+                // everything still queued - so their awaiters observe the exception instead of
+                // waiting forever, then release the queue so later requests start fresh.
+                lock (s_QueueLock)
+                {
+                    while (m_fileOperationQueue.Count > 0)
+                        batch.Add(m_fileOperationQueue.Dequeue());
+
+                    IsBusy = false;
+                }
+
+                foreach (var op in batch)
+                    op.Completion?.TrySetException(e);
+
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Executes one dequeued operation with <see cref="s_slotIndexOverride"/> set to the slot
+        /// index captured when the request was made. Deliberately an async Task rather than an
+        /// Awaitable: the TPL method builder isolates the caller's ExecutionContext, so the
+        /// AsyncLocal override set here cannot leak into the flow that started the drain (Unity's
+        /// Awaitable builder does not provide that isolation for code before the first await).
+        /// </summary>
+        static async Task<(bool processedLoad, bool processedLoadDefaults)> ExecuteOperationAsync(FileOperation fileOperation, OperationContext ctx, HashSet<string> affectedFilenames)
+        {
+            // Execute with the slot index that was current when this request was made,
+            // not whatever the slot index happens to be by the time it is dequeued.
+            s_slotIndexOverride.Value = fileOperation.SlotIndex;
+            try
+            {
+                switch (fileOperation.Type)
+                {
+                    case FileOperationType.Save:
+                        await SaveFileOperationAsync(fileOperation.Filenames, ctx);
+                        return (false, false);
+
+                    case FileOperationType.Load:
+                        await LoadFileOperationAsync(fileOperation.Filenames, ctx);
+                        foreach (var f in fileOperation.Filenames)
+                            affectedFilenames.Add(f);
+                        return (true, false);
+
+                    case FileOperationType.Delete:
+                        await DeleteFileOperationAsync(fileOperation.Filenames, eraseAndKeepFile: false, ctx);
+                        return (false, false);
+
+                    case FileOperationType.Erase:
+                        await DeleteFileOperationAsync(fileOperation.Filenames, eraseAndKeepFile: true, ctx);
+                        return (false, false);
+
+                    case FileOperationType.LoadDefaults:
+                        foreach (var f in fileOperation.Filenames)
+                            affectedFilenames.Add(f);
+                        return (false, true);
+
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
             finally
             {
-                // Only the operation that claimed IsBusy may release it.
-                if (ownsBusy)
-                {
-                    lock (s_QueueLock)
-                    {
-                        IsBusy = false;
-                    }
-                }
+                s_slotIndexOverride.Value = null;
             }
         }
 

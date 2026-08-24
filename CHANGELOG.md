@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.15.0] – 2026-08-24
+
+### Changed
+
+- Awaiting `Save`, `Load`, `LoadDefaults`, `Erase`, or `Delete` now completes when that request has actually been executed (including the restore pass for loads), even when another operation was already in progress and the request was only queued. Previously a queued request’s `await` completed immediately when it was enqueued, before any file I/O or restore had happened.
+- If the queue drain fails, every queued request observes the exception through its `await` (previously only the call that started the drain could observe exceptions, and queued requests were silently abandoned).
+
+### Fixed
+
+- Requests enqueued while an operation was finishing (during the restore pass or from inside a `RestoreState` callback) could be left in the queue unprocessed until some later operation happened to run. The queue is now re-checked atomically before the busy flag is released, so every accepted request is executed.
+- Queued operations now capture `SaveSlotIndex` when they are requested and execute with that value. Previously a queued operation resolved its file paths with whatever the slot index happened to be when it was finally dequeued, which could write or read a different save slot than the caller intended.
+- `SaveManager` API calls no longer throw when the `SaveManager` instance is gone (for example in the editor after exiting play mode, once the singleton has been destroyed).
+- Internal `CancellationTokenSource` instances are no longer created (and leaked) per API call; one linked source is cached per `SaveManager` instance.
+
+### Added
+
+- EditMode test suite (`Tests/Editor`) covering queue overlap, request stranding, completion semantics, slot capture, and failure propagation.
+
 ## [0.14.2] – 2026-08-21
 
 - Fixed `SaveManager.DoFileOperation()` releasing `IsBusy` from calls that never claimed it. A call that returned early because another operation was already in progress still ran the `finally` block and set `IsBusy = false`, so a third overlapping call would start a second, concurrent drain loop (overlapping file I/O, `m_loadedSaveables` cleared mid-restore, collection-modified exceptions during `RestorePass`). `IsBusy` is now released only by the operation that claimed it.
