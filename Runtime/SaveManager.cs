@@ -149,6 +149,49 @@ namespace Buck.SaveAsync
             m_initialized = true;
         }
 
+        // Every Play session starts from an empty SaveManager, with or without a domain reload
+        // (Enter Play Mode Settings, and Unity's CoreCLR runtime). Without one, the saveables,
+        // the file handler (a ScriptableObject Unity destroyed when the previous session ended)
+        // and the initialized flag would otherwise carry over, and the first Save of the new
+        // session would capture state from the previous session's destroyed objects.
+        // SubsystemRegistration is the earliest stage and runs before any scene object's Awake,
+        // so nothing registered by the new session itself is ever reset.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetForPlaySession()
+        {
+            List<FileOperation> abandoned = null;
+
+            lock (s_QueueLock)
+            {
+                if (m_fileOperationQueue.Count > 0)
+                {
+                    abandoned = new List<FileOperation>(m_fileOperationQueue);
+                    m_fileOperationQueue.Clear();
+                }
+
+                IsBusy = false;
+            }
+
+            m_saveables.Clear();
+            m_loadedSaveables.Clear();
+            s_fileScopes.Clear();
+            s_saveSlotIndex = -1;
+            m_fileHandler = null;
+            m_initialized = false;
+
+            // The cached lifetime token belongs to the previous session's (destroyed) instance.
+            s_linkedLifetimeCts?.Dispose();
+            s_linkedLifetimeCts = null;
+            s_linkedLifetimeOwner = null;
+
+            // Requests still queued belong to the previous session and will never execute; release
+            // their awaiters instead of leaving them waiting forever. Done last and outside the
+            // lock, since a released awaiter may resume code that calls back into the manager.
+            if (abandoned != null)
+                foreach (var op in abandoned)
+                    op.Completion?.TrySetCanceled();
+        }
+
         #region SaveAsync API
 
         /// <summary>

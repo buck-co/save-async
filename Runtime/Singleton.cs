@@ -15,6 +15,22 @@ namespace Buck.SaveAsync
         static object m_Lock = new object();
         static T m_Instance;
 
+        // Unity does not invoke RuntimeInitializeOnLoadMethod inside a generic type, so every
+        // closed Singleton<T> registers its reset here and PlayModeStatics runs it at the start
+        // of each Play session. Without it, OnDestroy at the end of one editor Play session
+        // latches m_ShuttingDown and Instance returns null for the rest of the editor session.
+        static Singleton()
+            => PlayModeStatics.Register(ResetStatics);
+
+        static void ResetStatics()
+        {
+            lock (m_Lock)
+            {
+                m_Instance = null;
+                m_ShuttingDown = false;
+            }
+        }
+
         /// <summary>
         /// Access singleton instance through this property.
         /// </summary>

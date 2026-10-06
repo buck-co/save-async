@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.15.1] – 2026-10-06
+
+### Fixed
+
+- `SaveManager` and `Singleton<T>` reset their statics at the start of every Play session (`RuntimeInitializeOnLoadMethod`, `SubsystemRegistration`), so the package works with Reload Domain disabled in Enter Play Mode Settings and under Unity's CoreCLR runtime. Before, the end of one editor Play session latched `Singleton<T>` as shutting down (`Instance` returned null for the rest of the editor session) and the next session reused the previous session's saveables and its destroyed `FileHandler`. Unity does not run `RuntimeInitializeOnLoadMethod` inside generic types, so `Singleton<T>` registers its reset from its static constructor through the new internal `PlayModeStatics` class. Requests still queued when a session ends now observe an `OperationCanceledException` instead of waiting forever. Nothing changes in a player or in an editor that still reloads the domain.
+
+### Added
+
+- EditMode test (`Tests/Editor/SaveManagerPlayModeTests.cs`) that runs two Play sessions with domain reload disabled and checks that the second one starts clean.
+
 ## [0.15.0] – 2026-08-24
 
 ### Changed
