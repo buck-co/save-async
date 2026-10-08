@@ -7,36 +7,61 @@ using UnityEngine;
 namespace Buck.SaveAsync
 {
     /// <summary>
-    /// Restores the package's statics at the start of every Play session, so Save Async behaves
-    /// the same whether or not the editor reloads the scripting domain on Play (Edit > Project
-    /// Settings > Editor > Enter Play Mode Settings). Unity's CoreCLR runtime removes domain
-    /// reload altogether, so this is also what keeps the package working there.
+    /// Runs reset actions at the start of every Play session, so code behaves the same whether or
+    /// not the editor reloads the scripting domain on Play (Edit > Project Settings > Editor > Enter
+    /// Play Mode Settings). Unity's CoreCLR runtime removes domain reload altogether, so this is also
+    /// what keeps that code working there.
     ///
-    /// Unity does not invoke RuntimeInitializeOnLoadMethod inside generic types, so each closed
-    /// Singleton&lt;T&gt; registers a reset action from its static constructor and this class runs
-    /// them all at SubsystemRegistration, the earliest stage, before any scene object's Awake.
-    /// Everything here is a no-op in a player and in an editor that still reloads the domain:
-    /// there is nothing stale to reset at that point.
+    /// It exists for generic types. Unity does not invoke RuntimeInitializeOnLoadMethod inside a
+    /// generic type, so each closed generic type (Singleton&lt;T&gt;, for one) registers a reset action
+    /// from its static constructor and this class runs them all. A non-generic type resets its own
+    /// state with its own RuntimeInitializeOnLoadMethod instead.
+    ///
+    /// The resets run at SubsystemRegistration, the earliest stage, before any scene object's Awake.
+    /// In a player, and in an editor that still reloads the domain, there is nothing stale to reset.
     /// </summary>
     internal static class PlayModeStatics
     {
-        static readonly List<Action> m_resets = new List<Action>();
+        static readonly List<Action> s_resets = new List<Action>();
+        static readonly object s_lock = new object();
 
         /// <summary>
-        /// Registers an action that puts a type's statics back to their initial values. The list
-        /// itself is never cleared, since a registration has to outlive every Play session.
+        /// Registers an action that puts a type's statics back to their initial values. Call it once
+        /// per closed generic type, from its static constructor. The list is never cleared: a
+        /// registration has to outlive every Play session.
         /// </summary>
         public static void Register(Action reset)
         {
-            if (reset != null && !m_resets.Contains(reset))
-                m_resets.Add(reset);
+            if (reset == null)
+                return;
+
+            // A static constructor runs on whichever thread first touches the type.
+            lock (s_lock)
+            {
+                if (!s_resets.Contains(reset))
+                    s_resets.Add(reset);
+            }
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetForPlaySession()
         {
-            for (int i = 0; i < m_resets.Count; i++)
-                m_resets[i]();
+            Action[] resets;
+            lock (s_lock)
+                resets = s_resets.ToArray();
+
+            // One failing reset must not stop the others.
+            foreach (var reset in resets)
+            {
+                try
+                {
+                    reset();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
         }
     }
 }

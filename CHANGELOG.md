@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.15.1] – 2026-10-06
+## [0.15.1] – 2026-10-08
 
 ### Fixed
 
@@ -8,7 +8,7 @@
 
 ### Added
 
-- EditMode test (`Tests/Editor/SaveManagerPlayModeTests.cs`) that runs two Play sessions with domain reload disabled and checks that the second one starts clean.
+- EditMode tests (`Tests/Editor/SaveManagerPlayModeTests.cs`) that run two Play sessions with domain reload disabled, with and without scene reload, and check that the second one starts clean.
 
 ## [0.15.0] – 2026-08-24
 

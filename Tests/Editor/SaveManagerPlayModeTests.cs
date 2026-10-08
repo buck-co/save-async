@@ -18,8 +18,9 @@ using UnityEngine.TestTools;
 /// sessions with domain reload disabled: the first uses the manager the way a game would and ends
 /// with a request still queued behind a write that never finishes, and the second must find the
 /// singleton available, the manager uninitialized and empty, and the abandoned request released.
-/// The project's Enter Play Mode Settings are restored afterwards. With the domain reload on
-/// there is nothing to test: the reload itself resets it all.
+/// A second fixture repeats it without scene reload. The project's Enter Play Mode Settings are
+/// restored afterwards. With the domain reload on there is nothing to test: the reload itself
+/// resets it all.
 /// </summary>
 public class SaveManagerPlayModeTests
 {
@@ -67,6 +68,8 @@ public class SaveManagerPlayModeTests
     static readonly Type k_saveManager = typeof(SaveManager);
     static readonly Type k_singleton = typeof(Singleton<SaveManager>);
 
+    protected virtual EnterPlayModeOptions Options => EnterPlayModeOptions.DisableDomainReload;
+
     bool m_optionsEnabled;
     EnterPlayModeOptions m_options;
 
@@ -80,7 +83,7 @@ public class SaveManagerPlayModeTests
         m_optionsEnabled = EditorSettings.enterPlayModeOptionsEnabled;
         m_options = EditorSettings.enterPlayModeOptions;
         EditorSettings.enterPlayModeOptionsEnabled = true;
-        EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
+        EditorSettings.enterPlayModeOptions = Options;
         m_failures.Clear();
     }
 
@@ -173,4 +176,10 @@ public class SaveManagerPlayModeTests
     static int SaveableCount => ((ICollection)GetStatic(k_saveManager, "m_saveables")).Count;
     static int FileScopeCount => ((ICollection)GetStatic(k_saveManager, "s_fileScopes")).Count;
     static int QueueCount => ((ICollection)GetStatic(k_saveManager, "m_fileOperationQueue")).Count;
+}
+
+public class SaveManagerPlayModeWithoutSceneReloadTests : SaveManagerPlayModeTests
+{
+    protected override EnterPlayModeOptions Options
+        => EnterPlayModeOptions.DisableDomainReload | EnterPlayModeOptions.DisableSceneReload;
 }
